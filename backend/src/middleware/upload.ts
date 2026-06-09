@@ -1,15 +1,10 @@
 import multer from "multer";
-import { Request } from "express";
 
 // Memory storage for database uploads (GridFS)
 const storage = multer.memoryStorage();
 
 // File filter to allow images, videos, PDFs, and documents
-const fileFilter = (
-  _req: Request,
-  file: Express.Multer.File,
-  cb: multer.FileFilterCallback
-) => {
+const fileFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
   const allowedMimeTypes = [
     // Images
     "image/jpeg",
@@ -74,11 +69,7 @@ export const uploadAccountDocument = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
 }).single("file");
 
-const excelFilter = (
-  _req: Request,
-  file: Express.Multer.File,
-  cb: multer.FileFilterCallback
-) => {
+const excelFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
   const allowed = [
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
