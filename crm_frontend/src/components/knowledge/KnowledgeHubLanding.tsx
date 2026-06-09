@@ -12,6 +12,7 @@ import {
   type KnowledgeSearchResult,
 } from "@/services/knowledgeBase";
 import { cn } from "@/lib/utils";
+import { HelpInfoButton } from "@/components/help/HelpInfoButton";
 
 interface KnowledgeHubLandingProps {
   onSelectProperty: (propertyId: string, sectionHash?: string) => void;
@@ -88,12 +89,15 @@ export function KnowledgeHubLanding({ onSelectProperty, canManage }: KnowledgeHu
   return (
     <div className="space-y-8 p-6">
       <div>
-        <h1
-          className="text-3xl font-bold tracking-tight"
-          style={{ fontFamily: "'Playfair Display', serif" }}
-        >
-          Knowledge Base
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1
+            className="text-3xl font-bold tracking-tight"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Knowledge Base
+          </h1>
+          <HelpInfoButton helpId="knowledge.hub" className="h-6 w-6" />
+        </div>
         <p className="text-muted-foreground mt-2">
           Browse property guides, search across hotels, and open detailed factsheets
         </p>

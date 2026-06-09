@@ -28,6 +28,7 @@ import { SalesTargetsSetup } from "@/pages/setup/SalesTargetsSetup";
 import { HolidaysSetup } from "@/pages/setup/HolidaysSetup";
 import { SalesSettingsSetup } from "@/pages/setup/SalesSettingsSetup";
 import { PropertyGuideEditorSetup } from "@/pages/setup/PropertyGuideEditorSetup";
+import HelpCenter from "@/pages/HelpCenter";
 import { AdminApiConsole } from "@/components/AdminApiConsole";
 import { AdminLeads } from "@/components/AdminLeads";
 import { WorkflowManagement } from "@/components/WorkflowManagement";
@@ -256,6 +257,8 @@ export const ProfessionalCRM = ({
             permissions={permissions || []}
           />
         );
+      case "help":
+        return <HelpCenter isAdmin={!!isAdmin} />;
       case 'settings':
         return (
           <SettingsDashboard

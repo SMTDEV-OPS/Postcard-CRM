@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,13 +141,14 @@ function SkeletonRow() {
 interface DrawerProps {
     open: boolean;
     onClose: () => void;
+    onSaveSuccess: () => void;
     editingUser: User | null;
     users: User[];
     roles: Role[];
     onSaved: () => void;
 }
 
-function UserDrawer({ open, onClose, editingUser, users, roles, onSaved }: DrawerProps) {
+function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, onSaved }: DrawerProps) {
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -163,6 +164,7 @@ function UserDrawer({ open, onClose, editingUser, users, roles, onSaved }: Drawe
 
     // Populate form when editing
     useEffect(() => {
+        if (!open) return;
         if (editingUser) {
             setForm({
                 name: editingUser.name,
@@ -232,7 +234,7 @@ function UserDrawer({ open, onClose, editingUser, users, roles, onSaved }: Drawe
                     : `${form.name} has been added to the CRM.`,
             });
             onSaved();
-            onClose();
+            onSaveSuccess();
         } catch (err: unknown) {
             toast({
                 title: "Error",
@@ -244,17 +246,19 @@ function UserDrawer({ open, onClose, editingUser, users, roles, onSaved }: Drawe
         }
     };
 
+    if (!open) return null;
+
     return (
         <>
             {/* Backdrop */}
             <div
-                className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 opacity-100"
                 onClick={onClose}
             />
 
             {/* Drawer Panel */}
             <div
-                className={`fixed right-0 top-0 h-full z-50 w-full max-w-[480px] bg-surface border-l border-border shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "translate-x-full"}`}
+                className="fixed right-0 top-0 h-full z-50 w-full max-w-[480px] bg-surface border-l border-border shadow-2xl flex flex-col transition-transform duration-300 ease-in-out translate-x-0"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-5 border-b border-border bg-muted/30">
@@ -272,8 +276,8 @@ function UserDrawer({ open, onClose, editingUser, users, roles, onSaved }: Drawe
                     </button>
                 </div>
 
-                {/* Body */}
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+                <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+                <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
                     {/* Personal Info Section */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 mb-1">
@@ -420,9 +424,8 @@ function UserDrawer({ open, onClose, editingUser, users, roles, onSaved }: Drawe
                             <p className="text-xs text-muted-foreground">Sets the reporting chain and data visibility hierarchy.</p>
                         </div>
                     </div>
-                </form>
+                </div>
 
-                {/* Footer */}
                 <div className="flex gap-3 px-6 py-4 border-t border-border bg-muted/20">
                     <Button type="button" variant="outline" onClick={onClose} className="flex-1" disabled={isSaving}>
                         Cancel
@@ -431,7 +434,6 @@ function UserDrawer({ open, onClose, editingUser, users, roles, onSaved }: Drawe
                         type="submit"
                         className="flex-1"
                         disabled={isSaving}
-                        onClick={handleSubmit}
                     >
                         {isSaving ? (
                             <>
@@ -445,6 +447,7 @@ function UserDrawer({ open, onClose, editingUser, users, roles, onSaved }: Drawe
                         )}
                     </Button>
                 </div>
+                </form>
             </div>
         </>
     );
@@ -579,6 +582,7 @@ export const UserManagement = () => {
     // Drawer state
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
+    const closeTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
     // Detail panel state
     const [viewingUser, setViewingUser] = useState<User | null>(null);
@@ -665,9 +669,29 @@ export const UserManagement = () => {
 
     // ── Handlers ───────────────────────────────────────────────────────────────
 
-    const openCreate = () => { setEditingUser(null); setDrawerOpen(true); };
-    const openEdit = (user: User) => { setEditingUser(user); setDrawerOpen(true); };
-    const closeDrawer = () => { setDrawerOpen(false); setTimeout(() => setEditingUser(null), 300); };
+    const openCreate = () => {
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        setEditingUser(null);
+        setDrawerOpen(true);
+    };
+    const openEdit = (user: User) => {
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        setEditingUser(user);
+        setDrawerOpen(true);
+    };
+    const closeDrawer = () => {
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        setDrawerOpen(false);
+        closeTimerRef.current = setTimeout(() => {
+            setEditingUser(null);
+            closeTimerRef.current = undefined;
+        }, 300);
+    };
+    const closeDrawerAfterSave = () => {
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        setDrawerOpen(false);
+        setEditingUser(null);
+    };
 
     // ── Lookup helpers ─────────────────────────────────────────────────────────
 
@@ -885,13 +909,13 @@ export const UserManagement = () => {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => openEdit(user)}>
+                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEdit(user); }}>
                                                         <Edit2 className="mr-2 h-4 w-4" />
                                                         Edit User
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem
-                                                        onClick={() => toggleStatus(user)}
+                                                        onClick={(e) => { e.stopPropagation(); toggleStatus(user); }}
                                                         className={user.status === "ACTIVE" ? "text-destructive focus:text-destructive" : "text-emerald-600 focus:text-emerald-600"}
                                                     >
                                                         {user.status === "ACTIVE" ? (
@@ -922,10 +946,11 @@ export const UserManagement = () => {
             <UserDrawer
                 open={drawerOpen}
                 onClose={closeDrawer}
+                onSaveSuccess={closeDrawerAfterSave}
                 editingUser={editingUser}
                 users={users}
                 roles={roles}
-                onSaved={loadData}
+                onSaved={() => { void loadData(); }}
             />
 
             <UserDetailPanel

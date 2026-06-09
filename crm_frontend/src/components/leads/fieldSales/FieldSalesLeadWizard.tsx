@@ -35,6 +35,7 @@ import {
   type FieldSalesLeadFormState,
 } from "./useFieldSalesLeadForm";
 import { getLeadDetail } from "@/services/leads";
+import { HelpFieldHint } from "@/components/help/HelpFieldHint";
 
 interface FieldSalesLeadWizardProps {
   open: boolean;
@@ -158,7 +159,10 @@ export function FieldSalesLeadWizard({
           ) : (
             <div className="space-y-6 py-2">
               <section className="space-y-3 rounded-lg border border-border p-4">
-                <h4 className="text-sm font-semibold">Contact</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-semibold">Contact</h4>
+                  <HelpFieldHint helpId="leads.field-sales.contact" />
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="sm:col-span-2">
                     <Label>Lead POC name *</Label>
@@ -259,7 +263,10 @@ export function FieldSalesLeadWizard({
               </section>
 
               <section className="space-y-3 rounded-lg border border-border p-4">
-                <h4 className="text-sm font-semibold">Stay</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-semibold">Stay</h4>
+                  <HelpFieldHint helpId="leads.field-sales.stay" />
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="sm:col-span-2">
                     <Label>Hotel</Label>
@@ -335,7 +342,10 @@ export function FieldSalesLeadWizard({
 
               <section className="space-y-3 rounded-lg border border-border p-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold">Rate offer</h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-semibold">Rate offer</h4>
+                    <HelpFieldHint helpId="leads.field-sales.pricing" />
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
@@ -420,7 +430,10 @@ export function FieldSalesLeadWizard({
               </section>
 
               <section className="space-y-3 rounded-lg border border-border p-4">
-                <h4 className="text-sm font-semibold">Follow-up (manual)</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-semibold">Follow-up (manual)</h4>
+                  <HelpFieldHint helpId="leads.field-sales.followup" />
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <Label>Follow-up date</Label>

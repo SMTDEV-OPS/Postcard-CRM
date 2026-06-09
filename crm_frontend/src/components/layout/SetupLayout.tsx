@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { HelpPageHeader } from "@/components/help/HelpPageHeader";
+import { SETUP_PATH_TO_HELP_ID } from "@/help/helpContent";
 import {
   Sliders,
   GitBranch,
@@ -30,15 +31,22 @@ const SETUP_LINKS = [
   { to: "/setup/property-guide", label: "Property guide editor", icon: BookOpen },
 ];
 
+const SETUP_PATH_ALIASES: Record<string, string> = {
+  "setup/followups": "setup/followup-rules",
+  "setup/audit": "setup/audit-log",
+};
+
 interface SetupLayoutProps {
   title?: string;
   subtitle?: string;
+  helpId?: string;
   children: ReactNode;
 }
 
 export function SetupLayout({
   title = "Setup",
   subtitle = "Configure CRM engines and integrations",
+  helpId,
   children,
 }: SetupLayoutProps) {
   const location = useLocation();
@@ -47,6 +55,10 @@ export function SetupLayout({
   if (!isSetupRoute) {
     return <>{children}</>;
   }
+
+  const pathKey = location.pathname.replace(/^\//, "");
+  const lookupKey = SETUP_PATH_ALIASES[pathKey] ?? pathKey;
+  const resolvedHelpId = helpId ?? SETUP_PATH_TO_HELP_ID[lookupKey];
 
   return (
     <div className="flex gap-8 animate-panel-enter">
@@ -72,7 +84,7 @@ export function SetupLayout({
         </nav>
       </aside>
       <div className="min-w-0 flex-1">
-        <PageHeader title={title} subtitle={subtitle} />
+        <HelpPageHeader title={title} subtitle={subtitle} helpId={resolvedHelpId} />
         {children}
       </div>
     </div>

@@ -36,6 +36,7 @@ export const CRM_PATHS = {
   setupSalesSettings: "/setup/sales-settings",
   setupKnowledgeImport: "/setup/knowledge-import",
   setupPropertyGuide: "/setup/property-guide",
+  help: "/help",
 } as const;
 
 /** Legacy activeView id from pathname */
@@ -63,6 +64,7 @@ export function pathnameToView(pathname: string): { view: string; leadId?: strin
   if (p === "/email/health") return { view: "email-health" };
   if (p === "/notifications") return { view: "notifications" };
   if (p === "/settings") return { view: "settings" };
+  if (p === "/help") return { view: "help" };
   if (p.startsWith("/setup/")) {
     const sub = p.replace("/setup/", "");
     return { view: `setup/${sub}` };
@@ -119,6 +121,8 @@ export function viewToPath(view: string, leadId?: string): string {
       return CRM_PATHS.notifications;
     case "settings":
       return CRM_PATHS.settings;
+    case "help":
+      return CRM_PATHS.help;
     case "user-management":
       return CRM_PATHS.setupUsers;
     case "security/roles":

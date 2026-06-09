@@ -44,6 +44,7 @@ const App = () => (
                 <Route path="/email/health" element={<Index />} />
                 <Route path="/notifications" element={<Index />} />
                 <Route path="/settings" element={<Index />} />
+                <Route path="/help" element={<Index />} />
                 <Route path="/setup/*" element={<Index />} />
                 <Route path="/security/*" element={<Index />} />
                 <Route path="/users" element={<Index />} />

@@ -9,6 +9,7 @@ import {
   Settings2,
   Mail,
   Building2,
+  BookOpen,
 } from "lucide-react";
 import {
   Dialog,
@@ -26,6 +27,8 @@ const COMMANDS = [
   { label: "Accounts", path: CRM_PATHS.accounts, icon: Building2 },
   { label: "Email", path: CRM_PATHS.email, icon: Mail },
   { label: "Settings", path: CRM_PATHS.settings, icon: Settings2 },
+  { label: "Training & Help", path: CRM_PATHS.help, icon: BookOpen },
+  { label: "Search help", path: CRM_PATHS.help, icon: BookOpen },
 ];
 
 interface CommandPaletteProps {

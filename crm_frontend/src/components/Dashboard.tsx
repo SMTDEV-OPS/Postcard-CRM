@@ -29,7 +29,7 @@ import {
 import { ChartTooltip } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Lead, getLeadContactInfo } from "@/services/leads";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { HelpPageHeader } from "@/components/help/HelpPageHeader";
 import { PageSkeleton } from "@/components/patterns";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -155,7 +155,8 @@ const Dashboard = ({
 
   return (
     <div className="space-y-6 animate-panel-enter">
-      <PageHeader
+      <HelpPageHeader
+        helpId="dashboard.main"
         title={`Good ${getGreeting()}`}
         subtitle="Your priorities for today"
         actions={

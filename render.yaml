@@ -1,8 +1,10 @@
-# Used when Render service Root Directory is set to "backend"
+# Render Blueprint — backend API (monorepo rootDir)
+# Dashboard: New → Blueprint → connect this repo, or set Root Directory to "backend" manually.
 services:
   - type: web
     name: postcardcrm-backend
     runtime: node
+    rootDir: backend
     buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /health
@@ -19,4 +21,3 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         sync: false
-

@@ -28,6 +28,8 @@ import {
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { CRM_PATHS } from "@/navigation/crmPaths";
+import { HelpInfoButton } from "@/components/help/HelpInfoButton";
+import { NAV_PATH_TO_HELP_ID } from "@/help/helpContent";
 
 interface NavItem {
   title: string;
@@ -151,34 +153,46 @@ export function Sidebar({
     .toUpperCase()
     .slice(0, 2);
 
+  const navHelpId = (path: string) => NAV_PATH_TO_HELP_ID[path];
+
   const NavItemLink = ({ item }: { item: NavItem }) => {
     const Icon = item.icon;
+    const helpId = navHelpId(item.path);
     return (
-      <NavLink
-        to={item.path}
-        end={item.path === CRM_PATHS.dashboard}
-        className={({ isActive }) =>
-          cn("nav-item", isActive && "nav-item-active", collapsed && "justify-center px-3")
-        }
-        title={collapsed ? item.title : undefined}
-      >
-        <Icon className={cn("nav-icon h-4 w-4 shrink-0", collapsed && "mx-auto")} strokeWidth={1.5} />
-        {!collapsed && (
-          <>
-            <span className="truncate">{item.title}</span>
-            {item.path === CRM_PATHS.followUps && followupsBadgeCount > 0 && (
-              <span
-                className={cn(
-                  "ml-auto text-xs px-1.5 py-0.5 rounded-sm font-medium tabular-nums",
-                  hasOverdueFollowups ? "bg-red-600 text-white" : "bg-white/15 text-white"
-                )}
-              >
-                {followupsBadgeCount}
-              </span>
-            )}
-          </>
+      <div className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
+        <NavLink
+          to={item.path}
+          end={item.path === CRM_PATHS.dashboard}
+          className={({ isActive }) =>
+            cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
+          }
+          title={collapsed ? item.title : undefined}
+        >
+          <Icon className={cn("nav-icon h-4 w-4 shrink-0", collapsed && "mx-auto")} strokeWidth={1.5} />
+          {!collapsed && (
+            <>
+              <span className="truncate">{item.title}</span>
+              {item.path === CRM_PATHS.followUps && followupsBadgeCount > 0 && (
+                <span
+                  className={cn(
+                    "ml-auto text-xs px-1.5 py-0.5 rounded-sm font-medium tabular-nums",
+                    hasOverdueFollowups ? "bg-red-600 text-white" : "bg-white/15 text-white"
+                  )}
+                >
+                  {followupsBadgeCount}
+                </span>
+              )}
+            </>
+          )}
+        </NavLink>
+        {!collapsed && helpId && (
+          <HelpInfoButton
+            helpId={helpId}
+            className="absolute right-2 opacity-0 transition-opacity group-hover/nav:opacity-100 text-white/50 hover:text-white hover:bg-white/10"
+            side="right"
+          />
         )}
-      </NavLink>
+      </div>
     );
   };
 
@@ -248,50 +262,91 @@ export function Sidebar({
         {(isAdminLike || permissions.includes("settings.manage")) && (
           <>
             <SectionLabel>Admin</SectionLabel>
-            <NavLink
-              to={CRM_PATHS.settings}
-              className={({ isActive }) =>
-                cn("nav-item", isActive && "nav-item-active", collapsed && "justify-center px-3")
-              }
-            >
-              <Settings className="nav-icon h-4 w-4 shrink-0" strokeWidth={1.5} />
-              {!collapsed && <span>Setup</span>}
-            </NavLink>
+            <div className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
+              <NavLink
+                to={CRM_PATHS.settings}
+                className={({ isActive }) =>
+                  cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
+                }
+              >
+                <Settings className="nav-icon h-4 w-4 shrink-0" strokeWidth={1.5} />
+                {!collapsed && <span>Setup</span>}
+              </NavLink>
+              {!collapsed && navHelpId(CRM_PATHS.settings) && (
+                <HelpInfoButton
+                  helpId={navHelpId(CRM_PATHS.settings)!}
+                  className="absolute right-2 opacity-0 transition-opacity group-hover/nav:opacity-100 text-white/50 hover:text-white hover:bg-white/10"
+                  side="right"
+                />
+              )}
+            </div>
           </>
         )}
 
         {hasKnowledgeAccess && (
           <>
             <SectionLabel>Resources</SectionLabel>
-            <NavLink
-              to={CRM_PATHS.knowledge}
-              className={({ isActive }) =>
-                cn("nav-item", isActive && "nav-item-active", collapsed && "justify-center px-3")
-              }
-            >
-              <BookOpen className="nav-icon h-4 w-4 shrink-0" strokeWidth={1.5} />
-              {!collapsed && <span>Knowledge</span>}
-            </NavLink>
+            <div className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
+              <NavLink
+                to={CRM_PATHS.knowledge}
+                className={({ isActive }) =>
+                  cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
+                }
+              >
+                <BookOpen className="nav-icon h-4 w-4 shrink-0" strokeWidth={1.5} />
+                {!collapsed && <span>Knowledge</span>}
+              </NavLink>
+              {!collapsed && navHelpId(CRM_PATHS.knowledge) && (
+                <HelpInfoButton
+                  helpId={navHelpId(CRM_PATHS.knowledge)!}
+                  className="absolute right-2 opacity-0 transition-opacity group-hover/nav:opacity-100 text-white/50 hover:text-white hover:bg-white/10"
+                  side="right"
+                />
+              )}
+            </div>
           </>
         )}
 
         <SectionLabel>Email</SectionLabel>
         {emailItems.map((item) => {
           const Icon = item.icon;
+          const helpId = navHelpId(item.path);
           return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                cn("nav-item", isActive && "nav-item-active", collapsed && "justify-center px-3")
-              }
-              title={collapsed ? item.title : undefined}
-            >
-              <Icon className="nav-icon h-4 w-4 shrink-0" strokeWidth={1.5} />
-              {!collapsed && <span>{item.title}</span>}
-            </NavLink>
+            <div key={item.path} className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
+              <NavLink
+                to={item.path}
+                className={({ isActive }) =>
+                  cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
+                }
+                title={collapsed ? item.title : undefined}
+              >
+                <Icon className="nav-icon h-4 w-4 shrink-0" strokeWidth={1.5} />
+                {!collapsed && <span>{item.title}</span>}
+              </NavLink>
+              {!collapsed && helpId && (
+                <HelpInfoButton
+                  helpId={helpId}
+                  className="absolute right-2 opacity-0 transition-opacity group-hover/nav:opacity-100 text-white/50 hover:text-white hover:bg-white/10"
+                  side="right"
+                />
+              )}
+            </div>
           );
         })}
+
+        <SectionLabel>Help</SectionLabel>
+        <div className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
+          <NavLink
+            to={CRM_PATHS.help}
+            className={({ isActive }) =>
+              cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
+            }
+            title={collapsed ? "Training & Help" : undefined}
+          >
+            <BookOpen className="nav-icon h-4 w-4 shrink-0" strokeWidth={1.5} />
+            {!collapsed && <span>Training & Help</span>}
+          </NavLink>
+        </div>
       </nav>
 
       <div ref={userMenuRef} className="relative shrink-0 border-t border-sidebar-border">
@@ -343,6 +398,17 @@ export function Sidebar({
             >
               <Settings size={14} strokeWidth={1.5} />
               Settings
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                navigate(CRM_PATHS.help);
+                setUserMenuOpen(false);
+              }}
+              className="flex h-9 w-full items-center gap-2 px-4 text-sm text-white/75 transition-colors hover:bg-white/8"
+            >
+              <BookOpen size={14} strokeWidth={1.5} />
+              Training & Help
             </button>
             <button
               type="button"

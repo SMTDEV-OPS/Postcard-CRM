@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChartTooltip } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { HelpPageHeader } from "@/components/help/HelpPageHeader";
 import { PageSkeleton } from "@/components/patterns";
 import { cn } from "@/lib/utils";
 import { CRM_PATHS } from "@/navigation/crmPaths";
@@ -187,7 +187,8 @@ export function AccountsDashboard() {
 
   return (
     <div className="space-y-6 animate-panel-enter">
-      <PageHeader
+      <HelpPageHeader
+        helpId="accounts.dashboard"
         title="Accounts Dashboard"
         subtitle="Upcoming check-ins, sales targets, and FY conversion"
       />
