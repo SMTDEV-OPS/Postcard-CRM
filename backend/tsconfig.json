@@ -9,7 +9,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "resolveJsonModule": true,
-    "moduleResolution": "node10"
+    "moduleResolution": "bundler"
   },
   "include": ["src"],
   "exclude": ["src/**/*.test.ts"]
