@@ -22,7 +22,7 @@
     "seed:leads:dummy": "ts-node scripts/seedDummyLeads.ts",
     "seed:property-kb:excel": "ts-node scripts/seedPropertyKnowledgeFromExcels.ts",
     "seed:everything": "ts-node scripts/seedEverything.ts",
-    "seed:complete": "ts-node scripts/seedComplete.ts",
+    "seed:complete": "TS_NODE_TRANSPILE_ONLY=true ts-node scripts/seedComplete.ts",
     "db:reset": "ts-node scripts/resetDatabase.ts",
     "db:clone:moustache-to-postcard": "bash scripts/cloneMoustacheToPostcard.sh",
     "list:users": "ts-node scripts/listUsers.ts",

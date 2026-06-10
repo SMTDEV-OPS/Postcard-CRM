@@ -10,7 +10,6 @@ import { initializeImapListeners } from "./services/imapListener";
 import { seedAllocationConfig } from "./services/allocationService";
 import { PropertyModel } from "./models/property";
 import { AccountModel } from "./models/account";
-import "./jobs/scheduler";
 
 // Global error handlers
 process.on("unhandledRejection", (reason: unknown, promise: Promise<unknown>) => {
@@ -41,6 +40,9 @@ async function start() {
 
     await mongoose.connect(config.mongoUri);
     logger.info("Connected to MongoDB", { uri: config.mongoUri });
+
+    const { startScheduler } = await import("./jobs/scheduler");
+    startScheduler();
 
     const { ensureDefaultPipeline } = await import("./scripts/ensureDefaultPipeline");
     await ensureDefaultPipeline();

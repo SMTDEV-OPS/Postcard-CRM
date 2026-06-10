@@ -384,7 +384,7 @@ async function runSMSFollowUpJob() {
   }
 }
 
-function setupJobs() {
+export function startScheduler() {
   // Auto-closure runs every hour.
   cron.schedule("0 * * * *", () => {
     void runAutoClosureJob();
@@ -453,4 +453,3 @@ function setupJobs() {
   logger.info("Scheduler jobs registered (auto-closure, reminders, workflow execution, pending workflow actions, followup missed, lead unattended, scheduled workflows, email sync, SMS follow-up, inactive leads monitor)");
 }
 
-setupJobs();
