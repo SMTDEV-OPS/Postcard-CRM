@@ -5,9 +5,10 @@
 The backend is configured to build and run in production mode on Render.
 
 ### Build Process
-1. **Build Command**: `npm install && npm run build`
-   - Installs dependencies
+1. **Build Command**: `npm run build`
+   - Installs dependencies (including dev types) via `npm install --include=dev`
    - Compiles TypeScript to JavaScript in the `dist/` folder
+   - `backend/.npmrc` sets `production=false` so Render's install step also includes devDependencies
 
 2. **Start Command**: `npm start`
    - Runs the compiled JavaScript: `node dist/server.js`
@@ -27,7 +28,7 @@ Make sure to set these in your Render dashboard:
 If using Render dashboard (not render.yaml):
 
 1. **Root Directory**: `backend`
-2. **Build Command**: `npm install && npm run build`
+2. **Build Command**: `npm run build`
 3. **Start Command**: `npm start`
 4. **Environment**: `Node`
 
