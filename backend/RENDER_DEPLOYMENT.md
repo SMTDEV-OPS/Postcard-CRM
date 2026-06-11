@@ -72,8 +72,9 @@ After changing env vars: **Manual Deploy → Clear build cache & deploy**.
 
 ### Post-deploy verification
 
-- Logs show: `Connected to MongoDB` and `PostcardCRM API listening on port ...`
-- `GET /health` returns `{"status":"ok"}`
+- Logs show: `Connected to MongoDB`, `PMS CRM integration { configured: true, ... }`, and `PostcardCRM API listening on port ...`
+- `GET /health` returns e.g. `{"status":"ok","pmsCrmConfigured":true,"gitCommit":"abc123...","nodeEnv":"production"}`
+- PMS lookup (authenticated): `GET /guests/search-by-phone/9800907654` must include `pmsLookupStatus` and, for staging test phone, `pmsCustomer`
 - Frontend login works with seeded admin user
 
 ### Troubleshooting

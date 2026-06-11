@@ -2,7 +2,9 @@ import express from "express";
 import cors from "cors";
 import { errorHandler } from "./middleware/errorHandler";
 import { requestLogger } from "./middleware/requestLogger";
+import { config } from "./config/env";
 import { logger } from "./config/logger";
+import { isPmsCrmConfigured } from "./services/pms/postcardResortsCrmClient";
 import { authRouter } from "./routes/auth";
 import { usersRouter } from "./routes/users";
 import { guestsRouter } from "./routes/guests";
@@ -81,7 +83,12 @@ app.get("/", (_req, res) => {
 });
 
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+  res.json({
+    status: "ok",
+    pmsCrmConfigured: isPmsCrmConfigured(),
+    gitCommit: process.env.RENDER_GIT_COMMIT ?? null,
+    nodeEnv: config.nodeEnv,
+  });
 });
 
 app.use("/auth", authRouter);

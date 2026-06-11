@@ -5,6 +5,7 @@ import { Types } from "mongoose";
 import { app } from "./app";
 import { config } from "./config/env";
 import { logger } from "./config/logger";
+import { isPmsCrmConfigured } from "./services/pms/postcardResortsCrmClient";
 import { initializeWebSocket } from "./websocket";
 import { initializeImapListeners } from "./services/imapListener";
 import { seedAllocationConfig } from "./services/allocationService";
@@ -40,6 +41,11 @@ async function start() {
 
     await mongoose.connect(config.mongoUri);
     logger.info("Connected to MongoDB", { uri: config.mongoUri });
+    logger.info("PMS CRM integration", {
+      configured: isPmsCrmConfigured(),
+      baseUrl: config.pmsCrm.baseUrl || "(not set)",
+      gitCommit: process.env.RENDER_GIT_COMMIT ?? "local",
+    });
 
     const { startScheduler } = await import("./jobs/scheduler");
     startScheduler();
