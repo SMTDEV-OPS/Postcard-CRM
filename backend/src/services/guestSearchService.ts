@@ -4,6 +4,10 @@ import { ReservationModel } from "../models/reservation";
 import { CommunicationModel } from "../models/communication";
 import { logger } from "../config/logger";
 import { Types } from "mongoose";
+import {
+  searchCustomersByPhone,
+  type PmsCrmCustomer,
+} from "./pms/postcardResortsCrmClient";
 
 // Plain object type for guest (without Mongoose Document methods)
 // This matches the structure returned by .lean()
@@ -35,37 +39,61 @@ export interface ExternalGuestData {
   [key: string]: any;
 }
 
+export interface PmsCustomerSummary {
+  customerId: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  loyaltyTier?: string;
+  lastStay?: string;
+  totalStays?: number;
+  preferredProperty?: string;
+  raw: Record<string, unknown>;
+}
+
 export interface GuestSearchResult {
   guest?: GuestPlain | null;
   source: "local" | "external" | "both";
   externalData?: ExternalGuestData;
+  pmsCustomer?: PmsCustomerSummary;
   previousLeads?: any[];
   previousReservations?: any[];
   communicationHistory?: any[];
 }
 
+function toPmsCustomerSummary(customer: PmsCrmCustomer): PmsCustomerSummary {
+  return {
+    customerId: customer.customerId,
+    name: customer.name,
+    phone: customer.phone,
+    email: customer.email,
+    loyaltyTier: customer.loyaltyTier,
+    lastStay: customer.lastStay,
+    totalStays: customer.totalStays,
+    preferredProperty: customer.preferredProperty,
+    raw: customer.raw,
+  };
+}
+
 /**
- * Placeholder function for searching guest in external database
- * This will be replaced with actual API integration later
+ * Search Postcard home-grown PMS CRM for a customer by phone.
  */
 export async function searchGuestInExternalDB(
   phone: string
 ): Promise<ExternalGuestData | null> {
-  // TODO: Implement actual external database API call
-  // This is a placeholder that returns null
-  // When implementing, replace with actual API call to client's guest database
+  const redacted = phone.replace(/\d(?=\d{4})/g, "*");
+  logger.info("PMS CRM guest search", { phone: redacted });
 
-  logger.info("External guest search called (placeholder)", { phone });
+  const pmsCustomer = await searchCustomersByPhone(phone);
+  if (!pmsCustomer) return null;
 
-  // Example structure for future implementation:
-  // const response = await fetch(`${EXTERNAL_API_URL}/guests/search`, {
-  //   method: "POST",
-  //   headers: { "Authorization": `Bearer ${EXTERNAL_API_KEY}` },
-  //   body: JSON.stringify({ phone })
-  // });
-  // return response.json();
-
-  return null;
+  return {
+    id: pmsCustomer.customerId,
+    name: pmsCustomer.name ?? "Unknown",
+    phone: pmsCustomer.phone ?? phone,
+    email: pmsCustomer.email,
+    ...pmsCustomer.raw,
+  };
 }
 
 /**
@@ -90,8 +118,16 @@ export async function searchGuestByPhone(
     ],
   }).lean();
 
-  // Search in external database (placeholder)
-  const externalGuest = await searchGuestInExternalDB(phone);
+  const pmsHit = await searchCustomersByPhone(phone);
+  const externalGuest = pmsHit
+    ? {
+        id: pmsHit.customerId,
+        name: pmsHit.name ?? "Unknown",
+        phone: pmsHit.phone ?? phone,
+        email: pmsHit.email,
+        ...pmsHit.raw,
+      }
+    : null;
 
   let guest: GuestPlain | null = null;
   let source: "local" | "external" | "both" = "local";
@@ -99,28 +135,25 @@ export async function searchGuestByPhone(
   if (localGuest && externalGuest) {
     source = "both";
     guest = localGuest as GuestPlain;
-    // Optionally sync external data to local guest
-    // This can be implemented later when sync strategy is defined
   } else if (localGuest) {
     source = "local";
     guest = localGuest as GuestPlain;
   } else if (externalGuest) {
     source = "external";
-    // Create a temporary guest object from external data
-    // In production, you might want to create a local guest record
     guest = {
       _id: new Types.ObjectId(),
       name: externalGuest.name,
       phone: externalGuest.phone,
       email: externalGuest.email,
-      isSunshineMember: false,
+      isSunshineMember: Boolean(pmsHit?.loyaltyTier),
+      sunshineTier: pmsHit?.loyaltyTier ?? null,
       tags: [],
       firstSeenAt: new Date(),
       lastSeenAt: new Date(),
       totalLeadsCount: 0,
-      totalReservationsCount: 0,
+      totalReservationsCount: pmsHit?.totalStays ?? 0,
       externalGuestId: externalGuest.id,
-      externalSource: "external",
+      externalSource: "pms_crm",
       lastSyncedAt: new Date(),
     } as GuestPlain;
   }
@@ -156,6 +189,7 @@ export async function searchGuestByPhone(
     guest,
     source,
     externalData: externalGuest || undefined,
+    pmsCustomer: pmsHit ? toPmsCustomerSummary(pmsHit) : undefined,
     previousLeads,
     previousReservations,
     communicationHistory,

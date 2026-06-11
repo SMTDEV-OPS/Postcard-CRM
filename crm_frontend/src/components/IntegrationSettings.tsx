@@ -21,6 +21,7 @@ export function IntegrationSettings() {
 
     const webhooks = {
         ivr: `${backendBase}/public/ivr-webhook`,
+        knowlarity: `${backendBase}/public/knowlarity-webhook`,
         whatsapp: `${backendBase}/public/whatsapp-webhook`,
         social: `${backendBase}/public/social-webhook`,
         website: `${backendBase}/public/website-leads`,
@@ -150,6 +151,28 @@ export function IntegrationSettings() {
                                 <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1.5">
                                     <AlertCircle className="w-3 h-3" />
                                     Paste this URL into the App / Flow builder in your IVR provider as a standard HTTP POST event.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2 pt-4 border-t">
+                                <Label>Knowlarity CTI Webhook URL</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        readOnly
+                                        value={webhooks.knowlarity}
+                                        className="font-mono text-sm bg-muted/50"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => copyToClipboard(webhooks.knowlarity, 'knowlarity')}
+                                    >
+                                        {copied === 'knowlarity' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1.5">
+                                    <AlertCircle className="w-3 h-3" />
+                                    POST with <code className="bg-muted px-1 rounded text-xs">From</code>, <code className="bg-muted px-1 rounded text-xs">CallSid</code>, <code className="bg-muted px-1 rounded text-xs">AgentId</code> (CRM user ID), and <code className="bg-muted px-1 rounded text-xs">Event</code> (ringing/answered). Routes incoming calls to the agent&apos;s call center screen.
                                 </p>
                             </div>
                         </CardContent>

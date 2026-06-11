@@ -1,5 +1,17 @@
 import { API_BASE_URL, withAuthHeaders } from "./api";
 
+export interface PmsCustomerSummary {
+  customerId: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  loyaltyTier?: string;
+  lastStay?: string;
+  totalStays?: number;
+  preferredProperty?: string;
+  raw: Record<string, unknown>;
+}
+
 export interface GuestSearchResult {
   guest?: {
     _id: string;
@@ -15,10 +27,11 @@ export interface GuestSearchResult {
     totalReservationsCount: number;
   } | null;
   source: "local" | "external" | "both";
-  externalData?: any;
-  previousLeads?: any[];
-  previousReservations?: any[];
-  communicationHistory?: any[];
+  externalData?: Record<string, unknown>;
+  pmsCustomer?: PmsCustomerSummary;
+  previousLeads?: Array<Record<string, unknown>>;
+  previousReservations?: Array<Record<string, unknown>>;
+  communicationHistory?: Array<Record<string, unknown>>;
 }
 
 /**

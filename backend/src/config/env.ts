@@ -3,6 +3,11 @@ export interface AppConfig {
   mongoUri: string;
   jwtSecret: string;
   nodeEnv: string;
+  pmsCrm: {
+    baseUrl: string;
+    apiKey: string;
+    secretKey: string;
+  };
   aws: {
     accessKeyId: string;
     secretAccessKey: string;
@@ -48,6 +53,11 @@ export const config: AppConfig = {
   mongoUri: resolveMongoUri(),
   jwtSecret: getEnv("JWT_SECRET", "change-me-in-production"),
   nodeEnv: getEnv("NODE_ENV", "development"),
+  pmsCrm: {
+    baseUrl: getEnv("PMS_CRM_BASE_URL", ""),
+    apiKey: getEnv("PMS_CRM_API_KEY", ""),
+    secretKey: getEnv("PMS_CRM_SECRET_KEY", ""),
+  },
   aws: {
     accessKeyId: getEnv("AWS_ACCESS_KEY_ID", ""),
     secretAccessKey: getEnv("AWS_SECRET_ACCESS_KEY", ""),
