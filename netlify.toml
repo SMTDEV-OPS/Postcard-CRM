@@ -1,6 +1,6 @@
 # Netlify — frontend SPA (monorepo)
 # Required in Netlify UI → Site settings → Environment variables:
-#   VITE_API_BASE_URL = https://<your-render-service>.onrender.com
+#   VITE_API_BASE_URL = https://postcard-crm.onrender.com
 # Optional:
 #   VITE_HOTEL_BRAND, VITE_ADMIN_EMAIL_PLACEHOLDER, VITE_SUPPORT_EMAIL
 [build]

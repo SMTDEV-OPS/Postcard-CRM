@@ -77,7 +77,17 @@ After changing env vars: **Manual Deploy → Clear build cache & deploy**.
 - PMS lookup (authenticated): `GET /guests/search-by-phone/9800907654` must include `pmsLookupStatus` and, for staging test phone, `pmsCustomer`
 - Frontend login works with seeded admin user
 
+### Production service URL
+
+The live backend is **`https://postcard-crm.onrender.com`** (with a hyphen).
+
+An older Render service at `https://postcardcrm.onrender.com` (no hyphen) may still exist but does **not** run current code. Netlify `VITE_API_BASE_URL` and all docs must use the hyphenated URL.
+
+Verify: `GET https://postcard-crm.onrender.com/health` should return `pmsCrmConfigured` and `gitCommit`.
+
 ### Troubleshooting
+
+**PMS works in Render logs but not in Call Center UI**: Netlify is likely pointing at the wrong backend URL (`postcardcrm` vs `postcard-crm`). Update `VITE_API_BASE_URL` and clear-cache redeploy.
 
 **Build fails with TS errors**: Ensure `npm run build` runs (installs all deps). Check build logs for `npm install --include=dev`.
 

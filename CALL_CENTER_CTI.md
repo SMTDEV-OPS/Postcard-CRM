@@ -33,7 +33,7 @@ No PMS secrets on the frontend. Ensure:
 
 | Variable | Value |
 |----------|-------|
-| `VITE_API_BASE_URL` | Your Render backend URL (e.g. `https://postcardcrm.onrender.com`) |
+| `VITE_API_BASE_URL` | Your Render backend URL: `https://postcard-crm.onrender.com` (hyphenated — not `postcardcrm`) |
 
 Redeploy Netlify after changing env vars (Vite bakes the value at build time).
 
