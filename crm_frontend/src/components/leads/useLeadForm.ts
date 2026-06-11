@@ -276,6 +276,20 @@ export function useLeadForm(options: UseLeadFormOptions = {}) {
     setCustomData({});
   };
 
+  const applyPrefill = (
+    partial: Partial<LeadFormData>,
+    customDataPatch?: Record<string, unknown>
+  ) => {
+    form.reset({ ...defaultLeadFormValues, ...options.prefill, ...partial });
+    if (customDataPatch && Object.keys(customDataPatch).length > 0) {
+      setCustomData((prev) => ({ ...prev, ...customDataPatch }));
+    }
+  };
+
+  const mergeCustomData = (patch: Record<string, unknown>) => {
+    setCustomData((prev) => ({ ...prev, ...patch }));
+  };
+
   const submitLead = async (data: LeadFormData) => {
     setIsSubmitting(true);
     try {
@@ -304,6 +318,8 @@ export function useLeadForm(options: UseLeadFormOptions = {}) {
     removeRoom,
     refreshCustomFields,
     resetForm,
+    applyPrefill,
+    mergeCustomData,
     submitLead,
   };
 }

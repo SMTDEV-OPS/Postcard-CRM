@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   Phone,
   Search,
@@ -9,24 +9,18 @@ import {
   Plus,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/shared/Button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/patterns";
 import { useToast } from "@/hooks/use-toast";
-import { searchGuestByPhone, type GuestSearchResult } from "@/services/calls";
-import { createLead, type CreateLeadPayload } from "@/services/leads";
+import { searchGuestByPhone, type GuestSearchResult, type PmsLookupStatus } from "@/services/calls";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
 import { getPmsCustomerDisplayFields } from "@/config/pmsCustomerFieldMap";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useLeadForm } from "@/components/leads/useLeadForm";
+import { LeadCreationWizardForm } from "@/components/leads/LeadCreationWizardForm";
+import { mapGuestSearchToLeadPrefill } from "@/utils/callCenterLeadPrefill";
 
 interface CallCenterScreenProps {
   agentName: string;
@@ -44,41 +38,19 @@ function formatDate(dateString?: string) {
   });
 }
 
-function buildLeadPrefill(
-  phone: string,
-  result: GuestSearchResult | null
-): Partial<CreateLeadPayload & { callStatus?: string }> {
-  const pms = result?.pmsCustomer;
-  const guest = result?.guest;
-
-  const customData: Record<string, unknown> = {};
-  if (pms?.customerId) customData.pms_customer_id = pms.customerId;
-  if (pms?.loyaltyTier) customData.pms_loyalty_tier = pms.loyaltyTier;
-  if (pms?.preferredProperty) customData.pms_preferred_property = pms.preferredProperty;
-  if (pms?.lastStay) customData.pms_last_stay = pms.lastStay;
-  if (pms?.totalStays !== undefined) customData.pms_total_stays = pms.totalStays;
-
-  return {
-    guestId: guest?._id,
-    guestContact: {
-      name: guest?.name || pms?.name || "",
-      phone: guest?.phone || pms?.phone || phone,
-      email: guest?.email || pms?.email || "",
-    },
-    source: "DIRECT_CALL",
-    leadType: "STAY",
-    heatLevel: "WARM",
-    hotels: [
-      {
-        checkInDate: "",
-        checkOutDate: "",
-        numberOfGuests: "2 Adults",
-        roomCategory: "",
-      },
-    ],
-    occasion: "",
-    customData,
-  };
+function pmsStatusMessage(status?: PmsLookupStatus): string {
+  switch (status) {
+    case "not_configured":
+      return "PMS lookup is not configured on the server. Set PMS_CRM_BASE_URL, PMS_CRM_API_KEY, and PMS_CRM_SECRET_KEY on Render, then redeploy.";
+    case "error":
+      return "PMS lookup failed. Check backend logs and API credentials.";
+    case "not_found":
+      return "No matching customer in Postcard PMS for this number.";
+    case "found":
+      return "";
+    default:
+      return "No matching customer in Postcard PMS for this number.";
+  }
 }
 
 export function CallCenterScreen({
@@ -92,28 +64,32 @@ export function CallCenterScreen({
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [showRawPms, setShowRawPms] = useState(false);
-  const [dynamicFields, setDynamicFields] = useState<Array<Record<string, unknown>>>([]);
-  const [isCreatingLead, setIsCreatingLead] = useState(false);
-  const [leadFormData, setLeadFormData] = useState<
-    Partial<CreateLeadPayload & { callStatus?: string }>
-  >(buildLeadPrefill("", null));
+  const [callStatus, setCallStatus] = useState("");
+  const [prefillKey, setPrefillKey] = useState(0);
 
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/admin/fields?entity_type=lead&is_active=true`, {
-      headers: withAuthHeaders(),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        const sorted = (data || []).sort(
-          (a: { display_order?: number }, b: { display_order?: number }) =>
-            (a.display_order || 0) - (b.display_order || 0)
-        );
-        setDynamicFields(sorted);
-      })
-      .catch(console.error);
-  }, []);
+  const {
+    form,
+    hotelFields,
+    hotelOptions,
+    customFields,
+    customData,
+    setCustomData,
+    isSubmitting,
+    addNewHotel,
+    removeHotel,
+    addRoom,
+    removeRoom,
+    refreshCustomFields,
+    applyPrefill,
+    resetForm,
+    submitLead,
+  } = useLeadForm({
+    onCreated: (lead) => {
+      onLeadCreated?.(lead.id);
+    },
+  });
 
   const handleSearch = useCallback(
     async (phone: string) => {
@@ -133,21 +109,31 @@ export function CallCenterScreen({
       setSearchResult(null);
 
       try {
+        await refreshCustomFields();
         const result = await searchGuestByPhone(trimmed);
         setSearchResult(result);
-        setLeadFormData(buildLeadPrefill(trimmed, result));
+
+        const { form: prefill, customData: prefillCustom } = mapGuestSearchToLeadPrefill(
+          result,
+          trimmed,
+          hotelOptions
+        );
+        applyPrefill(prefill, prefillCustom);
+        setPrefillKey((k) => k + 1);
       } catch (error) {
         toast({
           title: "Search failed",
           description: error instanceof Error ? error.message : "Failed to search guest",
           variant: "destructive",
         });
-        setLeadFormData(buildLeadPrefill(trimmed, null));
+        const fallback = mapGuestSearchToLeadPrefill(null, trimmed, hotelOptions);
+        applyPrefill(fallback.form, fallback.customData);
+        setPrefillKey((k) => k + 1);
       } finally {
         setIsSearching(false);
       }
     },
-    [toast]
+    [toast, refreshCustomFields, applyPrefill, hotelOptions]
   );
 
   useEffect(() => {
@@ -155,43 +141,18 @@ export function CallCenterScreen({
       setPhoneNumber(incomingPhoneNumber);
       void handleSearch(incomingPhoneNumber);
     }
-  }, [incomingPhoneNumber, phoneNumber, handleSearch]);
+  }, [incomingPhoneNumber]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleCreateLead = async () => {
-    if (!leadFormData.guestContact?.name?.trim()) {
-      toast({
-        title: "Validation error",
-        description: "Guest name is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsCreatingLead(true);
+  const handleLeadSubmit = async (data: Parameters<typeof submitLead>[0]) => {
     try {
-      const payload: CreateLeadPayload = {
-        guestContact: {
-          name: leadFormData.guestContact.name,
-          phone: leadFormData.guestContact.phone || phoneNumber,
-          email: leadFormData.guestContact.email,
-        },
-        source: leadFormData.source || "DIRECT_CALL",
-        leadType: leadFormData.leadType || "STAY",
-        heatLevel: leadFormData.heatLevel || "WARM",
-        hotels: leadFormData.hotels?.filter((h) => h.checkInDate || h.checkOutDate) || [],
-        occasion: leadFormData.occasion,
-        customData: leadFormData.customData || {},
-        assignmentMode: "auto",
-      };
+      const lead = await submitLead(data);
 
-      const lead = await createLead(payload);
-
-      if (leadFormData.callStatus) {
+      if (callStatus && lead?.id) {
         try {
           await fetch(`${API_BASE_URL}/leads/${lead.id}/call-status`, {
             method: "PATCH",
             headers: withAuthHeaders({ "Content-Type": "application/json" }),
-            body: JSON.stringify({ callStatus: leadFormData.callStatus }),
+            body: JSON.stringify({ callStatus }),
           });
         } catch {
           // non-fatal
@@ -203,25 +164,26 @@ export function CallCenterScreen({
         description: `Lead ${lead.leadNumber} created successfully`,
       });
 
-      onLeadCreated?.(lead.id);
       setSearchResult(null);
       setHasSearched(false);
       setPhoneNumber("");
-      setLeadFormData(buildLeadPrefill("", null));
+      setCallStatus("");
+      resetForm();
+      setPrefillKey((k) => k + 1);
     } catch (error) {
       toast({
         title: "Failed to create lead",
         description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive",
       });
-    } finally {
-      setIsCreatingLead(false);
     }
   };
 
   const pmsFields = searchResult?.pmsCustomer
     ? getPmsCustomerDisplayFields(searchResult.pmsCustomer)
     : [];
+  const pmsStatus = searchResult?.pmsLookupStatus;
+  const pmsMessage = pmsStatusMessage(pmsStatus);
 
   return (
     <div className="space-y-6">
@@ -274,14 +236,15 @@ export function CallCenterScreen({
       ) : (
         <div className="space-y-6">
           <div className="grid gap-4 lg:grid-cols-2">
-            {/* PMS Customer Panel */}
             <div className="rounded-lg border border-border bg-surface p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-sm font-medium text-text">PMS customer</h3>
                 {searchResult?.pmsCustomer ? (
                   <Badge variant="outline">{searchResult.pmsCustomer.customerId}</Badge>
                 ) : (
-                  <Badge variant="outline">Not found</Badge>
+                  <Badge variant="outline">
+                    {pmsStatus === "not_configured" ? "Not configured" : "Not found"}
+                  </Badge>
                 )}
               </div>
 
@@ -317,13 +280,10 @@ export function CallCenterScreen({
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-text-muted">
-                  No matching customer in Postcard PMS for this number.
-                </p>
+                <p className="text-sm text-text-muted">{pmsMessage}</p>
               )}
             </div>
 
-            {/* CRM Guest History */}
             <div className="rounded-lg border border-border bg-surface p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-sm font-medium text-text">CRM history</h3>
@@ -376,9 +336,7 @@ export function CallCenterScreen({
                   {searchResult.communicationHistory &&
                     searchResult.communicationHistory.length > 0 && (
                       <div>
-                        <p className="mb-2 text-xs font-medium text-text-muted">
-                          Communications
-                        </p>
+                        <p className="mb-2 text-xs font-medium text-text-muted">Communications</p>
                         <div className="max-h-32 space-y-2 overflow-y-auto">
                           {searchResult.communicationHistory.map((comm) => (
                             <div
@@ -410,179 +368,32 @@ export function CallCenterScreen({
             </div>
           </div>
 
-          {/* Lead Form */}
           <div className="rounded-lg border border-border bg-surface p-4">
             <div className="mb-4 flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              <h3 className="text-sm font-medium text-text">Create lead</h3>
               <span className="text-xs text-text-muted">Agent: {agentName}</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="guestName">Guest name *</Label>
-                <Input
-                  id="guestName"
-                  value={leadFormData.guestContact?.name || ""}
-                  onChange={(e) =>
-                    setLeadFormData({
-                      ...leadFormData,
-                      guestContact: {
-                        ...leadFormData.guestContact,
-                        name: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="guestPhone">Phone</Label>
-                <Input
-                  id="guestPhone"
-                  value={leadFormData.guestContact?.phone || phoneNumber}
-                  onChange={(e) =>
-                    setLeadFormData({
-                      ...leadFormData,
-                      guestContact: {
-                        ...leadFormData.guestContact,
-                        phone: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="guestEmail">Email</Label>
-                <Input
-                  id="guestEmail"
-                  type="email"
-                  value={leadFormData.guestContact?.email || ""}
-                  onChange={(e) =>
-                    setLeadFormData({
-                      ...leadFormData,
-                      guestContact: {
-                        ...leadFormData.guestContact,
-                        email: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Heat level</Label>
-                <Select
-                  value={leadFormData.heatLevel || "WARM"}
-                  onValueChange={(value) =>
-                    setLeadFormData({ ...leadFormData, heatLevel: value as "COLD" | "WARM" | "HOT" })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="HOT">Hot</SelectItem>
-                    <SelectItem value="WARM">Warm</SelectItem>
-                    <SelectItem value="COLD">Cold</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Call status</Label>
-                <Select
-                  value={leadFormData.callStatus || ""}
-                  onValueChange={(value) =>
-                    setLeadFormData({ ...leadFormData, callStatus: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="QUOTATION_SHARED">Quotation shared</SelectItem>
-                    <SelectItem value="PAYMENT_PENDING">Payment pending</SelectItem>
-                    <SelectItem value="NOT_INTERESTED">Not interested</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="checkInDate">Check-in</Label>
-                <Input
-                  id="checkInDate"
-                  type="date"
-                  value={leadFormData.hotels?.[0]?.checkInDate || ""}
-                  onChange={(e) => {
-                    const newHotels = [...(leadFormData.hotels || [])];
-                    if (!newHotels[0]) newHotels[0] = {};
-                    newHotels[0].checkInDate = e.target.value;
-                    setLeadFormData({ ...leadFormData, hotels: newHotels });
-                  }}
-                />
-              </div>
-              <div>
-                <Label htmlFor="checkOutDate">Check-out</Label>
-                <Input
-                  id="checkOutDate"
-                  type="date"
-                  min={leadFormData.hotels?.[0]?.checkInDate || undefined}
-                  value={leadFormData.hotels?.[0]?.checkOutDate || ""}
-                  onChange={(e) => {
-                    const newHotels = [...(leadFormData.hotels || [])];
-                    if (!newHotels[0]) newHotels[0] = {};
-                    newHotels[0].checkOutDate = e.target.value;
-                    setLeadFormData({ ...leadFormData, hotels: newHotels });
-                  }}
-                />
-              </div>
-              <div>
-                <Label htmlFor="occasion">Occasion</Label>
-                <Input
-                  id="occasion"
-                  value={leadFormData.occasion || ""}
-                  onChange={(e) =>
-                    setLeadFormData({ ...leadFormData, occasion: e.target.value })
-                  }
-                />
-              </div>
-
-              {dynamicFields.length > 0 && (
-                <div className="col-span-2 grid grid-cols-2 gap-4 border-t border-border pt-4">
-                  {dynamicFields.map((field) => {
-                    const slug = String(field.slug);
-                    return (
-                      <div key={slug}>
-                        <Label>
-                          {String(field.name)}
-                          {field.is_required ? " *" : ""}
-                        </Label>
-                        <Input
-                          value={String(leadFormData.customData?.[slug] ?? "")}
-                          onChange={(e) =>
-                            setLeadFormData({
-                              ...leadFormData,
-                              customData: {
-                                ...(leadFormData.customData || {}),
-                                [slug]: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 flex gap-2">
-              <Button
-                variant="primary"
-                onClick={() => void handleCreateLead()}
-                loading={isCreatingLead}
-                disabled={!leadFormData.guestContact?.name?.trim()}
-              >
-                Create lead
-              </Button>
-            </div>
+            <LeadCreationWizardForm
+              variant="inline"
+              title="Create lead"
+              form={form}
+              hotelFields={hotelFields}
+              onAddHotel={addNewHotel}
+              onRemoveHotel={removeHotel}
+              onAddRoom={addRoom}
+              onRemoveRoom={removeRoom}
+              hotelOptions={hotelOptions}
+              customFields={customFields as Array<Record<string, unknown>>}
+              customData={customData}
+              setCustomData={setCustomData}
+              onSubmit={handleLeadSubmit}
+              isSubmitting={isSubmitting}
+              showCallStatus
+              callStatus={callStatus}
+              onCallStatusChange={setCallStatus}
+              resetKey={prefillKey}
+            />
           </div>
         </div>
       )}

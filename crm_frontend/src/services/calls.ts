@@ -12,6 +12,8 @@ export interface PmsCustomerSummary {
   raw: Record<string, unknown>;
 }
 
+export type PmsLookupStatus = "found" | "not_found" | "not_configured" | "error";
+
 export interface GuestSearchResult {
   guest?: {
     _id: string;
@@ -29,6 +31,7 @@ export interface GuestSearchResult {
   source: "local" | "external" | "both";
   externalData?: Record<string, unknown>;
   pmsCustomer?: PmsCustomerSummary;
+  pmsLookupStatus?: PmsLookupStatus;
   previousLeads?: Array<Record<string, unknown>>;
   previousReservations?: Array<Record<string, unknown>>;
   communicationHistory?: Array<Record<string, unknown>>;

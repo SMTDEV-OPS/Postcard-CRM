@@ -19,7 +19,7 @@ export interface PmsCrmCustomer {
   raw: PmsCrmCustomerRaw;
 }
 
-function isPmsCrmConfigured(): boolean {
+export function isPmsCrmConfigured(): boolean {
   return Boolean(
     config.pmsCrm.baseUrl && config.pmsCrm.apiKey && config.pmsCrm.secretKey
   );

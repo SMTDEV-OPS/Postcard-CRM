@@ -29,7 +29,7 @@ const CallPage = ({ incomingPhoneNumber, onLeadCreated }: CallPageProps) => {
   // Fetch dynamic fields when form is shown
   useEffect(() => {
     if (showLeadForm && dynamicFields.length === 0) {
-      fetch(`${API_BASE_URL}/admin/fields?entity_type=lead&is_active=true`, {
+      fetch(`${API_BASE_URL}/api/admin/fields?entity=lead`, {
         headers: withAuthHeaders()
       })
         .then(res => res.json())

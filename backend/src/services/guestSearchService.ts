@@ -6,8 +6,11 @@ import { logger } from "../config/logger";
 import { Types } from "mongoose";
 import {
   searchCustomersByPhone,
+  isPmsCrmConfigured,
   type PmsCrmCustomer,
 } from "./pms/postcardResortsCrmClient";
+
+export type PmsLookupStatus = "found" | "not_found" | "not_configured" | "error";
 
 // Plain object type for guest (without Mongoose Document methods)
 // This matches the structure returned by .lean()
@@ -56,6 +59,7 @@ export interface GuestSearchResult {
   source: "local" | "external" | "both";
   externalData?: ExternalGuestData;
   pmsCustomer?: PmsCustomerSummary;
+  pmsLookupStatus?: PmsLookupStatus;
   previousLeads?: any[];
   previousReservations?: any[];
   communicationHistory?: any[];
@@ -118,7 +122,23 @@ export async function searchGuestByPhone(
     ],
   }).lean();
 
-  const pmsHit = await searchCustomersByPhone(phone);
+  let pmsLookupStatus: PmsLookupStatus = "not_found";
+  let pmsHit: PmsCrmCustomer | null = null;
+
+  if (!isPmsCrmConfigured()) {
+    pmsLookupStatus = "not_configured";
+  } else {
+    try {
+      pmsHit = await searchCustomersByPhone(phone);
+      pmsLookupStatus = pmsHit ? "found" : "not_found";
+    } catch (err) {
+      logger.error("PMS CRM lookup failed", {
+        error: err instanceof Error ? err.message : String(err),
+      });
+      pmsLookupStatus = "error";
+    }
+  }
+
   const externalGuest = pmsHit
     ? {
         id: pmsHit.customerId,
@@ -190,6 +210,7 @@ export async function searchGuestByPhone(
     source,
     externalData: externalGuest || undefined,
     pmsCustomer: pmsHit ? toPmsCustomerSummary(pmsHit) : undefined,
+    pmsLookupStatus,
     previousLeads,
     previousReservations,
     communicationHistory,

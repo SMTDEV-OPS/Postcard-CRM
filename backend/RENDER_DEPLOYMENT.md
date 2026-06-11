@@ -54,6 +54,9 @@ Default admin after seed: `admin@postcardcrm.local` / `Admin@123` (change after 
 | `MONGO_URI` | Yes | Atlas URI with `/postcard_crm` database path |
 | `JWT_SECRET` | Yes | Strong random string |
 | `FRONTEND_URL` | Yes | Netlify URL for OAuth/email redirects |
+| `PMS_CRM_BASE_URL` | Yes (Call Center) | e.g. `https://staging.postcardresorts.com` |
+| `PMS_CRM_API_KEY` | Yes (Call Center) | From PMS team — server-side only |
+| `PMS_CRM_SECRET_KEY` | Yes (Call Center) | From PMS team — never commit to git |
 | `NODE_ENV` | Yes | `production` |
 | `NODE_OPTIONS` | Recommended | `--max-old-space-size=4096` |
 | `PORT` | Auto | Render sets automatically |

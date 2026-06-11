@@ -16,7 +16,16 @@ Set these in **Render → Environment** (never commit real values to git):
 | `PMS_CRM_API_KEY` | API key from PMS team |
 | `PMS_CRM_SECRET_KEY` | Secret key for HMAC signing |
 
-If any of these are empty, PMS lookup is skipped gracefully; local CRM search still works.
+If any of these are empty, PMS lookup is skipped gracefully; local CRM search still works. The API returns `pmsLookupStatus: "not_configured"` and the Call Center UI shows an admin message.
+
+**After adding vars on Render:** Manual Deploy → Clear build cache & deploy. Verify with:
+
+```bash
+curl -s "https://YOUR-BACKEND.onrender.com/guests/search-by-phone/9800907654" \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+Expect `pmsCustomer.customerId` = `PC90147536` for the staging test number.
 
 ## Frontend (Netlify)
 
