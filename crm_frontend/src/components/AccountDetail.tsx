@@ -19,6 +19,7 @@ import {
   AccountProfileCommercial,
   AccountProfileCompliance,
   AccountProfileSales,
+  AccountProfileTravelTrade,
 } from "@/components/accounts/AccountProfileSections";
 import { cn } from "@/lib/utils";
 import { Account, updateAccount } from "@/services/accounts";
@@ -383,6 +384,7 @@ export const AccountDetail = ({ account, onBack, onEdit, isAdmin, isSystemAdmin,
                             <AccountProfileCompany account={account} />
                             <AccountProfileLocation account={account} />
                             <AccountProfileCommercial account={account} />
+                            <AccountProfileTravelTrade account={account} />
                         </div>
                         <div className="space-y-4">
                             <AccountProfileCompliance

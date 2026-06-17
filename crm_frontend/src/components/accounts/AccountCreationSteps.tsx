@@ -26,6 +26,10 @@ import {
   formatContractingPeriod,
   formatContractingTypeLabel,
 } from "./accountFormTypes";
+import { emptyTravelTradeProfile } from "@/types/travelTradeProfile";
+import { isTravelTrade } from "./travelTradeStepPlan";
+import { TravelTradeOrganizationFields } from "./TravelTradeSteps";
+import { TravelTradeReviewBlock } from "./TravelTradeReview";
 
 export interface StepContext {
   formData: AccountFormData;
@@ -58,7 +62,16 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label>Organization type</Label>
-          <Select value={formData.organizationType} onValueChange={(v) => set({ organizationType: v })}>
+          <Select
+            value={formData.organizationType}
+            onValueChange={(v) => {
+              const patch: Partial<AccountFormData> = { organizationType: v };
+              if (v === "TRAVEL_AGENT" && !formData.travelTradeProfile) {
+                patch.travelTradeProfile = emptyTravelTradeProfile();
+              }
+              set(patch);
+            }}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -82,6 +95,9 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
           </div>
         )}
       </div>
+      {isTravelTrade(formData) && (
+        <TravelTradeOrganizationFields formData={formData} set={set} />
+      )}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label>Email</Label>
@@ -669,6 +685,9 @@ export function AccountReviewSummary({
               ))}
             </ul>
           </div>
+        )}
+        {isTravelTrade(formData) && (
+          <TravelTradeReviewBlock profile={formData.travelTradeProfile} />
         )}
       </div>
     </div>

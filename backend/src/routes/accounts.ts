@@ -121,6 +121,63 @@ const accountSchema = z.object({
 
   followUpDate: z.coerce.date().optional().nullable(),
   followUpNote: z.string().optional(),
+
+  travelTradeProfile: z
+    .object({
+      travelOperatorName: z.string().optional(),
+      operatorTypes: z
+        .array(
+          z.enum(["INBOUND", "LUXURY", "SERIES", "DOMESTIC_AGENT", "GROUPS_INCENTIVES"])
+        )
+        .optional(),
+      inbound: z
+        .object({
+          segments: z
+            .array(z.enum(["FIT", "GROUPS", "LUXURY", "MICE", "CHARTERS"]))
+            .optional(),
+          segmentMarkets: z.record(z.string()).optional(),
+          hotelSegments: z
+            .array(z.enum(["LUXURY", "MID_SEGMENT", "BUDGET", "ECONOMY"]))
+            .optional(),
+        })
+        .optional(),
+      luxury: z
+        .object({
+          countryMarket: z.string().optional(),
+          operatorKind: z.enum(["LUXURY_TOUR_OPERATOR", "DMC"]).optional(),
+          estimatedAnnualRoomNights: z.number().optional(),
+        })
+        .optional(),
+      series: z
+        .object({
+          market: z.string().optional(),
+          programName: z.string().optional(),
+          startMonth: z.number().min(1).max(12).optional(),
+          endMonth: z.number().min(1).max(12).optional(),
+          frequency: z.enum(["WEEKLY", "BIWEEKLY"]).optional(),
+          pattern: z.enum(["WEEKENDS", "WEEKDAYS"]).optional(),
+          roomsPerDeparture: z.number().optional(),
+          estimatedTotalRoomNights: z.number().optional(),
+          blackoutDates: z.string().optional(),
+        })
+        .optional(),
+      domestic: z
+        .object({
+          city: z.string().optional(),
+          segments: z.array(z.enum(["LEISURE", "CORPORATE", "LUXURY"])).optional(),
+          agentType: z.enum(["B2B", "B2C"]).optional(),
+        })
+        .optional(),
+      groupsIncentives: z
+        .object({
+          market: z.string().optional(),
+          type: z.enum(["GROUP", "INCENTIVE", "CORPORATE_RETREAT"]).optional(),
+          preferredTravelMonths: z.array(z.number().min(1).max(12)).optional(),
+          groupSize: z.number().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 
 // POST /accounts/import — bulk import from Excel

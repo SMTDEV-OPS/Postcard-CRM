@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatAccountTypeLabel } from "./accountFormTypes";
 import type { Account } from "@/services/accounts";
+import { ORGANIZATION_TYPES } from "@/constants/accountData";
+import { TravelTradeReviewBlock } from "./TravelTradeReview";
 import { getFieldStyle } from "@/utils/fieldStyling";
 import {
   Tooltip,
@@ -68,6 +70,8 @@ export function ProfileField({
 
 function orgTypeLabel(type?: string) {
   if (!type) return "—";
+  const match = ORGANIZATION_TYPES.find((o) => o.value === type);
+  if (match) return match.label;
   return type
     .split("_")
     .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
@@ -242,6 +246,17 @@ export function AccountProfileSales({ account }: { account: Account }) {
             </ul>
           </div>
         )}
+      </div>
+    </ProfileSection>
+  );
+}
+
+export function AccountProfileTravelTrade({ account }: { account: Account }) {
+  if (!account.travelTradeProfile?.operatorTypes?.length) return null;
+  return (
+    <ProfileSection title="Travel trade">
+      <div className="text-sm">
+        <TravelTradeReviewBlock profile={account.travelTradeProfile} />
       </div>
     </ProfileSection>
   );

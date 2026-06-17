@@ -140,6 +140,45 @@ export interface IAccount extends Document {
   systemSyncedFields?: string[];
   followUpDate?: Date | null;
   followUpNote?: string;
+
+  travelTradeProfile?: {
+    travelOperatorName?: string;
+    operatorTypes?: Array<
+      "INBOUND" | "LUXURY" | "SERIES" | "DOMESTIC_AGENT" | "GROUPS_INCENTIVES"
+    >;
+    inbound?: {
+      segments?: Array<"FIT" | "GROUPS" | "LUXURY" | "MICE" | "CHARTERS">;
+      segmentMarkets?: Record<string, string>;
+      hotelSegments?: Array<"LUXURY" | "MID_SEGMENT" | "BUDGET" | "ECONOMY">;
+    };
+    luxury?: {
+      countryMarket?: string;
+      operatorKind?: "LUXURY_TOUR_OPERATOR" | "DMC";
+      estimatedAnnualRoomNights?: number;
+    };
+    series?: {
+      market?: string;
+      programName?: string;
+      startMonth?: number;
+      endMonth?: number;
+      frequency?: "WEEKLY" | "BIWEEKLY";
+      pattern?: "WEEKENDS" | "WEEKDAYS";
+      roomsPerDeparture?: number;
+      estimatedTotalRoomNights?: number;
+      blackoutDates?: string;
+    };
+    domestic?: {
+      city?: string;
+      segments?: Array<"LEISURE" | "CORPORATE" | "LUXURY">;
+      agentType?: "B2B" | "B2C";
+    };
+    groupsIncentives?: {
+      market?: string;
+      type?: "GROUP" | "INCENTIVE" | "CORPORATE_RETREAT";
+      preferredTravelMonths?: number[];
+      groupSize?: number;
+    };
+  };
 }
 
 const accountSchema = new Schema<IAccount>(
@@ -349,6 +388,7 @@ const accountSchema = new Schema<IAccount>(
     systemSyncedFields: [String],
     followUpDate: { type: Date, default: null },
     followUpNote: { type: String, default: "" },
+    travelTradeProfile: { type: Schema.Types.Mixed },
   },
   { timestamps: true }
 );

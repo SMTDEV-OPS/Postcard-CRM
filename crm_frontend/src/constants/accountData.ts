@@ -1,6 +1,6 @@
 export const ORGANISATION_TYPES = [
     { value: "CORPORATE", label: "Corporate" },
-    { value: "TRAVEL_AGENT", label: "Travel Agent" },
+    { value: "TRAVEL_AGENT", label: "Travel Trade" },
     { value: "EVENT_ORGANISER", label: "Event Organiser" },
     { value: "PROFESSIONAL_CONFERENCE_ORGANISER", label: "Professional Conference Organiser (PCO)" },
     { value: "AIRLINE", label: "Airline" },

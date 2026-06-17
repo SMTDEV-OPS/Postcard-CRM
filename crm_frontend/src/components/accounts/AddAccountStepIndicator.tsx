@@ -1,32 +1,25 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const STEPS = [
-  { num: 1, label: "Organization" },
-  { num: 2, label: "Classification" },
-  { num: 3, label: "Hierarchy" },
-  { num: 4, label: "Location" },
-  { num: 5, label: "Review" },
-] as const;
+import type { AccountWizardStep } from "./travelTradeStepPlan";
 
 interface AddAccountStepIndicatorProps {
-  currentStep: number;
-  isEdit?: boolean;
+  steps: AccountWizardStep[];
+  currentStepIndex: number;
 }
 
-export function AddAccountStepIndicator({ currentStep, isEdit }: AddAccountStepIndicatorProps) {
-  const steps = isEdit
-    ? STEPS.filter((s) => s.num <= 5)
-    : STEPS;
-
+export function AddAccountStepIndicator({ steps, currentStepIndex }: AddAccountStepIndicatorProps) {
   return (
-    <nav aria-label="Account wizard progress" className="flex items-center justify-between gap-1">
+    <nav
+      aria-label="Account wizard progress"
+      className="flex items-center gap-1 overflow-x-auto pb-1 -mx-1 px-1"
+    >
       {steps.map((step, index) => {
-        const isCompleted = currentStep > step.num;
-        const isActive = currentStep === step.num;
+        const stepNum = index + 1;
+        const isCompleted = currentStepIndex > index;
+        const isActive = currentStepIndex === index;
 
         return (
-          <div key={step.num} className="flex flex-1 items-center min-w-0">
+          <div key={step.id} className="flex items-center min-w-0 shrink-0" style={{ minWidth: "4.5rem" }}>
             <div className="flex flex-col items-center gap-1 min-w-0 flex-1">
               <div
                 className={cn(
@@ -36,19 +29,25 @@ export function AddAccountStepIndicator({ currentStep, isEdit }: AddAccountStepI
                   !isCompleted && !isActive && "border border-border bg-surface text-text-muted"
                 )}
               >
-                {isCompleted ? <Check className="h-3.5 w-3.5" /> : step.num}
+                {isCompleted ? <Check className="h-3.5 w-3.5" /> : stepNum}
               </div>
               <span
                 className={cn(
-                  "text-[10px] font-medium truncate w-full text-center hidden sm:block",
+                  "text-[10px] font-medium truncate w-full text-center max-w-[5.5rem]",
                   isActive ? "text-text" : "text-text-muted"
                 )}
+                title={step.label}
               >
                 {step.label}
               </span>
             </div>
             {index < steps.length - 1 && (
-              <div className={cn("h-px flex-1 mx-0.5 mb-4", isCompleted ? "bg-primary" : "bg-border")} />
+              <div
+                className={cn(
+                  "h-px w-4 sm:w-6 mx-0.5 mb-4 shrink-0",
+                  isCompleted ? "bg-primary" : "bg-border"
+                )}
+              />
             )}
           </div>
         );
@@ -56,11 +55,3 @@ export function AddAccountStepIndicator({ currentStep, isEdit }: AddAccountStepI
     </nav>
   );
 }
-
-export const ADD_ACCOUNT_STEP_SUBTITLES: Record<number, string> = {
-  1: "Who is this organization?",
-  2: "How is this account classified?",
-  3: "Where does it sit in your hierarchy?",
-  4: "Where are they located?",
-  5: "Review and create the account",
-};

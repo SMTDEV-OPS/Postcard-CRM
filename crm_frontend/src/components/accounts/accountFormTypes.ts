@@ -1,3 +1,5 @@
+import { emptyTravelTradeProfile } from "@/types/travelTradeProfile";
+
 export const emptyAccountForm = {
   name: "",
   organizationType: "CORPORATE",
@@ -27,6 +29,7 @@ export const emptyAccountForm = {
   contractingTypes: [] as { type: string; fromMonth?: number; toMonth?: number; fromYear?: number; toYear?: number }[],
   primaryAccountManager: { userId: "", name: "", city: "" },
   secondaryAccountManagers: [] as { userId?: string; name: string; city: string }[],
+  travelTradeProfile: emptyTravelTradeProfile(),
 };
 
 export type AccountFormData = typeof emptyAccountForm;

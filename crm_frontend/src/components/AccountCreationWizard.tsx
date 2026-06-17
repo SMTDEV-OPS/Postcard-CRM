@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { listConglomerates, Conglomerate } from "@/services/conglomerates";
 import { Account, createAccount, updateAccount, listAccounts } from "@/services/accounts";
 import { listProperties, Property } from "@/services/properties";
-import { AddAccountStepIndicator, ADD_ACCOUNT_STEP_SUBTITLES } from "@/components/accounts/AddAccountStepIndicator";
+import { AddAccountStepIndicator } from "@/components/accounts/AddAccountStepIndicator";
 import { emptyAccountForm, AccountFormData, defaultContractingPeriod } from "@/components/accounts/accountFormTypes";
 import {
   AccountStepOrganization,
@@ -22,6 +22,20 @@ import {
   AccountReviewSummary,
   StepContext,
 } from "@/components/accounts/AccountCreationSteps";
+import {
+  buildAccountWizardSteps,
+  isTravelTrade,
+  validateWizardStep,
+  type AccountWizardStepId,
+} from "@/components/accounts/travelTradeStepPlan";
+import {
+  TravelTradeInboundStep,
+  TravelTradeLuxuryStep,
+  TravelTradeSeriesStep,
+  TravelTradeDomesticStep,
+  TravelTradeGroupsStep,
+} from "@/components/accounts/TravelTradeSteps";
+import { normalizeTravelTradeProfile } from "@/types/travelTradeProfile";
 
 export interface AccountWizardSuccessPayload {
   account: Account;
@@ -38,8 +52,6 @@ interface AccountCreationWizardProps {
   onCreated?: (payload: AccountWizardSuccessPayload) => void;
 }
 
-const TOTAL_STEPS = 5;
-
 export const AccountCreationWizard = ({
   isOpen,
   onClose,
@@ -48,7 +60,7 @@ export const AccountCreationWizard = ({
   onCreated,
 }: AccountCreationWizardProps) => {
   const { toast } = useToast();
-  const [step, setStep] = useState(1);
+  const [stepIndex, setStepIndex] = useState(0);
   const [conglomerates, setConglomerates] = useState<Conglomerate[]>([]);
   const [availableAccounts, setAvailableAccounts] = useState<Account[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -58,9 +70,18 @@ export const AccountCreationWizard = ({
   const set = (patch: Partial<AccountFormData>) => setFormData((prev) => ({ ...prev, ...patch }));
   const isEdit = !!editingAccount;
 
+  const steps = useMemo(() => buildAccountWizardSteps(formData), [formData]);
+  const currentStep = steps[stepIndex];
+
+  useEffect(() => {
+    if (stepIndex >= steps.length) {
+      setStepIndex(Math.max(0, steps.length - 1));
+    }
+  }, [stepIndex, steps.length]);
+
   useEffect(() => {
     if (!isOpen) {
-      setStep(1);
+      setStepIndex(0);
       return;
     }
     if (editingAccount) {
@@ -73,6 +94,7 @@ export const AccountCreationWizard = ({
         primaryAccountManager: editingAccount.primaryAccountManager || { userId: "", name: "", city: "" },
         secondaryAccountManagers: editingAccount.secondaryAccountManagers || [],
         propertyIds: editingAccount.propertyIds || [],
+        travelTradeProfile: normalizeTravelTradeProfile(editingAccount.travelTradeProfile),
       });
     } else {
       setFormData({ ...emptyAccountForm });
@@ -132,20 +154,26 @@ export const AccountCreationWizard = ({
     updateContractingType,
   };
 
-  const validateStep = (s: number): boolean => {
-    if (s === 1 && !formData.name.trim()) {
-      toast({ title: "Required", description: "Account name is required", variant: "destructive" });
+  const validateCurrentStep = (): boolean => {
+    if (!currentStep) return false;
+    const result = validateWizardStep(currentStep.id, formData);
+    if (!result.valid) {
+      toast({
+        title: "Required",
+        description: result.message ?? "Please complete required fields",
+        variant: "destructive",
+      });
       return false;
     }
     return true;
   };
 
   const handleContinue = () => {
-    if (!validateStep(step)) return;
-    setStep((s) => Math.min(TOTAL_STEPS, s + 1));
+    if (!validateCurrentStep()) return;
+    setStepIndex((i) => Math.min(steps.length - 1, i + 1));
   };
 
-  const handleBack = () => setStep((s) => Math.max(1, s - 1));
+  const handleBack = () => setStepIndex((i) => Math.max(0, i - 1));
 
   const buildPayload = () => {
     const sanitized: Record<string, unknown> = { ...formData };
@@ -180,6 +208,9 @@ export const AccountCreationWizard = ({
     }
     delete sanitized.profileStatus;
     sanitized.isHeadquarter = formData.isHeadquarter ?? false;
+    if (!isTravelTrade(formData)) {
+      delete sanitized.travelTradeProfile;
+    }
     for (const key of Object.keys(sanitized)) {
       if (sanitized[key] === "") delete sanitized[key];
     }
@@ -187,9 +218,32 @@ export const AccountCreationWizard = ({
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(1)) {
-      setStep(1);
+    const orgResult = validateWizardStep("organization", formData);
+    if (!orgResult.valid) {
+      toast({
+        title: "Required",
+        description: orgResult.message ?? "Account name is required",
+        variant: "destructive",
+      });
+      setStepIndex(0);
       return;
+    }
+    if (isTravelTrade(formData)) {
+      for (const step of steps) {
+        if (step.id.startsWith("travel_")) {
+          const result = validateWizardStep(step.id, formData);
+          if (!result.valid) {
+            toast({
+              title: "Required",
+              description: result.message,
+              variant: "destructive",
+            });
+            const idx = steps.findIndex((s) => s.id === step.id);
+            if (idx >= 0) setStepIndex(idx);
+            return;
+          }
+        }
+      }
     }
     try {
       setIsSubmitting(true);
@@ -221,6 +275,40 @@ export const AccountCreationWizard = ({
     }
   };
 
+  const renderStepBody = (stepId: AccountWizardStepId) => {
+    switch (stepId) {
+      case "organization":
+        return <AccountStepOrganization {...stepCtx} />;
+      case "classification":
+        return <AccountStepClassification {...stepCtx} />;
+      case "travel_inbound":
+        return <TravelTradeInboundStep formData={formData} set={set} />;
+      case "travel_luxury":
+        return <TravelTradeLuxuryStep formData={formData} set={set} />;
+      case "travel_series":
+        return <TravelTradeSeriesStep formData={formData} set={set} />;
+      case "travel_domestic":
+        return <TravelTradeDomesticStep formData={formData} set={set} />;
+      case "travel_groups":
+        return <TravelTradeGroupsStep formData={formData} set={set} />;
+      case "hierarchy":
+        return <AccountStepHierarchy {...stepCtx} />;
+      case "location":
+        return <AccountStepLocation {...stepCtx} />;
+      case "review":
+        return (
+          <div className="space-y-4">
+            <AccountReviewSummary formData={formData} availableAccounts={availableAccounts} />
+            <AccountStepCompliance ctx={stepCtx} />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const isLastStep = stepIndex >= steps.length - 1;
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl h-[min(90vh,720px)] flex flex-col gap-0 p-0 overflow-hidden">
@@ -228,10 +316,12 @@ export const AccountCreationWizard = ({
           <DialogTitle className="text-base font-semibold">
             {isEdit ? "Edit account" : "New account"}
           </DialogTitle>
-          <DialogDescription className="text-sm">{ADD_ACCOUNT_STEP_SUBTITLES[step]}</DialogDescription>
+          <DialogDescription className="text-sm">
+            {currentStep?.subtitle ?? ""}
+          </DialogDescription>
           {!isEdit && (
             <div className="pt-3">
-              <AddAccountStepIndicator currentStep={step} />
+              <AddAccountStepIndicator steps={steps} currentStepIndex={stepIndex} />
             </div>
           )}
         </DialogHeader>
@@ -241,23 +331,21 @@ export const AccountCreationWizard = ({
             <div className="space-y-4">
               <AccountStepOrganization {...stepCtx} />
               <AccountStepClassification {...stepCtx} />
+              {isTravelTrade(formData) && (
+                <>
+                  {steps
+                    .filter((s) => s.id.startsWith("travel_"))
+                    .map((s) => (
+                      <div key={s.id}>{renderStepBody(s.id)}</div>
+                    ))}
+                </>
+              )}
               <AccountStepHierarchy {...stepCtx} />
               <AccountStepLocation {...stepCtx} />
               <AccountStepCompliance ctx={stepCtx} />
             </div>
           ) : (
-            <>
-              {step === 1 && <AccountStepOrganization {...stepCtx} />}
-              {step === 2 && <AccountStepClassification {...stepCtx} />}
-              {step === 3 && <AccountStepHierarchy {...stepCtx} />}
-              {step === 4 && <AccountStepLocation {...stepCtx} />}
-              {step === 5 && (
-                <div className="space-y-4">
-                  <AccountReviewSummary formData={formData} availableAccounts={availableAccounts} />
-                  <AccountStepCompliance ctx={stepCtx} />
-                </div>
-              )}
-            </>
+            currentStep && renderStepBody(currentStep.id)
           )}
         </div>
 
@@ -266,7 +354,7 @@ export const AccountCreationWizard = ({
             Cancel
           </Button>
           <div className="flex gap-2">
-            {!isEdit && step > 1 && (
+            {!isEdit && stepIndex > 0 && (
               <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting}>
                 Back
               </Button>
@@ -275,7 +363,7 @@ export const AccountCreationWizard = ({
               <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
                 {isSubmitting ? "Saving…" : "Save changes"}
               </Button>
-            ) : step < TOTAL_STEPS ? (
+            ) : !isLastStep ? (
               <Button type="button" onClick={handleContinue} disabled={isSubmitting}>
                 Continue
               </Button>

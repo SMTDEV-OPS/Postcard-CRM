@@ -1,4 +1,5 @@
 import { API_BASE_URL, withAuthHeaders, getAuthToken } from "./api";
+import type { TravelTradeProfile } from "@/types/travelTradeProfile";
 
 export type AccountType = "TRAVEL_AGENT" | "CORPORATE" | "EVENT_PLANNER" | "AIRLINES" | "GOVERNMENT" | "OTHER";
 export type OrganizationType =
@@ -156,6 +157,8 @@ export interface Account {
 
   followUpDate?: string | null;
   followUpNote?: string;
+
+  travelTradeProfile?: TravelTradeProfile;
 
   createdAt?: string;
   updatedAt?: string;
