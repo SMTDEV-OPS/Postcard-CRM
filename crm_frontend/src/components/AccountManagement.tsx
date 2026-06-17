@@ -659,6 +659,7 @@ export const AccountManagement = ({ permissions = [], isAdmin, isSystemAdmin }: 
               if (updated) setSelectedAccount(updated);
             }
           }}
+          onCreated={({ account, openContacts }) => void handleAccountCreated(account, !!openContacts)}
         />
       </>
     );

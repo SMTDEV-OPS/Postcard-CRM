@@ -4,6 +4,7 @@ import { z } from "zod";
 import * as XLSX from "xlsx";
 import { startOfWeek, endOfWeek } from "date-fns";
 import { AccountModel } from "../models/account";
+import { UserModel } from "../models/user";
 import { ApprovalRequestModel } from "../models/approvalRequest";
 import { ContactActivityModel } from "../models/contactActivity";
 import { LeadModel } from "../models/lead";
@@ -264,7 +265,7 @@ accountsRouter.post(
       const data = parsed.data;
 
       const normalizedProfileStatus =
-        data.profileStatus === "NA" || data.profileStatus === false ? "NA" : "ACTIVE";
+        data.profileStatus === "NA" ? "NA" : "ACTIVE";
 
       // Hierarchy validation
       if (data.parentAccountId) {
@@ -321,6 +322,13 @@ accountsRouter.post(
           name: pam.name,
           city: pam.city,
           ...(pam.userId?.trim() && { userId: pam.userId.trim() }),
+        };
+      } else if (req.user?.id) {
+        const creator = await UserModel.findById(req.user.id).select("name email").lean();
+        createPayload.primaryAccountManager = {
+          userId: req.user.id,
+          name: creator?.name || creator?.email || req.user.email || "",
+          city: "",
         };
       }
       if (data.secondaryAccountManagers?.length) {

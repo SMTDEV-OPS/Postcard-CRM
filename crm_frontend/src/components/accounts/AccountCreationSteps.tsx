@@ -154,8 +154,8 @@ export function AccountStepClassification({ formData, set }: StepContext) {
         <div className="flex items-center gap-2">
           <Checkbox
             id="isHq"
-            checked={formData.profileStatus}
-            onCheckedChange={(v) => set({ profileStatus: !!v })}
+            checked={formData.isHeadquarter}
+            onCheckedChange={(v) => set({ isHeadquarter: !!v })}
           />
           <label htmlFor="isHq" className="text-sm cursor-pointer">
             Headquarter account

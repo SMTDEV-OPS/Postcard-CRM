@@ -4,7 +4,7 @@ export const emptyAccountForm = {
   customOrganizationType: "",
   conglomerateId: null as string | null,
   accountLevel: "MASTER",
-  profileStatus: false,
+  isHeadquarter: false,
   accountType: "ACQUISITION",
   accountTypeOverride: false,
   parentAccountId: null as string | null,

@@ -33,7 +33,7 @@ interface AccountCreationWizardProps {
   isOpen: boolean;
   onClose: () => void;
   editingAccount?: Account | null;
-  onSuccess: () => void;
+  onSuccess: () => void | Promise<void>;
   /** Called after create (not edit) with the new account for navigation */
   onCreated?: (payload: AccountWizardSuccessPayload) => void;
 }
@@ -54,8 +54,6 @@ export const AccountCreationWizard = ({
   const [properties, setProperties] = useState<Property[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<AccountFormData>({ ...emptyAccountForm });
-  const [showPostCreate, setShowPostCreate] = useState(false);
-  const [createdAccount, setCreatedAccount] = useState<Account | null>(null);
 
   const set = (patch: Partial<AccountFormData>) => setFormData((prev) => ({ ...prev, ...patch }));
   const isEdit = !!editingAccount;
@@ -63,8 +61,6 @@ export const AccountCreationWizard = ({
   useEffect(() => {
     if (!isOpen) {
       setStep(1);
-      setShowPostCreate(false);
-      setCreatedAccount(null);
       return;
     }
     if (editingAccount) {
@@ -73,6 +69,7 @@ export const AccountCreationWizard = ({
         ...(editingAccount as AccountFormData),
         conglomerateId: (editingAccount as Account & { conglomerateId?: string }).conglomerateId || null,
         parentAccountId: editingAccount.parentAccountId || null,
+        isHeadquarter: editingAccount.isHeadquarter ?? false,
         primaryAccountManager: editingAccount.primaryAccountManager || { userId: "", name: "", city: "" },
         secondaryAccountManagers: editingAccount.secondaryAccountManagers || [],
         propertyIds: editingAccount.propertyIds || [],
@@ -181,6 +178,8 @@ export const AccountCreationWizard = ({
           return s;
         });
     }
+    delete sanitized.profileStatus;
+    sanitized.isHeadquarter = formData.isHeadquarter ?? false;
     for (const key of Object.keys(sanitized)) {
       if (sanitized[key] === "") delete sanitized[key];
     }
@@ -198,14 +197,18 @@ export const AccountCreationWizard = ({
       if (editingAccount) {
         await updateAccount(editingAccount.id, sanitized);
         toast({ title: "Success", description: "Account updated" });
-        onSuccess();
+        await onSuccess();
         onClose();
       } else {
         const created = await createAccount(sanitized as Parameters<typeof createAccount>[0]);
         toast({ title: "Success", description: "Account created" });
-        onSuccess();
-        setCreatedAccount(created);
-        setShowPostCreate(true);
+        await onSuccess();
+        if (onCreated) {
+          onCreated({ account: created, isNew: true, openContacts: true });
+          onClose();
+        } else {
+          onClose();
+        }
       }
     } catch (err) {
       toast({
@@ -217,44 +220,6 @@ export const AccountCreationWizard = ({
       setIsSubmitting(false);
     }
   };
-
-  const handlePostCreateView = () => {
-    if (createdAccount) {
-      onCreated?.({ account: createdAccount, isNew: true, openContacts: false });
-    }
-    onClose();
-  };
-
-  const handlePostCreateAddContact = () => {
-    if (createdAccount) {
-      onCreated?.({ account: createdAccount, isNew: true, openContacts: true });
-    }
-    onClose();
-  };
-
-  if (showPostCreate && createdAccount) {
-    return (
-      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Account created</DialogTitle>
-            <DialogDescription>
-              {createdAccount.name} is ready. What would you like to do next?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-2 pt-2">
-            <Button onClick={handlePostCreateAddContact}>Add contact</Button>
-            <Button variant="outline" onClick={handlePostCreateView}>
-              View account profile
-            </Button>
-            <Button variant="ghost" onClick={onClose}>
-              Back to directory
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
