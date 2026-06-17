@@ -35,6 +35,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SendQuotationDialog } from "@/components/SendQuotationDialog";
 import { AddLeadWizard } from "@/components/leads/AddLeadWizard";
 import { useLeadForm } from "@/components/leads/useLeadForm";
+import { useActiveProperties } from "@/hooks/useActiveProperties";
 import { HelpInfoButton } from "@/components/help/HelpInfoButton";
 
 interface ProfessionalLeadManagementProps {
@@ -92,6 +93,8 @@ const ProfessionalLeadManagement = ({
     resetForm,
     submitLead,
   } = useLeadForm();
+
+  const { properties: activeProperties } = useActiveProperties();
 
   const canViewTeamLeads =
     !!permissions?.includes("leads.view.team") ||
@@ -829,11 +832,11 @@ const ProfessionalLeadManagement = ({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Properties</SelectItem>
-                          <SelectItem value="Postcard Goa">Postcard Goa</SelectItem>
-                          <SelectItem value="Postcard Kerala">Postcard Kerala</SelectItem>
-                          <SelectItem value="Postcard Rajasthan">Postcard Rajasthan</SelectItem>
-                          <SelectItem value="Postcard Mumbai">Postcard Mumbai</SelectItem>
-                          <SelectItem value="Postcard Coonoor">Postcard Coonoor</SelectItem>
+                          {activeProperties.map((p) => (
+                            <SelectItem key={p._id} value={p.name}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
 

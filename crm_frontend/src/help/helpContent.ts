@@ -1,10 +1,13 @@
 import type { HelpTopic } from "./helpTypes";
+import {
+  enrichTopic,
+  registerTopics,
+  searchFieldGuides,
+  getFieldHelp,
+} from "./helpRegistry";
+import { topic } from "./modules/_utils";
 
-function topic(t: HelpTopic): HelpTopic {
-  return t;
-}
-
-export const HELP_TOPICS: HelpTopic[] = [
+export const RAW_TOPICS: HelpTopic[] = [
   topic({
     id: "getting-started.overview",
     category: "getting-started",
@@ -486,6 +489,17 @@ Add your hotel properties with details. Properties link to leads, pipelines, and
     tags: ["setup", "properties"],
   }),
   topic({
+    id: "setup.hotels",
+    category: "settings",
+    title: "Hotels master list",
+    summary: "Manage the canonical Postcard hotel list used across the CRM.",
+    audience: "admin",
+    body: `Setup → **Hotels**
+
+View and manage the master list of Postcard hotels. These properties appear in lead wizards, account hierarchy, contracts, and filters. Add new hotels here as the portfolio grows. PMS sync is not required for this list.`,
+    tags: ["setup", "hotels", "properties"],
+  }),
+  topic({
     id: "setup.fields",
     category: "settings",
     title: "Field builder",
@@ -661,12 +675,98 @@ Add webhook URLs to receive lead/contact events. Configure API keys and rate lim
 View a log of who changed what and when. Filter by user, entity, or action. Use for compliance and debugging.`,
     tags: ["setup", "audit"],
   }),
+  topic({
+    id: "leads.add",
+    category: "leads",
+    title: "Add lead wizard",
+    summary: "Four-step wizard to capture a new guest inquiry from phone, web, or walk-in.",
+    featureWhat: "Creates a new lead record with guest contact, stay details, source classification, and optional corporate billing info.",
+    featureHow: "Open Add lead → complete Guest → Stay → Source → Review → Create. Use Call Center for the same fields during live calls.",
+    body: `Use this wizard whenever a new inquiry is not yet in the CRM.
+
+**Steps**
+1. **Guest** — name, phone, email (required).
+2. **Stay** — hotel(s), check-in/out, rooms and guests.
+3. **Source** — booking source, heat level, corporate fields if applicable.
+4. **Review** — confirm and create.
+
+Duplicates may be flagged if phone/email matches an existing lead.`,
+    tags: ["leads", "wizard", "add"],
+    relatedIds: ["leads.list", "calls.center"],
+  }),
+  topic({
+    id: "accounts.wizard",
+    category: "accounts",
+    title: "New account wizard",
+    summary: "Multi-step wizard to create B2B, travel trade, or corporate accounts.",
+    featureWhat: "Registers a partner organization with hierarchy, location, compliance, and optional travel trade operator profiles.",
+    featureHow: "Organization → Classification → (Travel trade steps if applicable) → Hierarchy → Location → Review with compliance.",
+    body: `Create accounts from the Accounts list or Setup → Account Mgmt.
+
+Travel Trade accounts require operator name, types, and per-type profile steps before hierarchy.
+
+After save, add contacts and contracts from the account profile.`,
+    tags: ["accounts", "wizard"],
+    relatedIds: ["accounts.list", "contacts.wizard", "setup.hotels"],
+  }),
+  topic({
+    id: "contacts.wizard",
+    category: "accounts",
+    title: "Add contact",
+    summary: "Add a person at a B2B account with role and contact details.",
+    featureWhat: "Links a decision maker or operational contact to an account for quotations and contracts.",
+    featureHow: "Open account → Contacts → Add contact → fill form → save.",
+    body: `Contacts appear on account profile and can be selected on contracts and communications.`,
+    tags: ["contacts", "wizard"],
+    relatedIds: ["accounts.list", "contracts.wizard"],
+  }),
+  topic({
+    id: "contracts.wizard",
+    category: "accounts",
+    title: "Create contract",
+    summary: "B2B rate agreement wizard with property selection and rate grid.",
+    featureWhat: "Formalizes negotiated rates between Postcard and a partner for selected properties.",
+    featureHow: "Basics → Parties → Rates grid → Review → submit for approval if rules apply.",
+    body: `Start from account profile → Contracts → New contract.`,
+    tags: ["contracts", "wizard"],
+    relatedIds: ["accounts.list", "setup.contract-approval"],
+  }),
 ];
+
+export const HELP_TOPICS: HelpTopic[] = RAW_TOPICS.map(enrichTopic);
+registerTopics(HELP_TOPICS);
 
 const topicMap = new Map(HELP_TOPICS.map((t) => [t.id, t]));
 
 export function getHelpTopic(id: string): HelpTopic | undefined {
-  return topicMap.get(id);
+  return topicMap.get(id) ?? getFieldHelpAsTopic(id);
+}
+
+function getFieldHelpAsTopic(id: string): HelpTopic | undefined {
+  const f = getFieldHelp(id);
+  if (!f) return undefined;
+  return {
+    id: f.id,
+    title: f.label,
+    category: "support",
+    summary: f.what,
+    body: `${f.what}\n\n${f.how}`,
+  };
+}
+
+export interface HelpSearchResult {
+  topics: HelpTopic[];
+  fields: ReturnType<typeof searchFieldGuides>;
+}
+
+export function searchHelp(
+  query: string,
+  options?: { audience?: "all" | "admin"; includeAdmin?: boolean }
+): HelpSearchResult {
+  return {
+    topics: searchHelpTopics(query, options),
+    fields: searchFieldGuides(query, HELP_TOPICS, options),
+  };
 }
 
 export function searchHelpTopics(
@@ -684,6 +784,16 @@ export function searchHelpTopics(
       t.title.toLowerCase().includes(q) ||
       t.summary.toLowerCase().includes(q) ||
       t.body.toLowerCase().includes(q) ||
+      (t.featureWhat?.toLowerCase().includes(q) ?? false) ||
+      (t.featureHow?.toLowerCase().includes(q) ?? false) ||
+      t.screens?.some((s) =>
+        s.fields.some(
+          (f) =>
+            f.label.toLowerCase().includes(q) ||
+            f.what.toLowerCase().includes(q) ||
+            f.how.toLowerCase().includes(q)
+        )
+      ) ||
       t.tags?.some((tag) => tag.includes(q))
   );
 }
@@ -707,6 +817,7 @@ export const SETUP_PATH_TO_HELP_ID: Record<string, string> = {
   "setup/users": "setup.users",
   "setup/accounts": "setup.accounts",
   "/properties": "setup.properties",
+  "setup/hotels": "setup.hotels",
   "setup/fields": "setup.fields",
   "setup/pipelines": "setup.pipelines",
   "setup/scoring": "setup.scoring",

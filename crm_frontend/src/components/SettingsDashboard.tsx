@@ -94,6 +94,12 @@ export function SettingsDashboard({
         { name: "Account Mgmt", description: "Manage B2B and agent accounts.", path: "setup/accounts", icon: Building2 },
         { name: "Property Mgmt", description: "Manage hotel properties.", path: "/properties", icon: Hotel },
         {
+          name: "Hotels",
+          description: "Master hotel list for leads and accounts.",
+          path: "setup/hotels",
+          icon: Hotel,
+        },
+        {
           name: "Field Builder",
           description: "Define custom fields for leads and contacts.",
           path: "setup/fields",
@@ -115,7 +121,7 @@ export function SettingsDashboard({
         if (["setup/users", "setup/fields", "setup/pipelines", "setup/scoring"].includes(item.path))
           return isAdminLike;
         if (item.path === "setup/accounts") return canManageAccounts;
-        if (item.path === "/properties") return canManageProperties;
+        if (item.path === "/properties" || item.path === "setup/hotels") return canManageProperties;
         return true;
       }),
     },

@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { disableCheckInDate, disableCheckoutDate, startOfDay } from "@/lib/leadDates";
 import type { UseFormReturn } from "react-hook-form";
+import { useActiveProperties } from "@/hooks/useActiveProperties";
 
 function LeadMgmtHotelDates({
   index,
@@ -112,6 +113,7 @@ function LeadMgmtHotelDates({
 }
 
 const LeadManagement = () => {
+  const { properties: activeProperties } = useActiveProperties();
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [isNewLeadDialogOpen, setIsNewLeadDialogOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -698,10 +700,11 @@ const LeadManagement = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Hotels</SelectItem>
-                        <SelectItem value="Postcard Goa">Postcard Goa</SelectItem>
-                        <SelectItem value="Postcard Kerala">Postcard Kerala</SelectItem>
-                        <SelectItem value="Postcard Rajasthan">Postcard Rajasthan</SelectItem>
-                        <SelectItem value="Postcard Mumbai">Postcard Mumbai</SelectItem>
+                        {activeProperties.map((p) => (
+                          <SelectItem key={p._id} value={p.name}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -908,10 +911,11 @@ const LeadManagement = () => {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="Postcard Goa">Postcard Goa</SelectItem>
-                                  <SelectItem value="Postcard Kerala">Postcard Kerala</SelectItem>
-                                  <SelectItem value="Postcard Rajasthan">Postcard Rajasthan</SelectItem>
-                                  <SelectItem value="Postcard Mumbai">Postcard Mumbai</SelectItem>
+                                  {activeProperties.map((p) => (
+                                    <SelectItem key={p._id} value={p.name}>
+                                      {p.name}
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                               <FormMessage />

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { useToast } from "@/hooks/use-toast";
 import { RoleTreeNode } from "./RoleTreeNode";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
@@ -249,7 +249,7 @@ export function RolesManager() {
                             </CardHeader>
                             <CardContent className="p-6 space-y-6 max-w-2xl">
                                 <div className="space-y-2">
-                                    <Label htmlFor="name">Role Name <span className="text-red-500">*</span></Label>
+                                    <FormLabelHelp helpId="setup.roles.name" htmlFor="name" required>Role Name</FormLabelHelp>
                                     <Input
                                         id="name"
                                         value={formData.name}
@@ -259,7 +259,7 @@ export function RolesManager() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="parent">Reports To</Label>
+                                    <FormLabelHelp helpId="setup.roles.parent" htmlFor="parent">Reports To</FormLabelHelp>
                                     <select
                                         id="parent"
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -278,7 +278,7 @@ export function RolesManager() {
                                 <div className="space-y-4 pt-2 border-t mt-6">
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-0.5">
-                                            <Label className="text-base">Share Data with Peers</Label>
+                                            <FormLabelHelp helpId="setup.roles.shareDataWithPeers" className="text-base">Share Data with Peers</FormLabelHelp>
                                             <p className="text-sm text-muted-foreground">
                                                 Allows users in this role to view each other's data (if default module access is Private).
                                             </p>
@@ -291,7 +291,7 @@ export function RolesManager() {
                                 </div>
 
                                 <div className="space-y-2 pt-2 border-t mt-6">
-                                    <Label htmlFor="desc">Description</Label>
+                                    <FormLabelHelp helpId="setup.roles.description" htmlFor="desc">Description</FormLabelHelp>
                                     <Textarea
                                         id="desc"
                                         value={formData.description}

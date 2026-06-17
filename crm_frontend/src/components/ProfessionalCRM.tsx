@@ -27,6 +27,7 @@ import { AccountManagement } from "@/components/AccountManagement";
 import { AccountsDashboard } from "@/components/accounts/AccountsDashboard";
 import { SalesTargetsSetup } from "@/pages/setup/SalesTargetsSetup";
 import { HolidaysSetup } from "@/pages/setup/HolidaysSetup";
+import { HotelsSetup } from "@/pages/setup/HotelsSetup";
 import { SalesSettingsSetup } from "@/pages/setup/SalesSettingsSetup";
 import { PropertyGuideEditorSetup } from "@/pages/setup/PropertyGuideEditorSetup";
 import HelpCenter from "@/pages/HelpCenter";
@@ -524,6 +525,15 @@ export const ProfessionalCRM = ({
           );
         }
         return <HolidaysSetup />;
+      case 'setup/hotels':
+        if (!isAdmin && !permissions?.includes("properties.manage")) {
+          return (
+            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              You do not have permission to manage hotels.
+            </div>
+          );
+        }
+        return <HotelsSetup />;
       case 'setup/sales-settings':
         if (!isAdmin && !permissions?.includes("leads.manage")) {
           return (
@@ -710,7 +720,7 @@ export const ProfessionalCRM = ({
     'setup/scoring', 'setup/allocation', 'setup/contract-approval-rules', 'setup/followup-rules', 'setup/workflows',
     'setup/templates', 'setup/email-provider', 'setup/call-quality', 'setup/integrations',
     'setup/webhooks', 'setup/audit-log',
-    'setup/sales-targets', 'setup/holidays', 'setup/sales-settings', 'setup/knowledge-import', 'setup/property-guide',
+    'setup/sales-targets', 'setup/holidays', 'setup/hotels', 'setup/sales-settings', 'setup/knowledge-import', 'setup/property-guide',
   ].includes(activeView);
 
   const isSetupRoute = activeView.startsWith("setup/");

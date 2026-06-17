@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUploader } from "./FileUploader";
 import {
@@ -169,7 +169,7 @@ export const KnowledgeBaseEditor = ({
 
         <div className="space-y-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <FormLabelHelp helpId="knowledge.editor.title" required htmlFor="title">Title</FormLabelHelp>
             <Input
               id="title"
               value={title}
@@ -180,7 +180,7 @@ export const KnowledgeBaseEditor = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <FormLabelHelp helpId="knowledge.editor.description" htmlFor="description">Description</FormLabelHelp>
             <Textarea
               id="description"
               value={description}
@@ -192,7 +192,7 @@ export const KnowledgeBaseEditor = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="content">Content (JSON)</Label>
+            <FormLabelHelp helpId="knowledge.editor.content" htmlFor="content">Content (JSON)</FormLabelHelp>
             <Textarea
               id="content"
               value={contentJson}
@@ -207,7 +207,7 @@ export const KnowledgeBaseEditor = ({
           </div>
 
           <div className="space-y-2">
-            <Label>Files</Label>
+            <FormLabelHelp helpId="knowledge.editor.files">Files</FormLabelHelp>
             <FileUploader
               files={newFiles}
               onFilesChange={setNewFiles}
@@ -218,7 +218,7 @@ export const KnowledgeBaseEditor = ({
 
           {existingFiles.length > 0 && (
             <div className="space-y-2">
-              <Label>Existing Files</Label>
+              <FormLabelHelp helpId="knowledge.editor.files">Existing Files</FormLabelHelp>
               <div className="space-y-2">
                 {existingFiles.map((file) => (
                   <div

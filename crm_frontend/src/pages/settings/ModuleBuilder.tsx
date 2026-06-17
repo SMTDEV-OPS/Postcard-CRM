@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -207,9 +207,9 @@ export function ModuleBuilder() {
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <div className="flex items-center space-x-2">
-                                            <Label htmlFor={`active-${field._id}`} className="text-sm text-muted-foreground">
+                                            <FormLabelHelp helpId="setup.fields.isActive" htmlFor={`active-${field._id}`} className="text-sm text-muted-foreground">
                                                 {field.isActive ? 'Active' : 'Hidden'}
-                                            </Label>
+                                            </FormLabelHelp>
                                             <Switch
                                                 id={`active-${field._id}`}
                                                 checked={field.isActive}
@@ -238,15 +238,15 @@ export function ModuleBuilder() {
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Label</Label>
+                            <FormLabelHelp helpId="setup.fields.label" className="text-right justify-end" required>Label</FormLabelHelp>
                             <Input className="col-span-3" value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. Current CRM" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">API Key</Label>
+                            <FormLabelHelp helpId="setup.fields.apiKey" className="text-right justify-end">API Key</FormLabelHelp>
                             <Input className="col-span-3 font-mono" value={fieldName} onChange={e => setFieldName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))} placeholder="e.g. current_crm" disabled={!!editingField} />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Type</Label>
+                            <FormLabelHelp helpId="setup.fields.type" className="text-right justify-end" required>Type</FormLabelHelp>
                             <Select value={dataType} onValueChange={setDataType} disabled={!!editingField}>
                                 <SelectTrigger className="col-span-3">
                                     <SelectValue placeholder="Select type" />
@@ -259,7 +259,7 @@ export function ModuleBuilder() {
 
                         {dataType === "DROPDOWN" && (
                             <div className="grid grid-cols-4 items-start gap-4">
-                                <Label className="text-right mt-2">Options</Label>
+                                <FormLabelHelp helpId="setup.fields.options" className="text-right justify-end mt-2">Options</FormLabelHelp>
                                 <div className="col-span-3 space-y-1">
                                     <Input value={optionsStr} onChange={e => setOptionsStr(e.target.value)} placeholder="Yes, No, Maybe" />
                                     <p className="text-xs text-muted-foreground">Comma separated values</p>
@@ -268,7 +268,7 @@ export function ModuleBuilder() {
                         )}
 
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Required</Label>
+                            <FormLabelHelp helpId="setup.fields.required" className="text-right justify-end">Required</FormLabelHelp>
                             <div className="col-span-3 flex items-center space-x-2">
                                 <Switch checked={isRequired} onCheckedChange={setIsRequired} />
                             </div>

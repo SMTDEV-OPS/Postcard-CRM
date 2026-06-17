@@ -7,7 +7,7 @@ import {
   updateAgentAvailability,
 } from "@/services/allocation";
 import { PageHeader, Input, Select } from "@/components/shared";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
@@ -99,7 +99,7 @@ export function AllocationRules() {
               }}
             >
               <div>
-                <Label>Daily Lead Cap</Label>
+                <FormLabelHelp helpId="setup.allocation.dailyLeadCap">Daily Lead Cap</FormLabelHelp>
                 <Input
                   type="number"
                   value={config.daily_lead_cap ?? "30"}
@@ -108,7 +108,7 @@ export function AllocationRules() {
                 />
               </div>
               <div>
-                <Label>Allocation Window (hours after login)</Label>
+                <FormLabelHelp helpId="setup.allocation.allocationWindow">Allocation Window (hours after login)</FormLabelHelp>
                 <Input
                   type="number"
                   value={config.allocation_window_hours ?? "8"}
@@ -117,7 +117,7 @@ export function AllocationRules() {
                 />
               </div>
               <div>
-                <Label>Overflow Mode</Label>
+                <FormLabelHelp helpId="setup.allocation.overflowMode">Overflow Mode</FormLabelHelp>
                 <Select
                   value={config.overflow_mode ?? "queue"}
                   onChange={(e) => {
@@ -131,7 +131,7 @@ export function AllocationRules() {
                 </Select>
               </div>
               <div>
-                <Label>Alert Threshold (%)</Label>
+                <FormLabelHelp helpId="setup.allocation.alertThreshold">Alert Threshold (%)</FormLabelHelp>
                 <Input
                   type="number"
                   value={config.alert_threshold_percent ?? "90"}
@@ -140,7 +140,7 @@ export function AllocationRules() {
                 />
               </div>
               <div>
-                <Label>Assignment Mode</Label>
+                <FormLabelHelp helpId="setup.allocation.mode" required>Assignment Mode</FormLabelHelp>
                 <p
                   style={{
                     fontSize: 12,

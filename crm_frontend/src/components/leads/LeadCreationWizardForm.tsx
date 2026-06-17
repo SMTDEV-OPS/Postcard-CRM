@@ -18,7 +18,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import {
@@ -37,6 +36,7 @@ import {
   LEAD_CHANNEL_OPTIONS,
 } from "@/constants/leadDropdownOptions";
 import { HotelStayDateFields } from "./HotelStayDateFields";
+import { FormFieldLabelHelp, FormLabelHelp } from "@/components/help/FormLabelHelp";
 import type { LeadFormData } from "./useLeadForm";
 
 export const LEAD_WIZARD_STEP_FIELDS: Record<number, string[]> = {
@@ -313,7 +313,7 @@ export function LeadCreationWizardForm({
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First name *</FormLabel>
+                        <FormFieldLabelHelp helpId="leads.add.firstName" required>First name</FormFieldLabelHelp>
                         <FormControl>
                           <Input placeholder="First name" {...field} />
                         </FormControl>
@@ -326,7 +326,7 @@ export function LeadCreationWizardForm({
                     name="middleName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Middle name</FormLabel>
+                        <FormFieldLabelHelp helpId="leads.add.middleName">Middle name</FormFieldLabelHelp>
                         <FormControl>
                           <Input placeholder="Middle name" {...field} />
                         </FormControl>
@@ -339,7 +339,7 @@ export function LeadCreationWizardForm({
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last name *</FormLabel>
+                        <FormFieldLabelHelp helpId="leads.add.lastName" required>Last name</FormFieldLabelHelp>
                         <FormControl>
                           <Input placeholder="Last name" {...field} />
                         </FormControl>
@@ -354,7 +354,7 @@ export function LeadCreationWizardForm({
                     name="guestContactNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Contact number *</FormLabel>
+                        <FormFieldLabelHelp helpId="leads.add.guestContactNumber" required>Contact number</FormFieldLabelHelp>
                         <FormControl>
                           <Input placeholder="+91 XXXXX XXXXX" {...field} />
                         </FormControl>
@@ -367,7 +367,7 @@ export function LeadCreationWizardForm({
                     name="alternateContact"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Alternate contact</FormLabel>
+                        <FormFieldLabelHelp helpId="leads.add.alternateContact">Alternate contact</FormFieldLabelHelp>
                         <FormControl>
                           <Input placeholder="+91 XXXXX XXXXX" {...field} />
                         </FormControl>
@@ -382,7 +382,7 @@ export function LeadCreationWizardForm({
                     name="guestEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email *</FormLabel>
+                        <FormFieldLabelHelp helpId="leads.add.guestEmail" required>Email</FormFieldLabelHelp>
                         <FormControl>
                           <Input placeholder="guest@example.com" type="email" {...field} />
                         </FormControl>
@@ -395,7 +395,7 @@ export function LeadCreationWizardForm({
                     name="occupation"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Occupation</FormLabel>
+                        <FormFieldLabelHelp helpId="leads.add.occupation">Occupation</FormFieldLabelHelp>
                         <FormControl>
                           <Input placeholder="e.g. Business" {...field} />
                         </FormControl>
@@ -445,7 +445,7 @@ export function LeadCreationWizardForm({
                       name={`hotels.${index}.hotelName`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Hotel name</FormLabel>
+                          <FormFieldLabelHelp helpId="leads.add.hotelName">Hotel name</FormFieldLabelHelp>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -512,7 +512,7 @@ export function LeadCreationWizardForm({
                               name={`hotels.${index}.rooms.${roomIdx}.roomCategory`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">Category *</FormLabel>
+                                  <FormFieldLabelHelp helpId="leads.add.roomCategory" required className="text-xs">Category</FormFieldLabelHelp>
                                   <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                       <SelectTrigger className="h-9">
@@ -535,7 +535,7 @@ export function LeadCreationWizardForm({
                               name={`hotels.${index}.rooms.${roomIdx}.roomPreference`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">Preference</FormLabel>
+                                  <FormFieldLabelHelp helpId="leads.add.roomPreference" className="text-xs">Preference</FormFieldLabelHelp>
                                   <FormControl>
                                     <Input placeholder="e.g. Sea view" {...field} className="h-9" />
                                   </FormControl>
@@ -548,7 +548,7 @@ export function LeadCreationWizardForm({
                               name={`hotels.${index}.rooms.${roomIdx}.numberOfGuests`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">Guests *</FormLabel>
+                                  <FormFieldLabelHelp helpId="leads.add.numberOfGuests" required className="text-xs">Guests</FormFieldLabelHelp>
                                   <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                       <SelectTrigger className="h-9">
@@ -579,7 +579,7 @@ export function LeadCreationWizardForm({
                     name="specialRequests"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Special requests</FormLabel>
+                        <FormFieldLabelHelp helpId="leads.add.specialRequests">Special requests</FormFieldLabelHelp>
                         <FormControl>
                           <Textarea
                             placeholder="Dietary, accessibility, or other requirements..."
@@ -601,7 +601,7 @@ export function LeadCreationWizardForm({
                   name="heatLevel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Lead temperature *</FormLabel>
+                      <FormFieldLabelHelp helpId="leads.add.heatLevel" required>Lead temperature</FormFieldLabelHelp>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -623,7 +623,7 @@ export function LeadCreationWizardForm({
                   name="bookingSource"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Booking source *</FormLabel>
+                      <FormFieldLabelHelp helpId="leads.add.bookingSource" required>Booking source</FormFieldLabelHelp>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -644,7 +644,7 @@ export function LeadCreationWizardForm({
                 />
                 {showCallStatus && (
                   <div className="space-y-2">
-                    <Label>Call status</Label>
+                    <FormLabelHelp helpId="calls.center.callStatus">Call status</FormLabelHelp>
                     <Select value={callStatus || ""} onValueChange={onCallStatusChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
@@ -659,7 +659,7 @@ export function LeadCreationWizardForm({
                 )}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Guest segment</Label>
+                    <FormLabelHelp helpId="leads.add.guestSegment">Guest segment</FormLabelHelp>
                     <Select
                       value={(customData.guest_segment as string) || ""}
                       onValueChange={(value) =>
@@ -679,7 +679,7 @@ export function LeadCreationWizardForm({
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Channel</Label>
+                    <FormLabelHelp helpId="leads.add.source">Channel</FormLabelHelp>
                     <Select
                       value={(customData.lead_channel as string) || ""}
                       onValueChange={(value) =>
@@ -704,7 +704,7 @@ export function LeadCreationWizardForm({
                   name="corporateBooking"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel>Corporate booking?</FormLabel>
+                      <FormFieldLabelHelp helpId="leads.add.corporateBooking">Corporate booking?</FormFieldLabelHelp>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
@@ -732,7 +732,7 @@ export function LeadCreationWizardForm({
                       name="companyName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Company name</FormLabel>
+                          <FormFieldLabelHelp helpId="leads.add.companyName">Company name</FormFieldLabelHelp>
                           <FormControl>
                             <Input placeholder="Company name" {...field} />
                           </FormControl>
@@ -745,7 +745,7 @@ export function LeadCreationWizardForm({
                       name="gstin"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>GSTIN</FormLabel>
+                          <FormFieldLabelHelp helpId="leads.add.gstin">GSTIN</FormFieldLabelHelp>
                           <FormControl>
                             <Input placeholder="GSTIN number" {...field} />
                           </FormControl>
@@ -761,7 +761,7 @@ export function LeadCreationWizardForm({
                     name="leadType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Lead type</FormLabel>
+                        <FormFieldLabelHelp helpId="leads.add.leadType">Lead type</FormFieldLabelHelp>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -785,7 +785,7 @@ export function LeadCreationWizardForm({
                     name="value"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Estimated Booking Value</FormLabel>
+                        <FormFieldLabelHelp helpId="leads.add.value">Estimated Booking Value</FormFieldLabelHelp>
                         <FormControl>
                           <Input placeholder="e.g. ₹25,000" {...field} />
                         </FormControl>
@@ -806,7 +806,7 @@ export function LeadCreationWizardForm({
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notes</FormLabel>
+                        <FormFieldLabelHelp helpId="leads.add.notes">Notes</FormFieldLabelHelp>
                         <FormControl>
                           <Textarea placeholder="Additional notes for this lead..." {...field} />
                         </FormControl>

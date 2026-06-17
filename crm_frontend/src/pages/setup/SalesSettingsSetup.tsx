@@ -6,7 +6,7 @@ import {
 } from "@/services/accountsDashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import {
   Select,
   SelectContent,
@@ -73,7 +73,7 @@ export function SalesSettingsSetup() {
         Configure financial year boundaries and how target achievement is measured on the accounts dashboard.
       </p>
       <div>
-        <Label>FY start month</Label>
+        <FormLabelHelp helpId="setup.sales-settings.fyStartMonth" required>FY start month</FormLabelHelp>
         <Select
           value={String(settings.financialYearStartMonth)}
           onValueChange={(v) =>
@@ -93,7 +93,7 @@ export function SalesSettingsSetup() {
         </Select>
       </div>
       <div>
-        <Label>FY start day</Label>
+        <FormLabelHelp helpId="setup.sales-settings.fyStartDay" required>FY start day</FormLabelHelp>
         <Input
           type="number"
           min={1}
@@ -108,7 +108,7 @@ export function SalesSettingsSetup() {
         />
       </div>
       <div>
-        <Label>Achievement metric</Label>
+        <FormLabelHelp helpId="setup.sales-settings.metric" required>Achievement metric</FormLabelHelp>
         <Select
           value={settings.achievementMetric}
           onValueChange={(v) =>

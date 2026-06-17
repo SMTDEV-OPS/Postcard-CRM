@@ -46,7 +46,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
@@ -788,7 +788,7 @@ function ScoringRulesSection({
             {/* Section 1: Rule name + Points */}
             <div style={{ display: "flex", gap: 12 }}>
               <div style={{ flex: 1 }}>
-                <Label>Rule Name</Label>
+                <FormLabelHelp helpId="setup.scoring.ruleName" required>Rule Name</FormLabelHelp>
                 <input
                   type="text"
                   value={ruleForm.name}
@@ -806,7 +806,7 @@ function ScoringRulesSection({
                 />
               </div>
               <div>
-                <Label>Points</Label>
+                <FormLabelHelp helpId="setup.scoring.points">Points</FormLabelHelp>
                 <input
                   type="number"
                   value={ruleForm.points}
@@ -828,7 +828,7 @@ function ScoringRulesSection({
             {/* Section 2: Conditions */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <Label style={{ marginBottom: 0 }}>Conditions</Label>
+                <FormLabelHelp helpId="setup.scoring.conditions" className="mb-0">Conditions</FormLabelHelp>
                 {hasMultipleConditions && (
                   <div style={{ display: "flex", gap: 0, border: "1px solid #e5e7eb", borderRadius: 6, overflow: "hidden" }}>
                     {(["AND", "OR"] as ConditionLogic[]).map((logic) => (
@@ -904,7 +904,7 @@ function ScoringRulesSection({
             {/* Section 3: Settings */}
             <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
               <div>
-                <Label>Priority</Label>
+                <FormLabelHelp helpId="setup.scoring.priority">Priority</FormLabelHelp>
                 <input
                   type="number"
                   value={ruleForm.priority}
@@ -926,7 +926,7 @@ function ScoringRulesSection({
                   checked={ruleForm.isActive}
                   onCheckedChange={(v) => setRuleForm((p) => ({ ...p, isActive: v }))}
                 />
-                <Label style={{ marginBottom: 0 }}>Active</Label>
+                <FormLabelHelp helpId="setup.scoring.active" className="mb-0">Active</FormLabelHelp>
               </div>
             </div>
 
@@ -1253,36 +1253,36 @@ export function ScoringEngine() {
           <DialogHeader><DialogTitle>{editingThreshold ? "Edit Threshold" : "Add Threshold"}</DialogTitle></DialogHeader>
           <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 8 }}>
             <div>
-              <Label>Label</Label>
+              <FormLabelHelp helpId="setup.scoring.thresholdLabel" required>Label</FormLabelHelp>
               <Input value={thresholdForm.label ?? ""} onChange={(e) => setThresholdForm((p) => ({ ...p, label: e.target.value }))} />
             </div>
             <div style={{ display: "flex", gap: 16 }}>
               <div style={{ flex: 1 }}>
-                <Label>Min Score</Label>
+                <FormLabelHelp helpId="setup.scoring.minScore" required>Min Score</FormLabelHelp>
                 <Input type="number" value={String(thresholdForm.min_score ?? 0)} onChange={(e) => setThresholdForm((p) => ({ ...p, min_score: parseInt(e.target.value, 10) || 0 }))} />
               </div>
               <div style={{ flex: 1 }}>
-                <Label>Max Score</Label>
+                <FormLabelHelp helpId="setup.scoring.maxScore" required>Max Score</FormLabelHelp>
                 <Input type="number" value={String(thresholdForm.max_score ?? 10)} onChange={(e) => setThresholdForm((p) => ({ ...p, max_score: parseInt(e.target.value, 10) || 0 }))} />
               </div>
             </div>
             <div>
-              <Label>Color</Label>
+              <FormLabelHelp helpId="setup.scoring.color">Color</FormLabelHelp>
               <input type="color" value={thresholdForm.color ?? "#3b82f6"} onChange={(e) => setThresholdForm((p) => ({ ...p, color: e.target.value }))} style={{ width: 40, height: 34, padding: 2, border: "1px solid var(--border)", borderRadius: "var(--radius)" }} />
               <span style={{ marginLeft: 8, fontSize: 12, color: "var(--text-muted)" }}>{thresholdForm.color ?? "#3b82f6"}</span>
             </div>
             <div style={{ display: "flex", gap: 16 }}>
               <div style={{ flex: 1 }}>
-                <Label>Inactive Hours Warning</Label>
+                <FormLabelHelp helpId="setup.scoring.inactiveHoursWarning">Inactive Hours Warning</FormLabelHelp>
                 <Input type="number" value={String(thresholdForm.inactive_hours_warning ?? "")} onChange={(e) => setThresholdForm((p) => ({ ...p, inactive_hours_warning: e.target.value ? parseInt(e.target.value, 10) : undefined }))} placeholder="Optional" />
               </div>
               <div style={{ flex: 1 }}>
-                <Label>Inactive Hours Critical</Label>
+                <FormLabelHelp helpId="setup.scoring.inactiveHoursCritical">Inactive Hours Critical</FormLabelHelp>
                 <Input type="number" value={String(thresholdForm.inactive_hours_critical ?? "")} onChange={(e) => setThresholdForm((p) => ({ ...p, inactive_hours_critical: e.target.value ? parseInt(e.target.value, 10) : undefined }))} placeholder="Optional" />
               </div>
             </div>
             <div>
-              <Label>Auto Action</Label>
+              <FormLabelHelp helpId="setup.scoring.autoAction">Auto Action</FormLabelHelp>
               <Select value={thresholdForm.auto_action ?? "none"} onChange={(e) => setThresholdForm((p) => ({ ...p, auto_action: e.target.value as any }))}>
                 <option value="none">None</option>
                 <option value="notify_tl">Notify TL</option>
@@ -1303,20 +1303,20 @@ export function ScoringEngine() {
           <DialogHeader><DialogTitle>{editingDimension ? "Edit Dimension" : "Add Dimension"}</DialogTitle></DialogHeader>
           <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 8 }}>
             <div>
-              <Label>Name</Label>
+              <FormLabelHelp helpId="setup.scoring.dimensionName" required>Name</FormLabelHelp>
               <Input value={dimensionForm.name ?? ""} onChange={(e) => setDimensionForm((p) => ({ ...p, name: e.target.value }))} />
             </div>
             <div>
-              <Label>Description</Label>
+              <FormLabelHelp helpId="setup.scoring.dimensionDescription">Description</FormLabelHelp>
               <Input value={dimensionForm.description ?? ""} onChange={(e) => setDimensionForm((p) => ({ ...p, description: e.target.value }))} placeholder="Optional" />
             </div>
             <div>
-              <Label>Weight %</Label>
+              <FormLabelHelp helpId="setup.scoring.weightPercent">Weight %</FormLabelHelp>
               <Input type="number" value={String(dimensionForm.weight_percent ?? 20)} onChange={(e) => setDimensionForm((p) => ({ ...p, weight_percent: parseInt(e.target.value, 10) || 0 }))} />
               <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>Weights must total 100% across active dimensions</p>
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Label>Is Active</Label>
+              <FormLabelHelp helpId="setup.scoring.isActive">Is Active</FormLabelHelp>
               <Switch checked={dimensionForm.is_active ?? true} onCheckedChange={(v) => setDimensionForm((p) => ({ ...p, is_active: v }))} />
             </div>
           </div>

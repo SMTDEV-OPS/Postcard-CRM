@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Contact } from "@/services/contacts";
@@ -16,9 +17,7 @@ export function ContactStepIdentity({ formData, set, errors, clearError }: Conta
   return (
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
       <div className="space-y-1.5">
-        <Label>
-          Full name <span className="text-destructive">*</span>
-        </Label>
+        <FormLabelHelp helpId="contacts.wizard.fullName" required>Full name</FormLabelHelp>
         <div className="flex gap-2">
           <Select value={formData.title} onValueChange={(v) => set({ title: v })}>
             <SelectTrigger className="w-[100px]">
@@ -47,7 +46,7 @@ export function ContactStepIdentity({ formData, set, errors, clearError }: Conta
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Designation</Label>
+          <FormLabelHelp helpId="contacts.wizard.designation">Designation</FormLabelHelp>
           <Input
             value={formData.designation}
             onChange={(e) => set({ designation: e.target.value })}
@@ -55,7 +54,7 @@ export function ContactStepIdentity({ formData, set, errors, clearError }: Conta
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Email</Label>
+          <FormLabelHelp helpId="contacts.wizard.email">Email</FormLabelHelp>
           <Input
             type="email"
             value={formData.email}
@@ -78,7 +77,7 @@ export function ContactStepReach({ formData, set }: ContactStepContext) {
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Mobile number 1</Label>
+          <FormLabelHelp helpId="contacts.wizard.mobileNumber1">Mobile number 1</FormLabelHelp>
           <Input
             value={formData.mobileNumber1}
             onChange={(e) => set({ mobileNumber1: e.target.value })}
@@ -86,7 +85,7 @@ export function ContactStepReach({ formData, set }: ContactStepContext) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Mobile number 2</Label>
+          <FormLabelHelp helpId="contacts.wizard.mobileNumber2">Mobile number 2</FormLabelHelp>
           <Input
             value={formData.mobileNumber2}
             onChange={(e) => set({ mobileNumber2: e.target.value })}
@@ -94,7 +93,7 @@ export function ContactStepReach({ formData, set }: ContactStepContext) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Board number</Label>
+          <FormLabelHelp helpId="contacts.wizard.boardNumber">Board number</FormLabelHelp>
           <Input
             value={formData.boardNumber}
             onChange={(e) => set({ boardNumber: e.target.value })}
@@ -102,7 +101,7 @@ export function ContactStepReach({ formData, set }: ContactStepContext) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Office number</Label>
+          <FormLabelHelp helpId="contacts.wizard.officeNumber">Office number</FormLabelHelp>
           <Input
             value={formData.officeNumber}
             onChange={(e) => set({ officeNumber: e.target.value })}
@@ -117,21 +116,19 @@ export function ContactStepReach({ formData, set }: ContactStepContext) {
 export function ContactStepRole({ formData, set, errors, clearError }: ContactStepContext) {
   return (
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="isKey"
-          checked={formData.isKeyPersonnel}
-          onCheckedChange={(checked) => set({ isKeyPersonnel: !!checked, keyPersonnelRole: checked ? formData.keyPersonnelRole : undefined })}
-        />
-        <Label htmlFor="isKey" className="cursor-pointer font-medium">
-          Key personnel / decision maker
-        </Label>
-      </div>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="isKey"
+            checked={formData.isKeyPersonnel}
+            onCheckedChange={(checked) => set({ isKeyPersonnel: !!checked, keyPersonnelRole: checked ? formData.keyPersonnelRole : undefined })}
+          />
+          <FormLabelHelp helpId="contacts.wizard.isKeyPersonnel" htmlFor="isKey" className="cursor-pointer font-medium">
+            Key personnel / decision maker
+          </FormLabelHelp>
+        </div>
       {formData.isKeyPersonnel && (
         <div className="space-y-1.5 pl-6 border-l-2 border-primary/20">
-          <Label>
-            Organization role <span className="text-destructive">*</span>
-          </Label>
+          <FormLabelHelp helpId="contacts.wizard.keyPersonnelRole" required>Organization role</FormLabelHelp>
           <Select
             value={formData.keyPersonnelRole}
             onValueChange={(v) => {
@@ -156,7 +153,7 @@ export function ContactStepRole({ formData, set, errors, clearError }: ContactSt
         </div>
       )}
       <div className="space-y-1.5 pt-2 border-t border-border">
-        <Label>Client status</Label>
+        <FormLabelHelp helpId="contacts.wizard.clientStatus">Client status</FormLabelHelp>
         <Select
           value={formData.clientStatus}
           onValueChange={(v) => set({ clientStatus: v as Contact["clientStatus"] })}
@@ -199,9 +196,7 @@ export function ContactStepLoyalty({ formData, set, errors, clearError }: Contac
       {formData.isLoyaltyMember && (
         <div className="grid grid-cols-1 gap-3 pl-6 border-l-2 border-primary/20">
           <div className="space-y-1.5">
-            <Label>
-              Loyalty membership number <span className="text-destructive">*</span>
-            </Label>
+            <FormLabelHelp helpId="contacts.wizard.loyaltyNumber" required>Loyalty membership number</FormLabelHelp>
             <Input
               value={formData.loyaltyNumber}
               onChange={(e) => {
@@ -216,7 +211,7 @@ export function ContactStepLoyalty({ formData, set, errors, clearError }: Contac
             )}
           </div>
           <div className="space-y-1.5">
-            <Label>Program name (optional)</Label>
+            <FormLabelHelp helpId="contacts.wizard.loyaltyProgramName">Program name (optional)</FormLabelHelp>
             <Input
               value={formData.loyaltyProgramName}
               onChange={(e) => set({ loyaltyProgramName: e.target.value })}
@@ -227,7 +222,7 @@ export function ContactStepLoyalty({ formData, set, errors, clearError }: Contac
       )}
       <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
         <div className="space-y-1.5">
-          <Label>Birthday</Label>
+          <FormLabelHelp helpId="contacts.wizard.dateOfBirth">Birthday</FormLabelHelp>
           <Input
             type="date"
             value={formData.dateOfBirth}
@@ -235,7 +230,7 @@ export function ContactStepLoyalty({ formData, set, errors, clearError }: Contac
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Wedding anniversary</Label>
+          <FormLabelHelp helpId="contacts.wizard.weddingAnniversary">Wedding anniversary</FormLabelHelp>
           <Input
             type="date"
             value={formData.weddingAnniversary}

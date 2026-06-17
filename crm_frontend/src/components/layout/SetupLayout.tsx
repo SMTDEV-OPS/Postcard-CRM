@@ -14,6 +14,7 @@ import {
   Calendar,
   BarChart3,
   BookOpen,
+  Hotel,
 } from "lucide-react";
 
 const SETUP_LINKS = [
@@ -27,6 +28,7 @@ const SETUP_LINKS = [
   { to: "/setup/audit", label: "Audit log", icon: FileText },
   { to: "/setup/sales-targets", label: "Sales targets", icon: BarChart3 },
   { to: "/setup/holidays", label: "Holidays", icon: Calendar },
+  { to: "/setup/hotels", label: "Hotels", icon: Hotel },
   { to: "/setup/sales-settings", label: "FY & sales", icon: Target },
   { to: "/setup/property-guide", label: "Property guide editor", icon: BookOpen },
 ];

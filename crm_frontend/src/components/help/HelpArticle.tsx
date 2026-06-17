@@ -2,6 +2,20 @@ import { Link } from "react-router-dom";
 import type { HelpTopic } from "@/help/helpTypes";
 import { getHelpTopic } from "@/help/helpContent";
 import { helpArticleUrl } from "@/help/useHelpTopic";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 function renderBody(body: string) {
   const lines = body.split("\n");
@@ -51,6 +65,67 @@ function renderBody(body: string) {
   return elements;
 }
 
+function FieldTable({ topic }: { topic: HelpTopic }) {
+  const screens = topic.screens ?? [];
+  if (!screens.length) return null;
+
+  return (
+    <div className="space-y-3 pt-4 border-t border-border">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Field reference
+      </p>
+      <Accordion type="multiple" className="w-full">
+        {screens.map((screen) => (
+          <AccordionItem key={screen.id} value={screen.id}>
+            <AccordionTrigger className="text-sm font-medium py-3">
+              {screen.title}
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                ({screen.fields.length} fields)
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-2 pb-2">
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">What: </span>
+                  {screen.what}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">How: </span>
+                  {screen.how}
+                </p>
+              </div>
+              <div className="overflow-x-auto rounded-md border border-border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[140px]">Field</TableHead>
+                      <TableHead>What</TableHead>
+                      <TableHead>How to use</TableHead>
+                      <TableHead className="w-[72px]">Required</TableHead>
+                      <TableHead className="w-[120px]">Example</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {screen.fields.map((f) => (
+                      <TableRow key={f.id}>
+                        <TableCell className="font-medium text-sm align-top">{f.label}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground align-top">{f.what}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground align-top">{f.how}</TableCell>
+                        <TableCell className="text-xs align-top">{f.required ? "Yes" : "—"}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground align-top">{f.example ?? "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </div>
+  );
+}
+
 interface HelpArticleProps {
   topic: HelpTopic;
   showRelated?: boolean;
@@ -68,7 +143,27 @@ export function HelpArticle({ topic, showRelated = true }: HelpArticleProps) {
         )}
       </div>
       <p className="text-sm text-muted-foreground">{topic.summary}</p>
+
+      {(topic.featureWhat || topic.featureHow) && (
+        <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2 text-sm">
+          {topic.featureWhat && (
+            <div>
+              <p className="text-xs font-semibold uppercase text-foreground/80">What is this?</p>
+              <p className="text-muted-foreground leading-relaxed">{topic.featureWhat}</p>
+            </div>
+          )}
+          {topic.featureHow && (
+            <div>
+              <p className="text-xs font-semibold uppercase text-foreground/80">How to use it</p>
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{topic.featureHow}</p>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="space-y-1">{renderBody(topic.body)}</div>
+      <FieldTable topic={topic} />
+
       {showRelated && topic.relatedIds && topic.relatedIds.length > 0 && (
         <div className="border-t border-border pt-4 mt-4">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">

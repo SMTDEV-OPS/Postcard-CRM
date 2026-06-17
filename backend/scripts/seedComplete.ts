@@ -15,6 +15,7 @@ import { AccountModel } from "../src/models/account";
 import { seedDashboardWidgets } from "./seedDashboardWidgets";
 import { seedSystemFilters } from "./seedSystemFilters";
 import { seedPostcardWorkflows } from "./seedPostcardWorkflows";
+import { seedPostcardHotels } from "./seedPostcardHotels";
 
 const backendRoot = path.resolve(__dirname, "..");
 
@@ -32,6 +33,7 @@ async function main() {
 
   await mongoose.connect(config.mongoUri);
   try {
+    await seedPostcardHotels();
     await seedDashboardWidgets();
 
     const account = await AccountModel.findOne().sort({ createdAt: 1 });

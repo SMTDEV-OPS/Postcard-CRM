@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X } from "lucide-react";
@@ -49,9 +50,9 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
   return (
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="acct-name">
-          Account name <span className="text-destructive">*</span>
-        </Label>
+        <FormLabelHelp helpId="accounts.wizard.organization.name" required htmlFor="acct-name">
+          Account name
+        </FormLabelHelp>
         <Input
           id="acct-name"
           value={formData.name}
@@ -61,7 +62,7 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Organization type</Label>
+          <FormLabelHelp helpId="accounts.wizard.organization.organizationType">Organization type</FormLabelHelp>
           <Select
             value={formData.organizationType}
             onValueChange={(v) => {
@@ -86,7 +87,7 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
         </div>
         {formData.organizationType === "CUSTOM" && (
           <div className="space-y-1.5">
-            <Label>Custom type</Label>
+            <FormLabelHelp helpId="accounts.wizard.organization.customOrganizationType">Custom type</FormLabelHelp>
             <Input
               value={formData.customOrganizationType}
               onChange={(e) => set({ customOrganizationType: e.target.value })}
@@ -100,7 +101,7 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
       )}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Email</Label>
+          <FormLabelHelp helpId="accounts.wizard.organization.email">Email</FormLabelHelp>
           <Input
             type="email"
             value={formData.email}
@@ -109,7 +110,7 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Website</Label>
+          <FormLabelHelp helpId="accounts.wizard.organization.website">Website</FormLabelHelp>
           <Input
             value={formData.website}
             onChange={(e) => set({ website: e.target.value })}
@@ -126,7 +127,7 @@ export function AccountStepClassification({ formData, set }: StepContext) {
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Account level</Label>
+          <FormLabelHelp helpId="accounts.wizard.classification.accountLevel">Account level</FormLabelHelp>
           <Select value={formData.accountLevel} onValueChange={(v) => set({ accountLevel: v })}>
             <SelectTrigger>
               <SelectValue />
@@ -141,7 +142,7 @@ export function AccountStepClassification({ formData, set }: StepContext) {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Account type</Label>
+          <FormLabelHelp helpId="accounts.wizard.classification.accountType">Account type</FormLabelHelp>
           <Select value={formData.accountType} onValueChange={(v) => set({ accountType: v })}>
             <SelectTrigger>
               <SelectValue />
@@ -180,7 +181,7 @@ export function AccountStepClassification({ formData, set }: StepContext) {
       </div>
       <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
         <div className="space-y-1.5">
-          <Label>Industry category</Label>
+          <FormLabelHelp helpId="accounts.wizard.classification.industryCategory">Industry category</FormLabelHelp>
           <Select
             value={formData.industryCategory || "none"}
             onValueChange={(v) => set({ industryCategory: v === "none" ? "" : v, industrySubCategory: "" })}
@@ -199,7 +200,7 @@ export function AccountStepClassification({ formData, set }: StepContext) {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Industry size</Label>
+          <FormLabelHelp helpId="accounts.wizard.classification.industrySize">Industry size</FormLabelHelp>
           <Select value={formData.industrySize} onValueChange={(v) => set({ industrySize: v })}>
             <SelectTrigger>
               <SelectValue />
@@ -236,7 +237,7 @@ export function AccountStepHierarchy({ formData, set, conglomerates, availableAc
       <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label>Conglomerate</Label>
+            <FormLabelHelp helpId="accounts.wizard.hierarchy.conglomerateId">Conglomerate</FormLabelHelp>
             <Select
               value={formData.conglomerateId || "none"}
               onValueChange={(v) => set({ conglomerateId: v === "none" ? null : v })}
@@ -255,7 +256,7 @@ export function AccountStepHierarchy({ formData, set, conglomerates, availableAc
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Parent account</Label>
+            <FormLabelHelp helpId="accounts.wizard.hierarchy.parentAccountId">Parent account</FormLabelHelp>
             <Select
               value={formData.parentAccountId || "none"}
               onValueChange={(v) => set({ parentAccountId: v === "none" ? null : v })}
@@ -280,7 +281,7 @@ export function AccountStepHierarchy({ formData, set, conglomerates, availableAc
       </div>
       <div className="rounded-lg border border-border bg-surface p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <Label>Assign properties</Label>
+          <FormLabelHelp helpId="accounts.wizard.hierarchy.propertyIds">Assign properties</FormLabelHelp>
           {selectableIds.length > 0 && (
             <label className="flex items-center gap-2 text-sm cursor-pointer text-text-muted">
               <Checkbox checked={allSelected} onCheckedChange={(v) => toggleSelectAll(!!v)} />
@@ -347,7 +348,7 @@ export function AccountStepLocation({ formData, set }: StepContext) {
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
       <div className="grid grid-cols-3 gap-3">
         <div className="space-y-1.5">
-          <Label>City</Label>
+          <FormLabelHelp helpId="accounts.wizard.location.city">City</FormLabelHelp>
           <Select value={formData.city || "none"} onValueChange={handleCityChange}>
             <SelectTrigger>
               <SelectValue placeholder="Select city" />
@@ -363,7 +364,7 @@ export function AccountStepLocation({ formData, set }: StepContext) {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>State</Label>
+          <FormLabelHelp helpId="accounts.wizard.location.state">State</FormLabelHelp>
           <Select
             value={formData.state || "none"}
             onValueChange={(v) => set({ state: v === "none" ? "" : v })}
@@ -383,7 +384,7 @@ export function AccountStepLocation({ formData, set }: StepContext) {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Zone</Label>
+          <FormLabelHelp helpId="accounts.wizard.location.zone">Zone</FormLabelHelp>
           <Select value={formData.zone || "none"} onValueChange={(v) => set({ zone: v === "none" ? "" : v })}>
             <SelectTrigger>
               <SelectValue placeholder="Zone" />
@@ -401,7 +402,7 @@ export function AccountStepLocation({ formData, set }: StepContext) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Locality / area</Label>
+          <FormLabelHelp helpId="accounts.wizard.location.locality">Locality / area</FormLabelHelp>
           <Input
             value={formData.locality}
             onChange={(e) => set({ locality: e.target.value })}
@@ -409,7 +410,7 @@ export function AccountStepLocation({ formData, set }: StepContext) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Country</Label>
+          <FormLabelHelp helpId="accounts.wizard.location.country">Country</FormLabelHelp>
           <Select value={formData.country} onValueChange={(v) => set({ country: v })}>
             <SelectTrigger>
               <SelectValue />
@@ -423,7 +424,7 @@ export function AccountStepLocation({ formData, set }: StepContext) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Address</Label>
+          <FormLabelHelp helpId="accounts.wizard.location.addressLine1">Address</FormLabelHelp>
           <Input
             value={formData.addressLine1}
             onChange={(e) => set({ addressLine1: e.target.value })}
@@ -431,7 +432,7 @@ export function AccountStepLocation({ formData, set }: StepContext) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>PIN code</Label>
+          <FormLabelHelp helpId="accounts.wizard.location.zip">PIN code</FormLabelHelp>
           <Input
             value={formData.zip}
             onChange={(e) => set({ zip: e.target.value })}
@@ -452,15 +453,15 @@ export function AccountStepCompliance({ ctx }: { ctx: StepContext }) {
         <h4 className="text-sm font-medium text-text">Identification</h4>
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1.5">
-            <Label>GSTIN</Label>
+            <FormLabelHelp helpId="accounts.wizard.compliance.gstin">GSTIN</FormLabelHelp>
             <Input value={formData.gstin} onChange={(e) => set({ gstin: e.target.value })} placeholder="15-digit GSTIN" />
           </div>
           <div className="space-y-1.5">
-            <Label>PAN</Label>
+            <FormLabelHelp helpId="accounts.wizard.compliance.panNumber">PAN</FormLabelHelp>
             <Input value={formData.panNumber} onChange={(e) => set({ panNumber: e.target.value })} placeholder="10-digit PAN" />
           </div>
           <div className="space-y-1.5">
-            <Label>PMS profile ID</Label>
+            <FormLabelHelp helpId="accounts.wizard.compliance.pmsProfileId">PMS profile ID</FormLabelHelp>
             <Input
               value={formData.pmsProfileId}
               onChange={(e) => set({ pmsProfileId: e.target.value })}
@@ -473,7 +474,7 @@ export function AccountStepCompliance({ ctx }: { ctx: StepContext }) {
       <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
         <h4 className="text-sm font-medium text-text">Sales team</h4>
         <div className="space-y-2">
-          <Label className="text-sm">Primary account manager (PAM)</Label>
+          <FormLabelHelp helpId="accounts.wizard.compliance.primaryAccountManager" className="text-sm">Primary account manager (PAM)</FormLabelHelp>
           <div className="grid grid-cols-2 gap-3">
             <Input
               placeholder="Manager name"
@@ -493,7 +494,7 @@ export function AccountStepCompliance({ ctx }: { ctx: StepContext }) {
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-sm">Secondary managers (SAM)</Label>
+            <FormLabelHelp helpId="accounts.wizard.compliance.secondaryAccountManagers" className="text-sm">Secondary managers (SAM)</FormLabelHelp>
             <Button type="button" variant="outline" size="sm" onClick={addSam}>
               Add SAM
             </Button>

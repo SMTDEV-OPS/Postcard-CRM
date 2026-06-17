@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
@@ -285,7 +285,7 @@ export function GroupsManager() {
                             <div className="space-y-4">
                                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Group Details</h3>
                                 <div className="space-y-2">
-                                    <Label>Name <span className="text-red-500">*</span></Label>
+                                    <FormLabelHelp helpId="setup.groups.name" required>Name</FormLabelHelp>
                                     <Input
                                         value={editingGroup.name}
                                         onChange={e => setEditingGroup({ ...editingGroup, name: e.target.value })}
@@ -293,7 +293,7 @@ export function GroupsManager() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Description</Label>
+                                    <FormLabelHelp helpId="setup.groups.description">Description</FormLabelHelp>
                                     <Textarea
                                         value={editingGroup.description}
                                         onChange={e => setEditingGroup({ ...editingGroup, description: e.target.value })}
@@ -309,7 +309,7 @@ export function GroupsManager() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {/* Add Users */}
                                     <div className="space-y-1.5">
-                                        <Label className="text-xs">Add Users</Label>
+                                        <FormLabelHelp helpId="setup.groups.addUsers" className="text-xs">Add Users</FormLabelHelp>
                                         <div className="flex gap-2">
                                             <select
                                                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
@@ -327,7 +327,7 @@ export function GroupsManager() {
 
                                     {/* Add Subgroups */}
                                     <div className="space-y-1.5">
-                                        <Label className="text-xs">Add Sub-Groups</Label>
+                                        <FormLabelHelp helpId="setup.groups.addSubGroups" className="text-xs">Add Sub-Groups</FormLabelHelp>
                                         <div className="flex gap-2">
                                             <select
                                                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
@@ -345,7 +345,7 @@ export function GroupsManager() {
 
                                     {/* Add Roles */}
                                     <div className="space-y-1.5 md:col-span-2">
-                                        <Label className="text-xs">Add Roles</Label>
+                                        <FormLabelHelp helpId="setup.groups.addRoles" className="text-xs">Add Roles</FormLabelHelp>
                                         <div className="flex gap-2">
                                             <select
                                                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"

@@ -13,6 +13,7 @@
     "dev": "ts-node src/server.ts",
     "seed:admin": "ts-node scripts/seedAdmin.ts",
     "seed:ezee-properties": "ts-node scripts/seedEzeeProperties.ts",
+    "seed:postcard-hotels": "ts-node scripts/seedPostcardHotels.ts",
     "seed:newhotel": "ts-node scripts/seedNewHotel.ts",
     "seed:postcard-workflows": "ts-node scripts/seedPostcardWorkflows.ts",
     "seed:system-filters": "ts-node scripts/seedSystemFilters.ts",

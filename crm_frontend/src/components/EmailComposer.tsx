@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import {
   Dialog,
   DialogContent,
@@ -691,9 +691,9 @@ export const EmailComposer = ({
             <div className="bg-white rounded-lg border border-slate-200 p-4 space-y-4">
           {/* To */}
           <div>
-                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2 block">
-                  To <span className="text-red-500">*</span>
-                </Label>
+                <FormLabelHelp helpId="email.compose.to" required className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2 block">
+                  To
+                </FormLabelHelp>
                 {to.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {to.map((addr) => (
@@ -854,9 +854,9 @@ export const EmailComposer = ({
 
           {/* Subject */}
             <div className="bg-white rounded-lg border border-slate-200 p-4">
-              <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2 block">
-                Subject <span className="text-red-500">*</span>
-              </Label>
+              <FormLabelHelp helpId="email.compose.subject" required className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2 block">
+                Subject
+              </FormLabelHelp>
             <Input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
@@ -868,9 +868,9 @@ export const EmailComposer = ({
             {/* Message Body */}
             <div className="bg-white rounded-lg border border-slate-200 p-4">
               <div className="flex items-center justify-between mb-3">
-                <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                  Message <span className="text-red-500">*</span>
-                </Label>
+                <FormLabelHelp helpId="email.compose.body" required className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  Message
+                </FormLabelHelp>
               <Button
                 variant="ghost"
                 size="sm"

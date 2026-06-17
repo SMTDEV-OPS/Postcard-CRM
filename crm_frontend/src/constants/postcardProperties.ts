@@ -1,4 +1,4 @@
-/** Canonical Postcard hotel properties (accounts, contracts, etc.) */
+/** Canonical Postcard hotel properties (display order for seeded hotels) */
 export const POSTCARD_PROPERTY_NAMES = [
   "The Postcard in the Himalayan Willows",
   "The Postcard in the Durrung Tea Estate",
@@ -44,20 +44,28 @@ function propertyNamesMatch(canonical: string, apiName: string): boolean {
 }
 
 export function buildPostcardPropertyOptions(
-  apiProperties: Array<{ _id: string; name: string }>
+  apiProperties: Array<{ _id: string; name: string; status?: string }>
 ): PostcardPropertyOption[] {
+  const active = apiProperties.filter((p) => p.status !== "INACTIVE");
   const usedIds = new Set<string>();
-  return POSTCARD_PROPERTY_NAMES.map((name) => {
-    const match = apiProperties.find(
-      (p) => !usedIds.has(p._id) && propertyNamesMatch(name, p.name)
+  const ordered: PostcardPropertyOption[] = [];
+
+  for (const canonical of POSTCARD_PROPERTY_NAMES) {
+    const match = active.find(
+      (p) => !usedIds.has(p._id) && propertyNamesMatch(canonical, p.name)
     );
-    if (match) usedIds.add(match._id);
-    return {
-      id: match?._id ?? "",
-      name,
-      selectable: !!match?._id,
-    };
-  });
+    if (match) {
+      usedIds.add(match._id);
+      ordered.push({ id: match._id, name: match.name, selectable: true });
+    }
+  }
+
+  const extras = active
+    .filter((p) => !usedIds.has(p._id))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((p) => ({ id: p._id, name: p.name, selectable: true }));
+
+  return [...ordered, ...extras];
 }
 
 export function propertyMapFromOptions(

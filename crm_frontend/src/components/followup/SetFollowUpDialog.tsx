@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import {
   Select,
   SelectContent,
@@ -172,9 +172,9 @@ export function SetFollowUpDialog({
           <div className="space-y-4 py-1">
             {showContactPicker ? (
               <div className="space-y-1.5">
-                <Label>
-                  Follow-up for <span className="text-destructive">*</span>
-                </Label>
+                <FormLabelHelp helpId="followups.contact" required className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                  Follow-up for
+                </FormLabelHelp>
                 <Select value={contactId} onValueChange={setContactId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select contact" />
@@ -200,7 +200,7 @@ export function SetFollowUpDialog({
             ) : null}
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-text-muted">Follow-up date</Label>
+              <FormLabelHelp helpId="followups.dueDate" className="text-xs font-semibold uppercase tracking-wide text-text-muted">Follow-up date</FormLabelHelp>
               <DatePicker
                 value={followUpDate}
                 onChange={(d) => setFollowUpDate(d ?? null)}
@@ -210,7 +210,7 @@ export function SetFollowUpDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-text-muted">Note</Label>
+              <FormLabelHelp helpId="followups.note" className="text-xs font-semibold uppercase tracking-wide text-text-muted">Note</FormLabelHelp>
               <Input
                 placeholder="Note…"
                 value={followUpNote}

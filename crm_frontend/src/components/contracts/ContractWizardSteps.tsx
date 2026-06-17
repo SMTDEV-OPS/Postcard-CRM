@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -27,9 +27,7 @@ export function ContractStepBasics({
   return (
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
       <div className="space-y-1.5">
-        <Label>
-          Company name <span className="text-destructive">*</span>
-        </Label>
+        <FormLabelHelp helpId="contracts.wizard.companyName" required>Company name</FormLabelHelp>
         <Input
           value={form.companyName}
           onChange={(e) => set({ companyName: e.target.value })}
@@ -37,7 +35,7 @@ export function ContractStepBasics({
         />
       </div>
       <div className="space-y-1.5">
-        <Label>Channel</Label>
+        <FormLabelHelp helpId="contracts.wizard.channel">Channel</FormLabelHelp>
         <Select value={form.channel} onValueChange={(v) => set({ channel: v as ContractChannel })}>
           <SelectTrigger>
             <SelectValue />
@@ -81,7 +79,7 @@ export function ContractStepParties({
     <div className="space-y-4">
       <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
         <div className="space-y-1.5">
-          <Label>Send to contact (optional)</Label>
+          <FormLabelHelp helpId="contracts.wizard.contactId">Send to contact (optional)</FormLabelHelp>
           <Select
             value={form.contactId || "__none__"}
             onValueChange={(v) => set({ contactId: v === "__none__" ? "" : v })}
@@ -103,7 +101,7 @@ export function ContractStepParties({
           </p>
         </div>
         <div className="space-y-1.5">
-          <Label>Or email (optional)</Label>
+          <FormLabelHelp helpId="contracts.wizard.contactEmail">Or email (optional)</FormLabelHelp>
           <Input
             value={form.contactEmail}
             onChange={(e) => set({ contactEmail: e.target.value })}
@@ -114,7 +112,7 @@ export function ContractStepParties({
       </div>
       <div className="rounded-lg border border-border bg-surface p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <Label>Properties</Label>
+          <FormLabelHelp helpId="contracts.wizard.propertyIds">Properties</FormLabelHelp>
           {selectableIds.length > 0 && (
             <label className="flex items-center gap-2 text-sm cursor-pointer text-text-muted">
               <Checkbox

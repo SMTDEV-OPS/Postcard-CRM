@@ -31,7 +31,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
@@ -338,7 +338,7 @@ export function PipelineBuilder() {
         <>
           {pipelines.length > 1 && (
             <div style={{ marginBottom: 16 }}>
-              <Label>Pipeline</Label>
+              <FormLabelHelp helpId="setup.pipelines.pipeline">Pipeline</FormLabelHelp>
               <Select
                 value={selectedPipeline?._id ?? ""}
                 onChange={(e) => {
@@ -409,7 +409,7 @@ export function PipelineBuilder() {
           </DialogHeader>
           <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 8 }}>
             <div>
-              <Label>Stage Name</Label>
+              <FormLabelHelp helpId="setup.pipelines.stageName" required>Stage Name</FormLabelHelp>
               <Input
                 value={form.name ?? ""}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
@@ -417,7 +417,7 @@ export function PipelineBuilder() {
               />
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Label>Is Terminal</Label>
+              <FormLabelHelp helpId="setup.pipelines.isTerminal">Is Terminal</FormLabelHelp>
               <Switch
                 checked={form.isTerminal ?? false}
                 onCheckedChange={(v) =>
@@ -431,7 +431,7 @@ export function PipelineBuilder() {
             </div>
             {form.isTerminal && (
               <div>
-                <Label>Terminal Type</Label>
+                <FormLabelHelp helpId="setup.pipelines.terminalType" required>Terminal Type</FormLabelHelp>
                 <Select
                   value={form.terminalType ?? "LOST"}
                   onChange={(e) =>
@@ -447,7 +447,7 @@ export function PipelineBuilder() {
               </div>
             )}
             <div>
-              <Label>Mandatory Fields</Label>
+              <FormLabelHelp helpId="setup.pipelines.requiredFields">Mandatory Fields</FormLabelHelp>
               <div
                 style={{
                   display: "flex",
@@ -481,7 +481,7 @@ export function PipelineBuilder() {
               </div>
             </div>
             <div>
-              <Label>Color</Label>
+              <FormLabelHelp helpId="setup.pipelines.color">Color</FormLabelHelp>
               <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
                 {COLOR_PRESETS.map((c) => (
                   <button

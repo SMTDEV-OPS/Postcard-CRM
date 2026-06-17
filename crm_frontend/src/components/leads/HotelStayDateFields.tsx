@@ -2,11 +2,11 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { FormFieldLabelHelp } from "@/components/help/FormLabelHelp";
 import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -37,7 +37,7 @@ export function HotelStayDateFields({
         name={`hotels.${index}.checkInDate`}
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>{checkInLabel}</FormLabel>
+            <FormFieldLabelHelp helpId="leads.add.checkInDate" required>{checkInLabel.replace(" *", "")}</FormFieldLabelHelp>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -78,7 +78,7 @@ export function HotelStayDateFields({
         name={`hotels.${index}.checkOutDate`}
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>{checkOutLabel}</FormLabel>
+            <FormFieldLabelHelp helpId="leads.add.checkOutDate" required>{checkOutLabel.replace(" *", "")}</FormFieldLabelHelp>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>

@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -57,9 +58,9 @@ export function TravelTradeOrganizationFields({
     <div className="space-y-4 rounded-lg border border-border bg-hover/30 p-4">
       <p className="text-sm font-medium text-text">Travel trade details</p>
       <div className="space-y-1.5">
-        <Label htmlFor="travel-operator-name">
-          Travel operator name <span className="text-destructive">*</span>
-        </Label>
+        <FormLabelHelp helpId="accounts.wizard.organization.travelOperatorName" required htmlFor="travel-operator-name">
+          Travel operator name
+        </FormLabelHelp>
         <Input
           id="travel-operator-name"
           value={profile?.travelOperatorName ?? ""}
@@ -72,9 +73,9 @@ export function TravelTradeOrganizationFields({
         />
       </div>
       <div className="space-y-2">
-        <Label>
-          Travel operator type <span className="text-destructive">*</span>
-        </Label>
+        <FormLabelHelp helpId="accounts.wizard.organization.operatorTypes" required>
+          Travel operator type
+        </FormLabelHelp>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {TRAVEL_OPERATOR_TYPES.map((opt) => (
             <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -118,7 +119,7 @@ export function TravelTradeInboundStep({ formData, set }: { formData: AccountFor
     <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
       <h3 className="text-sm font-medium">Inbound operator</h3>
       <div className="space-y-2">
-        <Label>Segment</Label>
+        <FormLabelHelp helpId="accounts.wizard.travel.inbound.segments">Segment</FormLabelHelp>
         <div className="grid grid-cols-2 gap-2">
           {INBOUND_SEGMENTS.map((opt) => (
             <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -133,7 +134,7 @@ export function TravelTradeInboundStep({ formData, set }: { formData: AccountFor
       </div>
       {inbound.segments.length > 0 && (
         <div className="space-y-3">
-          <Label>Market / country per segment</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.inbound.segmentMarkets">Market / country per segment</FormLabelHelp>
           {inbound.segments.map((seg) => (
             <div key={seg} className="space-y-1">
               <Label className="text-xs text-text-muted">{labelForInboundSegment(seg)}</Label>
@@ -151,7 +152,7 @@ export function TravelTradeInboundStep({ formData, set }: { formData: AccountFor
         </div>
       )}
       <div className="space-y-2">
-        <Label>Hotel segment</Label>
+        <FormLabelHelp helpId="accounts.wizard.travel.inbound.hotelSegments">Hotel segment</FormLabelHelp>
         <div className="grid grid-cols-2 gap-2">
           {HOTEL_SEGMENTS.map((opt) => (
             <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -188,14 +189,14 @@ export function TravelTradeLuxuryStep({ formData, set }: { formData: AccountForm
     <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
       <h3 className="text-sm font-medium">Luxury operator</h3>
       <div className="space-y-1.5">
-        <Label>Country / market</Label>
+        <FormLabelHelp helpId="accounts.wizard.travel.luxury.countryMarket">Country / market</FormLabelHelp>
         <Input
           value={luxury.countryMarket ?? ""}
           onChange={(e) => updateLuxury({ countryMarket: e.target.value })}
         />
       </div>
       <div className="space-y-1.5">
-        <Label>Type of operator</Label>
+        <FormLabelHelp helpId="accounts.wizard.travel.luxury.operatorKind">Type of operator</FormLabelHelp>
         <Select
           value={luxury.operatorKind ?? ""}
           onValueChange={(v) =>
@@ -215,7 +216,7 @@ export function TravelTradeLuxuryStep({ formData, set }: { formData: AccountForm
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label>Estimated annual room nights</Label>
+        <FormLabelHelp helpId="accounts.wizard.travel.luxury.annualRoomNights">Estimated annual room nights</FormLabelHelp>
         <Input
           type="number"
           min={0}
@@ -248,18 +249,18 @@ export function TravelTradeSeriesStep({ formData, set }: { formData: AccountForm
       <h3 className="text-sm font-medium">Series operator</h3>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Market</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.series.market">Market</FormLabelHelp>
           <Input value={series.market ?? ""} onChange={(e) => updateSeries({ market: e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Series or program name</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.series.programName">Series or program name</FormLabelHelp>
           <Input
             value={series.programName ?? ""}
             onChange={(e) => updateSeries({ programName: e.target.value })}
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Start month</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.series.startMonth">Start month</FormLabelHelp>
           <Select
             value={series.startMonth ? String(series.startMonth) : ""}
             onValueChange={(v) => updateSeries({ startMonth: Number(v) })}
@@ -277,7 +278,7 @@ export function TravelTradeSeriesStep({ formData, set }: { formData: AccountForm
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>End month</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.series.endMonth">End month</FormLabelHelp>
           <Select
             value={series.endMonth ? String(series.endMonth) : ""}
             onValueChange={(v) => updateSeries({ endMonth: Number(v) })}
@@ -295,7 +296,7 @@ export function TravelTradeSeriesStep({ formData, set }: { formData: AccountForm
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Frequency</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.series.frequency">Frequency</FormLabelHelp>
           <Select
             value={series.frequency ?? ""}
             onValueChange={(v) => updateSeries({ frequency: v as "WEEKLY" | "BIWEEKLY" })}
@@ -313,7 +314,7 @@ export function TravelTradeSeriesStep({ formData, set }: { formData: AccountForm
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Pattern</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.series.pattern">Pattern</FormLabelHelp>
           <Select
             value={series.pattern ?? ""}
             onValueChange={(v) => updateSeries({ pattern: v as "WEEKENDS" | "WEEKDAYS" })}
@@ -331,7 +332,7 @@ export function TravelTradeSeriesStep({ formData, set }: { formData: AccountForm
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Rooms per departure</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.series.roomsPerDeparture">Rooms per departure</FormLabelHelp>
           <Input
             type="number"
             min={0}
@@ -344,7 +345,7 @@ export function TravelTradeSeriesStep({ formData, set }: { formData: AccountForm
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Estimated total room nights</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.series.totalRoomNights">Estimated total room nights</FormLabelHelp>
           <Input
             type="number"
             min={0}
@@ -358,7 +359,7 @@ export function TravelTradeSeriesStep({ formData, set }: { formData: AccountForm
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>Blackout dates</Label>
+        <FormLabelHelp helpId="accounts.wizard.travel.series.blackoutDates">Blackout dates</FormLabelHelp>
         <Textarea
           value={series.blackoutDates ?? ""}
           onChange={(e) => updateSeries({ blackoutDates: e.target.value })}
@@ -386,11 +387,11 @@ export function TravelTradeDomesticStep({ formData, set }: { formData: AccountFo
     <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
       <h3 className="text-sm font-medium">Domestic agent</h3>
       <div className="space-y-1.5">
-        <Label>City</Label>
+        <FormLabelHelp helpId="accounts.wizard.travel.domestic.city">City</FormLabelHelp>
         <Input value={domestic.city ?? ""} onChange={(e) => updateDomestic({ city: e.target.value })} />
       </div>
       <div className="space-y-2">
-        <Label>Segment</Label>
+        <FormLabelHelp helpId="accounts.wizard.travel.domestic.segment">Segment</FormLabelHelp>
         <div className="grid grid-cols-2 gap-2">
           {DOMESTIC_SEGMENTS.map((opt) => (
             <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -408,7 +409,7 @@ export function TravelTradeDomesticStep({ formData, set }: { formData: AccountFo
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>Agent type</Label>
+        <FormLabelHelp helpId="accounts.wizard.travel.domestic.agentType">Agent type</FormLabelHelp>
         <Select
           value={domestic.agentType ?? ""}
           onValueChange={(v) => updateDomestic({ agentType: v as "B2B" | "B2C" })}
@@ -446,11 +447,11 @@ export function TravelTradeGroupsStep({ formData, set }: { formData: AccountForm
       <h3 className="text-sm font-medium">Groups & incentives</h3>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Market</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.series.market">Market</FormLabelHelp>
           <Input value={groups.market ?? ""} onChange={(e) => updateGroups({ market: e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Type</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.groups.type">Type</FormLabelHelp>
           <Select
             value={groups.type ?? ""}
             onValueChange={(v) =>
@@ -470,7 +471,7 @@ export function TravelTradeGroupsStep({ formData, set }: { formData: AccountForm
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Group size</Label>
+          <FormLabelHelp helpId="accounts.wizard.travel.groups.groupSize">Group size</FormLabelHelp>
           <Input
             type="number"
             min={0}
@@ -482,7 +483,7 @@ export function TravelTradeGroupsStep({ formData, set }: { formData: AccountForm
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Preferred travel months</Label>
+        <FormLabelHelp helpId="accounts.wizard.travel.groups.preferredTravelMonths">Preferred travel months</FormLabelHelp>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {TRAVEL_MONTH_OPTIONS.map((m) => (
             <label key={m.value} className="flex items-center gap-2 text-sm cursor-pointer">

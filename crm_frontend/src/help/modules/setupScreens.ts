@@ -1,0 +1,66 @@
+import type { HelpScreenGuide } from "../helpTypes";
+import {
+  SETUP_HOTELS_FIELDS,
+  SETUP_HOLIDAYS_FIELDS,
+  SETUP_USERS_FIELDS,
+  SETUP_FIELDS_BUILDER_FIELDS,
+  SETUP_PIPELINES_FIELDS,
+  SETUP_SCORING_FIELDS,
+  SETUP_ALLOCATION_FIELDS,
+  SETUP_FOLLOWUP_FIELDS,
+  SETUP_WORKFLOWS_FIELDS,
+  SETUP_SALES_TARGETS_FIELDS,
+  SETUP_SALES_SETTINGS_FIELDS,
+  SETUP_INTEGRATIONS_FIELDS,
+  SETUP_WEBHOOKS_FIELDS,
+  SETUP_TEMPLATES_FIELDS,
+  SETUP_EMAIL_PROVIDER_FIELDS,
+  SETUP_ROLES_FIELDS,
+  SETUP_PROFILES_FIELDS,
+  SETUP_GROUPS_FIELDS,
+  SETUP_DATA_SHARING_FIELDS,
+  SETUP_AUDIT_FIELDS,
+  TICKETS_FIELDS,
+  FOLLOWUPS_FIELDS,
+  KNOWLEDGE_EDITOR_FIELDS,
+  EMAIL_CLIENT_FIELDS,
+  BUDDY_FIELDS,
+} from "./fieldGuides/setup";
+
+function screen(
+  id: string,
+  title: string,
+  what: string,
+  how: string,
+  fields: typeof SETUP_HOTELS_FIELDS
+): HelpScreenGuide {
+  return { id, title, what, how, fields };
+}
+
+export const SETUP_TOPIC_SCREENS: Record<string, HelpScreenGuide[]> = {
+  "setup.hotels": [screen("setup.hotels.form", "Hotel form", "Add or edit a master-list hotel.", "Enter name and location; set Active to show in dropdowns.", SETUP_HOTELS_FIELDS)],
+  "setup.holidays": [screen("setup.holidays.form", "Holiday form", "Calendar markers for dashboard.", "Add date range and type.", SETUP_HOLIDAYS_FIELDS)],
+  "setup.users": [screen("setup.users.form", "User form", "Create CRM login.", "Email, name, role, profile.", SETUP_USERS_FIELDS)],
+  "setup.fields": [screen("setup.fields.form", "Field builder", "Custom fields on modules.", "Pick entity, type, and label.", SETUP_FIELDS_BUILDER_FIELDS)],
+  "setup.pipelines": [screen("setup.pipelines.form", "Pipeline editor", "Stages and required fields.", "Name pipeline, add ordered stages.", SETUP_PIPELINES_FIELDS)],
+  "setup.scoring": [screen("setup.scoring.form", "Scoring config", "Hot/Warm/Cold thresholds.", "Set score cutoffs and weights.", SETUP_SCORING_FIELDS)],
+  "setup.allocation": [screen("setup.allocation.form", "Assignment rules", "Auto lead routing.", "Choose mode and capacity.", SETUP_ALLOCATION_FIELDS)],
+  "setup.followup-rules": [screen("setup.followups.form", "Follow-up rules", "Auto-schedule tasks by heat.", "Per bucket, set delay hours.", SETUP_FOLLOWUP_FIELDS)],
+  "setup.workflows": [screen("setup.workflows.form", "Workflow builder", "Automation rules.", "Trigger, condition, action.", SETUP_WORKFLOWS_FIELDS)],
+  "setup.sales-targets": [screen("setup.sales-targets.form", "Sales targets", "Monthly goals.", "Enter month and target.", SETUP_SALES_TARGETS_FIELDS)],
+  "setup.sales-settings": [screen("setup.sales-settings.form", "FY settings", "Financial year config.", "Start month and metric.", SETUP_SALES_SETTINGS_FIELDS)],
+  "setup.integrations": [screen("setup.integrations.form", "Integrations", "External connections.", "Pick provider and authenticate.", SETUP_INTEGRATIONS_FIELDS)],
+  "setup.webhooks": [screen("setup.webhooks.form", "Webhooks", "Outbound event URLs.", "URL and event selection.", SETUP_WEBHOOKS_FIELDS)],
+  "setup.templates": [screen("setup.templates.form", "Message templates", "Reusable messages.", "Name, channel, body with placeholders.", SETUP_TEMPLATES_FIELDS)],
+  "setup.email-provider": [screen("setup.email-provider.form", "Email provider", "SMTP settings.", "Host, port, credentials.", SETUP_EMAIL_PROVIDER_FIELDS)],
+  "setup.roles": [screen("setup.roles.form", "Roles", "Org hierarchy roles.", "Name and parent role.", SETUP_ROLES_FIELDS)],
+  "setup.profiles": [screen("setup.profiles.form", "Profiles", "Permission sets.", "Name and check permissions.", SETUP_PROFILES_FIELDS)],
+  "setup.groups": [screen("setup.groups.form", "Groups", "Teams.", "Name and add members.", SETUP_GROUPS_FIELDS)],
+  "setup.data-sharing": [screen("setup.data-sharing.form", "Data sharing", "Record visibility.", "Per object, set default access.", SETUP_DATA_SHARING_FIELDS)],
+  "setup.audit-log": [screen("setup.audit.form", "Audit log", "Change history.", "Filter by user, entity, dates.", SETUP_AUDIT_FIELDS)],
+  "tickets.main": [screen("tickets.form", "Ticket form", "Support issue record.", "Subject, description, priority, assignee.", TICKETS_FIELDS)],
+  "followups.today": [screen("followups.task", "Follow-up task", "Scheduled action on a lead.", "Due date, note, outcome.", FOLLOWUPS_FIELDS)],
+  "knowledge.editor": [screen("knowledge.editor.form", "Guide editor", "Per-hotel sales content.", "Edit sections and gallery.", KNOWLEDGE_EDITOR_FIELDS)],
+  "email.client": [screen("email.client.form", "Email compose", "Send from CRM.", "To, subject, body.", EMAIL_CLIENT_FIELDS)],
+  "buddy.main": [screen("buddy.form", "Buddy assignment", "Coverage when away.", "Assignee and date range.", BUDDY_FIELDS)],
+};

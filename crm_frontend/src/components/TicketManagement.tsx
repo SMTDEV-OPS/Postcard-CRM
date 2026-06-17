@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -243,7 +243,7 @@ export const TicketManagement = ({ permissions = [], isAdmin = false }: TicketMa
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
+                  <FormLabelHelp helpId="tickets.title" required htmlFor="title">Title</FormLabelHelp>
                   <Input
                     id="title"
                     value={newTicket.title}
@@ -252,7 +252,7 @@ export const TicketManagement = ({ permissions = [], isAdmin = false }: TicketMa
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description *</Label>
+                  <FormLabelHelp helpId="tickets.description" required htmlFor="description">Description</FormLabelHelp>
                   <Textarea
                     id="description"
                     value={newTicket.description}
@@ -263,7 +263,7 @@ export const TicketManagement = ({ permissions = [], isAdmin = false }: TicketMa
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category *</Label>
+                    <FormLabelHelp helpId="tickets.category" required htmlFor="category">Category</FormLabelHelp>
                     <Select
                       value={newTicket.category}
                       onValueChange={(value) => setNewTicket({ ...newTicket, category: value as TicketCategory })}
@@ -281,7 +281,7 @@ export const TicketManagement = ({ permissions = [], isAdmin = false }: TicketMa
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="priority">Priority</Label>
+                    <FormLabelHelp helpId="tickets.priority" htmlFor="priority">Priority</FormLabelHelp>
                     <Select
                       value={newTicket.priority}
                       onValueChange={(value) => setNewTicket({ ...newTicket, priority: value as TicketPriority })}
@@ -299,7 +299,7 @@ export const TicketManagement = ({ permissions = [], isAdmin = false }: TicketMa
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="assignment">Assignment</Label>
+                  <FormLabelHelp helpId="tickets.assignment" htmlFor="assignment">Assignment</FormLabelHelp>
                   <Select
                     value={newTicket.assignmentMode}
                     onValueChange={(value) => setNewTicket({ ...newTicket, assignmentMode: value as "auto" | "manual" })}
@@ -315,7 +315,7 @@ export const TicketManagement = ({ permissions = [], isAdmin = false }: TicketMa
                 </div>
                 {newTicket.assignmentMode === "manual" && (
                   <div className="space-y-2">
-                    <Label htmlFor="assignee">Assign To</Label>
+                    <FormLabelHelp helpId="tickets.assignee" htmlFor="assignee">Assign To</FormLabelHelp>
                     <Select
                       value={newTicket.assignedToUserId || ""}
                       onValueChange={(value) => setNewTicket({ ...newTicket, assignedToUserId: value })}

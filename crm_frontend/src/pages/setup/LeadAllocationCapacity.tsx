@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { CheckCircle } from "lucide-react";
 import { getAllocationConfig, updateAllocationConfig } from "@/services/allocation";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
@@ -53,7 +53,7 @@ export function LeadAllocationCapacity() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label>Daily lead cap per agent</Label>
+          <FormLabelHelp helpId="setup.allocation.dailyLeadCap">Daily lead cap per agent</FormLabelHelp>
           <Input
             type="number"
             value={config.daily_lead_cap ?? "30"}
@@ -63,7 +63,7 @@ export function LeadAllocationCapacity() {
           />
         </div>
         <div>
-          <Label>Allocation window (hours after login)</Label>
+          <FormLabelHelp helpId="setup.allocation.allocationWindow">Allocation window (hours after login)</FormLabelHelp>
           <Input
             type="number"
             value={config.allocation_window_hours ?? "8"}
@@ -73,7 +73,7 @@ export function LeadAllocationCapacity() {
           />
         </div>
         <div>
-          <Label>Overflow mode</Label>
+          <FormLabelHelp helpId="setup.allocation.overflowMode">Overflow mode</FormLabelHelp>
           <select
             className="mt-1 w-full h-9 px-3 border rounded-md text-sm"
             value={config.overflow_mode ?? "queue"}
@@ -88,7 +88,7 @@ export function LeadAllocationCapacity() {
           </select>
         </div>
         <div>
-          <Label>Alert threshold (%)</Label>
+          <FormLabelHelp helpId="setup.allocation.alertThreshold">Alert threshold (%)</FormLabelHelp>
           <Input
             type="number"
             value={config.alert_threshold_percent ?? "90"}
@@ -100,7 +100,7 @@ export function LeadAllocationCapacity() {
       </div>
 
       <div>
-        <Label>Assignment mode</Label>
+        <FormLabelHelp helpId="setup.allocation.mode" required>Assignment mode</FormLabelHelp>
         <p className="text-xs text-muted-foreground mt-0.5 mb-2">Manual only = no auto-assignment; leads stay unassigned until manually assigned</p>
         <div className="inline-flex border rounded-md overflow-hidden">
           {(["round_robin", "manual"] as const).map((mode) => {

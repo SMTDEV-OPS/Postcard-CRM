@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -264,11 +264,11 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="ticket-title">Title</Label>
+                <FormLabelHelp helpId="tickets.title" htmlFor="ticket-title">Title</FormLabelHelp>
                 <Input id="ticket-title" placeholder="Ticket title" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ticket-category">Category</Label>
+                <FormLabelHelp helpId="tickets.category" htmlFor="ticket-category">Category</FormLabelHelp>
                 <Select>
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
@@ -284,7 +284,7 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ticket-priority">Priority</Label>
+                <FormLabelHelp helpId="tickets.priority" htmlFor="ticket-priority">Priority</FormLabelHelp>
                 <Select>
                   <SelectTrigger>
                     <SelectValue placeholder="Select priority" />
@@ -298,7 +298,7 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="property">Property</Label>
+                <FormLabelHelp helpId="tickets.property" htmlFor="property">Property</FormLabelHelp>
                 <Select value={selectedProperty} onValueChange={setSelectedProperty}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select property" />
@@ -312,7 +312,7 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="assigned-agent">Assign to Agent</Label>
+                <FormLabelHelp helpId="tickets.assignee" htmlFor="assigned-agent">Assign to Agent</FormLabelHelp>
                 <Select disabled={!selectedProperty}>
                   <SelectTrigger>
                     <SelectValue placeholder={selectedProperty ? "Select agent" : "Select property first"} />
@@ -325,19 +325,19 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="guest-name">Guest Name</Label>
+                <FormLabelHelp helpId="tickets.guestName" htmlFor="guest-name">Guest Name</FormLabelHelp>
                 <Input id="guest-name" placeholder="Guest name" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="guest-phone">Guest Phone</Label>
+                <FormLabelHelp helpId="tickets.guestPhone" htmlFor="guest-phone">Guest Phone</FormLabelHelp>
                 <Input id="guest-phone" placeholder="+91 98765 43210" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="guest-email">Guest Email</Label>
+                <FormLabelHelp helpId="tickets.guestEmail" htmlFor="guest-email">Guest Email</FormLabelHelp>
                 <Input id="guest-email" type="email" placeholder="guest@email.com" />
               </div>
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="ticket-description">Description</Label>
+                <FormLabelHelp helpId="tickets.description" htmlFor="ticket-description">Description</FormLabelHelp>
                 <Textarea id="ticket-description" placeholder="Detailed description of the issue..." rows={4} />
               </div>
             </div>

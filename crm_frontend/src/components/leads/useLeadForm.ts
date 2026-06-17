@@ -215,11 +215,7 @@ export function useLeadForm(options: UseLeadFormOptions = {}) {
     const fetchPmsHotels = async () => {
       try {
         const properties = await listProperties();
-        setHotelOptions(
-          properties.filter(
-            (property) => property.status === "ACTIVE" && property.pmsProvider && property.pmsProvider !== "NONE"
-          )
-        );
+        setHotelOptions(properties.filter((property) => property.status === "ACTIVE"));
       } catch {
         setHotelOptions([]);
       }

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { PermissionsTable } from "./PermissionsTable";
@@ -344,11 +344,11 @@ export function ProfilesManager() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label>New Profile Name</Label>
+                            <FormLabelHelp helpId="setup.profiles.name" required>New Profile Name</FormLabelHelp>
                             <Input value={cloneName} onChange={e => setCloneName(e.target.value)} autoFocus />
                         </div>
                         <div className="space-y-2">
-                            <Label>Description</Label>
+                            <FormLabelHelp helpId="setup.profiles.description">Description</FormLabelHelp>
                             <Input value={cloneDesc} onChange={e => setCloneDesc(e.target.value)} />
                         </div>
                         <div className="pt-4 flex justify-end gap-2">

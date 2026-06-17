@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import {
   Dialog,
   DialogContent,
@@ -244,7 +244,7 @@ export const ScheduleFollowUpDialog = ({
         <div className="space-y-4 py-4">
           {/* Quick Time Buttons */}
           <div className="space-y-2 min-w-0">
-            <Label className="text-xs text-muted-foreground">Quick Schedule</Label>
+            <FormLabelHelp helpId="followups.quickSchedule" className="text-xs text-muted-foreground">Quick Schedule</FormLabelHelp>
             <div className="flex flex-wrap gap-2 min-w-0">
               {QUICK_TIMES.map((qt) => (
                 <Button
@@ -263,7 +263,7 @@ export const ScheduleFollowUpDialog = ({
 
           {/* Follow-up Type */}
           <div className="space-y-2 min-w-0">
-            <Label>Follow-up Type</Label>
+            <FormLabelHelp helpId="followups.type">Follow-up Type</FormLabelHelp>
             <div className="flex flex-wrap gap-2 min-w-0">
               {FOLLOW_UP_TYPES.map((type) => {
                 const Icon = type.icon;
@@ -286,7 +286,7 @@ export const ScheduleFollowUpDialog = ({
 
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <FormLabelHelp helpId="followups.title" required htmlFor="title">Title</FormLabelHelp>
             <Input
               id="title"
               placeholder="e.g., Call back guest regarding room availability"
@@ -297,7 +297,7 @@ export const ScheduleFollowUpDialog = ({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Notes (Optional)</Label>
+            <FormLabelHelp helpId="followups.note" htmlFor="description">Notes (Optional)</FormLabelHelp>
             <Textarea
               id="description"
               placeholder="Add any details or context for this follow-up..."
@@ -310,10 +310,7 @@ export const ScheduleFollowUpDialog = ({
           {/* Date and Time */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="dueDate">
-                <Calendar className="h-3 w-3 inline mr-1" />
-                Date *
-              </Label>
+              <FormLabelHelp helpId="followups.dueDate" required htmlFor="dueDate">Date</FormLabelHelp>
               <Input
                 id="dueDate"
                 type="date"
@@ -323,10 +320,7 @@ export const ScheduleFollowUpDialog = ({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dueTime">
-                <Clock className="h-3 w-3 inline mr-1" />
-                Time *
-              </Label>
+              <FormLabelHelp helpId="followups.dueTime" required htmlFor="dueTime">Time</FormLabelHelp>
               <Input
                 id="dueTime"
                 type="time"
@@ -338,10 +332,7 @@ export const ScheduleFollowUpDialog = ({
 
           {/* Assign To */}
           <div className="space-y-2">
-            <Label>
-              <UserIcon className="h-3 w-3 inline mr-1" />
-              Assign To *
-            </Label>
+            <FormLabelHelp helpId="followups.assignee" required>Assign To</FormLabelHelp>
             <Select
               value={ownerUserId}
               onValueChange={setOwnerUserId}
@@ -371,7 +362,7 @@ export const ScheduleFollowUpDialog = ({
           {leadId && (
             <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
               <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Pause Workflow Reminders</Label>
+                <FormLabelHelp helpId="followups.pauseWorkflow" className="text-sm font-medium">Pause Workflow Reminders</FormLabelHelp>
                 <p className="text-xs text-muted-foreground">
                   Stop automatic workflow reminders. Only this scheduled follow-up will trigger.
                 </p>

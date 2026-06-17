@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
@@ -299,9 +299,9 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, o
 
                         <div className="grid gap-4">
                             <div className="space-y-1.5">
-                                <Label htmlFor="um-name" className="text-sm font-medium">
-                                    Full Name <span className="text-destructive">*</span>
-                                </Label>
+                                <FormLabelHelp helpId="setup.users.name" htmlFor="um-name" className="text-sm font-medium" required>
+                                    Full Name
+                                </FormLabelHelp>
                                 <Input
                                     id="um-name"
                                     placeholder="e.g. Priya Sharma"
@@ -313,9 +313,9 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, o
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="um-email" className="text-sm font-medium">
-                                    Email Address <span className="text-destructive">*</span>
-                                </Label>
+                                <FormLabelHelp helpId="setup.users.email" htmlFor="um-email" className="text-sm font-medium" required>
+                                    Email Address
+                                </FormLabelHelp>
                                 <Input
                                     id="um-email"
                                     type="email"
@@ -330,7 +330,7 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, o
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="um-phone" className="text-sm font-medium">Phone Number</Label>
+                                <FormLabelHelp helpId="setup.users.phone" htmlFor="um-phone" className="text-sm font-medium">Phone Number</FormLabelHelp>
                                 <Input
                                     id="um-phone"
                                     type="tel"
@@ -353,10 +353,10 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, o
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="um-password" className="text-sm font-medium">
-                                Password {!editingUser && <span className="text-destructive">*</span>}
+                            <FormLabelHelp helpId="setup.users.password" htmlFor="um-password" className="text-sm font-medium" required={!editingUser}>
+                                Password
                                 {editingUser && <span className="text-muted-foreground font-normal text-xs ml-1">(leave blank to keep current)</span>}
-                            </Label>
+                            </FormLabelHelp>
                             <Input
                                 id="um-password"
                                 type="password"
@@ -381,7 +381,7 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, o
 
 
                         <div className="space-y-1.5">
-                            <Label className="text-sm font-medium">Role</Label>
+                            <FormLabelHelp helpId="setup.users.role" className="text-sm font-medium" required>Role</FormLabelHelp>
                             <Select
                                 value={form.roleId || "none"}
                                 onValueChange={(v) => set("roleId", v === "none" ? "" : v)}
@@ -402,7 +402,7 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, o
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-sm font-medium">Reports To</Label>
+                            <FormLabelHelp helpId="setup.users.reportsTo" className="text-sm font-medium">Reports To</FormLabelHelp>
                             <Select value={form.reportsTo} onValueChange={(v) => set("reportsTo", v)}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="No manager" />

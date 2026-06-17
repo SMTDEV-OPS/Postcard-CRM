@@ -8,7 +8,7 @@ import {
 } from "@/services/accountsDashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import {
   Select,
   SelectContent,
@@ -118,12 +118,12 @@ export function HolidaysSetup() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Name</Label>
+              <FormLabelHelp helpId="setup.holidays.name" required>Name</FormLabelHelp>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Start date</Label>
+                <FormLabelHelp helpId="setup.holidays.startDate" required>Start date</FormLabelHelp>
                 <Input
                   type="date"
                   value={form.startDate}
@@ -131,7 +131,7 @@ export function HolidaysSetup() {
                 />
               </div>
               <div>
-                <Label>End date</Label>
+                <FormLabelHelp helpId="setup.holidays.endDate" required>End date</FormLabelHelp>
                 <Input
                   type="date"
                   value={form.endDate}
@@ -140,7 +140,7 @@ export function HolidaysSetup() {
               </div>
             </div>
             <div>
-              <Label>Type</Label>
+              <FormLabelHelp helpId="setup.holidays.type" required>Type</FormLabelHelp>
               <Select
                 value={form.type}
                 onValueChange={(v) =>
@@ -157,7 +157,7 @@ export function HolidaysSetup() {
               </Select>
             </div>
             <div>
-              <Label>Region (optional)</Label>
+              <FormLabelHelp helpId="setup.holidays.region">Region (optional)</FormLabelHelp>
               <Input
                 value={form.region}
                 onChange={(e) => setForm({ ...form, region: e.target.value })}

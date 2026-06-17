@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
@@ -318,11 +318,11 @@ export function WorkflowBuilder() {
           {step === 1 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <Label>Name</Label>
+                <FormLabelHelp helpId="setup.workflows.name" required>Name</FormLabelHelp>
                 <Input value={form.name ?? ""} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
               </div>
               <div>
-                <Label>Description</Label>
+                <FormLabelHelp helpId="setup.workflows.description">Description</FormLabelHelp>
                 <textarea
                   value={form.description ?? ""}
                   onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
@@ -337,7 +337,7 @@ export function WorkflowBuilder() {
                 />
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <Label>Is Active</Label>
+                <FormLabelHelp helpId="setup.workflows.isActive">Is Active</FormLabelHelp>
                 <Switch
                   checked={form.is_active ?? true}
                   onCheckedChange={(v) => setForm((p) => ({ ...p, is_active: v }))}
@@ -349,7 +349,7 @@ export function WorkflowBuilder() {
           {step === 2 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <Label>Trigger Event</Label>
+                <FormLabelHelp helpId="setup.workflows.trigger" required>Trigger Event</FormLabelHelp>
                 <Select
                   value={form.trigger_event ?? "lead_created"}
                   onChange={(e) => setForm((p) => ({ ...p, trigger_event: e.target.value as TriggerEvent }))}
@@ -363,7 +363,7 @@ export function WorkflowBuilder() {
                 <div>
                   {form.trigger_event === "lead_unattended" && (
                     <>
-                      <Label>Idle for (minutes)</Label>
+                      <FormLabelHelp helpId="setup.workflows.idleMinutes">Idle for (minutes)</FormLabelHelp>
                       <Input
                         type="number"
                         value={String((form.trigger_params_json as any)?.idle_minutes ?? 15)}
@@ -378,7 +378,7 @@ export function WorkflowBuilder() {
                   )}
                   {form.trigger_event === "scheduled" && (
                     <>
-                      <Label>Cron expression</Label>
+                      <FormLabelHelp helpId="setup.workflows.cronExpression">Cron expression</FormLabelHelp>
                       <Input
                         value={(form.trigger_params_json as any)?.cron ?? "0 9 * * *"}
                         onChange={(e) =>
@@ -392,7 +392,7 @@ export function WorkflowBuilder() {
                   )}
                   {form.trigger_event === "followup_missed_count" && (
                     <>
-                      <Label>After N missed follow-ups</Label>
+                      <FormLabelHelp helpId="setup.workflows.missedFollowups">After N missed follow-ups</FormLabelHelp>
                       <Input
                         type="number"
                         value={String((form.trigger_params_json as any)?.count ?? 1)}

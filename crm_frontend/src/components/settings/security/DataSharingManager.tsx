@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus, ShieldAlert, Loader2, Save, Trash2, Info, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
@@ -320,7 +320,7 @@ export function DataSharingManager() {
                     </DialogHeader>
                     <div className="grid gap-6 py-4">
                         <div className="grid gap-2">
-                            <Label>Module</Label>
+                            <FormLabelHelp helpId="setup.data-sharing.object" required>Module</FormLabelHelp>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 value={newRule.module}
@@ -334,7 +334,7 @@ export function DataSharingManager() {
                             <div className="border rounded-lg p-4 bg-gray-50/50 space-y-4">
                                 <h4 className="text-sm font-semibold flex items-center gap-2">Data From <span className="text-muted-foreground font-normal">(Records owned by)</span></h4>
                                 <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Type</Label>
+                                    <FormLabelHelp helpId="setup.data-sharing.fromType" className="text-xs text-muted-foreground" required>Type</FormLabelHelp>
                                     <select
                                         className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                         value={newRule.fromType}
@@ -345,7 +345,7 @@ export function DataSharingManager() {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">{newRule.fromType === 'role' ? 'Select Role' : 'Select Group'}</Label>
+                                    <FormLabelHelp helpId="setup.data-sharing.fromId" className="text-xs text-muted-foreground" required>{newRule.fromType === 'role' ? 'Select Role' : 'Select Group'}</FormLabelHelp>
                                     <select
                                         className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                         value={(newRule.fromId as any) || ""}
@@ -362,7 +362,7 @@ export function DataSharingManager() {
                             <div className="border rounded-lg p-4 bg-blue-50/30 space-y-4">
                                 <h4 className="text-sm font-semibold flex items-center gap-2 text-primary">Shared To <span className="text-muted-foreground font-normal">(Granted access)</span></h4>
                                 <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Type</Label>
+                                    <FormLabelHelp helpId="setup.data-sharing.toType" className="text-xs text-muted-foreground" required>Type</FormLabelHelp>
                                     <select
                                         className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                         value={newRule.toType}
@@ -373,7 +373,7 @@ export function DataSharingManager() {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">{newRule.toType === 'role' ? 'Select Role' : 'Select Group'}</Label>
+                                    <FormLabelHelp helpId="setup.data-sharing.toId" className="text-xs text-muted-foreground" required>{newRule.toType === 'role' ? 'Select Role' : 'Select Group'}</FormLabelHelp>
                                     <select
                                         className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                         value={(newRule.toId as any) || ""}
@@ -389,7 +389,7 @@ export function DataSharingManager() {
                         </div>
 
                         <div className="grid gap-2 border-t pt-4">
-                            <Label>Type of Access Granted</Label>
+                            <FormLabelHelp helpId="setup.data-sharing.access" required>Type of Access Granted</FormLabelHelp>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 value={newRule.accessLevel}

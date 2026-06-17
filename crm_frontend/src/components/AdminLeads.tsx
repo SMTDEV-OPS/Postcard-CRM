@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createLead, getLeadDetail, Lead, LeadDetail, listLeads, updateLead, getEligibleAssignees, EligibleAssignee, AssignmentMode, getLeadContactInfo } from "@/services/leads";
 import { listFilters, applyFilter, type SavedFilter } from "@/services/filters";
 import { listProperties } from "@/services/properties";
+import { useActiveProperties } from "@/hooks/useActiveProperties";
 import { listUsers, User } from "@/services/users";
 import { listAccounts, Account, AccountType } from "@/services/accounts";
 import { CustomFieldsService, CustomFieldDefinition } from "@/services/customFields";
@@ -258,6 +259,7 @@ interface AdminLeadsProps {
 export const AdminLeads = ({ canManageUsers, permissions, isAdmin, onViewLead }: AdminLeadsProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { properties: hotelOptions } = useActiveProperties();
 
   const openAddLeadWizard = () => {
     sessionStorage.setItem("crm:pending-add-lead", "1");
@@ -2134,10 +2136,11 @@ export const AdminLeads = ({ canManageUsers, permissions, isAdmin, onViewLead }:
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="NONE">None</SelectItem>
-                        <SelectItem value="Postcard Goa">Postcard Goa</SelectItem>
-                        <SelectItem value="Postcard Kerala">Postcard Kerala</SelectItem>
-                        <SelectItem value="Postcard Rajasthan">Postcard Rajasthan</SelectItem>
-                        <SelectItem value="Postcard Mumbai">Postcard Mumbai</SelectItem>
+                        {hotelOptions.map((p) => (
+                          <SelectItem key={p._id} value={p.name}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

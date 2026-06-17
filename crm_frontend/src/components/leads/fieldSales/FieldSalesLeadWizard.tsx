@@ -35,7 +35,7 @@ import {
   type FieldSalesLeadFormState,
 } from "./useFieldSalesLeadForm";
 import { getLeadDetail } from "@/services/leads";
-import { HelpFieldHint } from "@/components/help/HelpFieldHint";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 
 interface FieldSalesLeadWizardProps {
   open: boolean;
@@ -160,12 +160,11 @@ export function FieldSalesLeadWizard({
             <div className="space-y-6 py-2">
               <section className="space-y-3 rounded-lg border border-border p-4">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-semibold">Contact</h4>
-                  <HelpFieldHint helpId="leads.field-sales.contact" />
+                  <FormLabelHelp helpId="leads.field-sales.contact">Contact</FormLabelHelp>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="sm:col-span-2">
-                    <Label>Lead POC name *</Label>
+                    <FormLabelHelp helpId="leads.field-sales.pocName" required>Lead POC name</FormLabelHelp>
                     <Input
                       value={form.pocName}
                       onChange={(e) => patch({ pocName: e.target.value })}
@@ -173,11 +172,11 @@ export function FieldSalesLeadWizard({
                     />
                   </div>
                   <div>
-                    <Label>Phone</Label>
+                    <FormLabelHelp helpId="leads.field-sales.phone">Phone</FormLabelHelp>
                     <Input value={form.phone} onChange={(e) => patch({ phone: e.target.value })} />
                   </div>
                   <div>
-                    <Label>Email</Label>
+                    <FormLabelHelp helpId="leads.field-sales.email">Email</FormLabelHelp>
                     <Input
                       type="email"
                       value={form.email}
@@ -185,7 +184,7 @@ export function FieldSalesLeadWizard({
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <Label>Alternate contact</Label>
+                    <FormLabelHelp helpId="leads.field-sales.alternateContact">Alternate contact</FormLabelHelp>
                     <Input
                       value={form.alternateContact}
                       onChange={(e) => patch({ alternateContact: e.target.value })}
@@ -198,7 +197,7 @@ export function FieldSalesLeadWizard({
                 <h4 className="text-sm font-semibold">Source & account</h4>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <Label>Lead source *</Label>
+                    <FormLabelHelp helpId="leads.field-sales.leadSource" required>Lead source</FormLabelHelp>
                     <Select value={form.source} onValueChange={(v) => patch({ source: v })}>
                       <SelectTrigger>
                         <SelectValue />
@@ -213,7 +212,7 @@ export function FieldSalesLeadWizard({
                     </Select>
                   </div>
                   <div>
-                    <Label>Lead temperature *</Label>
+                    <FormLabelHelp helpId="leads.field-sales.heatLevel" required>Lead temperature</FormLabelHelp>
                     <Select
                       value={form.heatLevel}
                       onValueChange={(v) => patch({ heatLevel: v as FieldSalesLeadFormState["heatLevel"] })}
@@ -230,7 +229,7 @@ export function FieldSalesLeadWizard({
                   </div>
                   {showAccountPicker && (
                     <div className="sm:col-span-2 space-y-2">
-                      <Label>Account (TA / Corporate) *</Label>
+                      <FormLabelHelp helpId="leads.field-sales.accountId" required>Account (TA / Corporate)</FormLabelHelp>
                       <Input
                         placeholder="Search accounts..."
                         value={accountSearch}
@@ -252,7 +251,7 @@ export function FieldSalesLeadWizard({
                     </div>
                   )}
                   <div className="sm:col-span-2">
-                    <Label>Company name (snapshot)</Label>
+                    <FormLabelHelp helpId="leads.field-sales.companyName">Company name (snapshot)</FormLabelHelp>
                     <Input
                       value={form.companyName}
                       onChange={(e) => patch({ companyName: e.target.value })}
@@ -264,12 +263,11 @@ export function FieldSalesLeadWizard({
 
               <section className="space-y-3 rounded-lg border border-border p-4">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-semibold">Stay</h4>
-                  <HelpFieldHint helpId="leads.field-sales.stay" />
+                  <FormLabelHelp helpId="leads.field-sales.stay">Stay</FormLabelHelp>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="sm:col-span-2">
-                    <Label>Hotel</Label>
+                    <FormLabelHelp helpId="leads.field-sales.hotelId">Hotel</FormLabelHelp>
                     <Select
                       value={form.hotelName}
                       onValueChange={(name) => {
@@ -290,7 +288,7 @@ export function FieldSalesLeadWizard({
                     </Select>
                   </div>
                   <div>
-                    <Label>Check-in</Label>
+                    <FormLabelHelp helpId="leads.field-sales.checkInDate">Check-in</FormLabelHelp>
                     <Input
                       type="date"
                       value={form.checkInDate}
@@ -305,7 +303,7 @@ export function FieldSalesLeadWizard({
                     />
                   </div>
                   <div>
-                    <Label>Check-out</Label>
+                    <FormLabelHelp helpId="leads.field-sales.checkOutDate">Check-out</FormLabelHelp>
                     <Input
                       type="date"
                       min={form.checkInDate || undefined}
@@ -314,7 +312,7 @@ export function FieldSalesLeadWizard({
                     />
                   </div>
                   <div>
-                    <Label>Total rooms</Label>
+                    <FormLabelHelp helpId="leads.field-sales.totalRooms">Total rooms</FormLabelHelp>
                     <Input
                       type="number"
                       min={1}
@@ -323,7 +321,7 @@ export function FieldSalesLeadWizard({
                     />
                   </div>
                   <div>
-                    <Label>Occasion</Label>
+                    <FormLabelHelp helpId="leads.field-sales.occasion">Occasion</FormLabelHelp>
                     <Select value={form.occasion} onValueChange={(v) => patch({ occasion: v })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select occasion" />
@@ -343,8 +341,7 @@ export function FieldSalesLeadWizard({
               <section className="space-y-3 rounded-lg border border-border p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-semibold">Rate offer</h4>
-                    <HelpFieldHint helpId="leads.field-sales.pricing" />
+                    <FormLabelHelp helpId="leads.field-sales.pricing">Rate offer</FormLabelHelp>
                   </div>
                   <Button
                     type="button"
@@ -366,14 +363,14 @@ export function FieldSalesLeadWizard({
                 {form.pricingLines.map((line, idx) => (
                   <div key={idx} className="grid gap-2 rounded-md border border-dashed p-3 sm:grid-cols-2">
                     <div>
-                      <Label className="text-xs">Room category</Label>
+                      <FormLabelHelp helpId="leads.field-sales.roomCategory" className="text-xs">Room category</FormLabelHelp>
                       <Input
                         value={line.roomCategory}
                         onChange={(e) => updatePricingLine(idx, "roomCategory", e.target.value)}
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">Meal plan</Label>
+                      <FormLabelHelp helpId="leads.field-sales.mealPlan" className="text-xs">Meal plan</FormLabelHelp>
                       <Select
                         value={line.mealPlan}
                         onValueChange={(v) => updatePricingLine(idx, "mealPlan", v)}
@@ -391,7 +388,7 @@ export function FieldSalesLeadWizard({
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-xs">Rate per room per night (₹)</Label>
+                      <FormLabelHelp helpId="leads.field-sales.ratePerNight" className="text-xs">Rate per room per night (₹)</FormLabelHelp>
                       <Input
                         value={line.ratePerNight}
                         onChange={(e) => updatePricingLine(idx, "ratePerNight", e.target.value)}
@@ -399,7 +396,7 @@ export function FieldSalesLeadWizard({
                     </div>
                     <div className="sm:col-span-2 flex gap-2">
                       <div className="flex-1">
-                        <Label className="text-xs">Other inclusions</Label>
+                        <FormLabelHelp helpId="leads.field-sales.otherInclusions" className="text-xs">Other inclusions</FormLabelHelp>
                         <Textarea
                           rows={2}
                           value={line.inclusions}
@@ -431,12 +428,11 @@ export function FieldSalesLeadWizard({
 
               <section className="space-y-3 rounded-lg border border-border p-4">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-semibold">Follow-up (manual)</h4>
-                  <HelpFieldHint helpId="leads.field-sales.followup" />
+                  <FormLabelHelp helpId="leads.field-sales.followup">Follow-up (manual)</FormLabelHelp>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <Label>Follow-up date</Label>
+                    <FormLabelHelp helpId="leads.field-sales.followUpDate">Follow-up date</FormLabelHelp>
                     <Input
                       type="date"
                       value={form.followUpDate}
@@ -444,7 +440,7 @@ export function FieldSalesLeadWizard({
                     />
                   </div>
                   <div>
-                    <Label>Time</Label>
+                    <FormLabelHelp helpId="leads.field-sales.followUpTime">Time</FormLabelHelp>
                     <Input
                       type="time"
                       value={form.followUpTime}
@@ -452,7 +448,7 @@ export function FieldSalesLeadWizard({
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <Label>Notes</Label>
+                    <FormLabelHelp helpId="leads.field-sales.notes">Notes</FormLabelHelp>
                     <Textarea
                       value={form.followUpNotes}
                       onChange={(e) => patch({ followUpNotes: e.target.value })}
@@ -463,7 +459,7 @@ export function FieldSalesLeadWizard({
               </section>
 
               <div>
-                <Label>Notes</Label>
+                <FormLabelHelp helpId="leads.field-sales.notes">Notes</FormLabelHelp>
                 <Textarea value={form.notes} onChange={(e) => patch({ notes: e.target.value })} rows={2} />
               </div>
             </div>

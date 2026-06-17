@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
@@ -258,7 +258,7 @@ export function FollowupRules() {
           </DialogHeader>
           <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 8 }}>
             <div>
-              <Label>Bucket</Label>
+              <FormLabelHelp helpId="setup.followups.bucket" required>Bucket</FormLabelHelp>
               <Select
                 value={form.bucket ?? selectedBucket ?? "Hot"}
                 onChange={(e) => setForm((p) => ({ ...p, bucket: e.target.value as FollowupBucket }))}
@@ -269,7 +269,7 @@ export function FollowupRules() {
               </Select>
             </div>
             <div>
-              <Label>Follow-up #</Label>
+              <FormLabelHelp helpId="setup.followups.followupNumber">Follow-up #</FormLabelHelp>
               <Input
                 type="number"
                 value={String(form.followup_number ?? 1)}
@@ -277,11 +277,11 @@ export function FollowupRules() {
               />
             </div>
             <div>
-              <Label>Offset</Label>
+              <FormLabelHelp helpId="setup.followups.offset">Offset</FormLabelHelp>
               <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>Use hours OR days, not both</p>
               <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <Label style={{ fontSize: 12 }}>Hours</Label>
+                  <FormLabelHelp helpId="setup.followups.delayHours" className="text-xs">Hours</FormLabelHelp>
                   <Input
                     type="number"
                     value={form.offset_hours != null ? String(form.offset_hours) : ""}
@@ -296,7 +296,7 @@ export function FollowupRules() {
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <Label style={{ fontSize: 12 }}>Days</Label>
+                  <FormLabelHelp helpId="setup.followups.offsetDays" className="text-xs">Days</FormLabelHelp>
                   <Input
                     type="number"
                     value={form.offset_days != null ? String(form.offset_days) : ""}
@@ -313,7 +313,7 @@ export function FollowupRules() {
               </div>
             </div>
             <div>
-              <Label>Description</Label>
+              <FormLabelHelp helpId="setup.followups.description">Description</FormLabelHelp>
               <Input
                 value={form.description ?? ""}
                 onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
@@ -321,7 +321,7 @@ export function FollowupRules() {
               />
             </div>
             <div>
-              <Label>Template</Label>
+              <FormLabelHelp helpId="setup.followups.template">Template</FormLabelHelp>
               <Select
                 value={form.template_id ?? ""}
                 onChange={(e) => setForm((p) => ({ ...p, template_id: e.target.value || undefined }))}
@@ -333,7 +333,7 @@ export function FollowupRules() {
               </Select>
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Label>Is Active</Label>
+              <FormLabelHelp helpId="setup.followups.isActive">Is Active</FormLabelHelp>
               <Switch
                 checked={form.is_active ?? true}
                 onCheckedChange={(v) => setForm((p) => ({ ...p, is_active: v }))}
