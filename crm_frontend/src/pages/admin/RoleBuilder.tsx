@@ -319,9 +319,9 @@ export const RoleBuilder = () => {
                 </p>
             </div>
 
-            <div className="flex border border-gray-200 bg-white rounded-md shadow-sm h-[calc(100vh-200px)] min-h-[500px]">
+            <div className="flex flex-col lg:flex-row border border-gray-200 bg-white rounded-md shadow-sm h-[calc(100vh-200px)] min-h-[500px]">
                 {/* Left Pane - Tree */}
-                <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-gray-200 flex flex-col">
+                <div className="w-full lg:w-1/3 lg:min-w-[300px] lg:max-w-[400px] border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
                     <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                         <Button onClick={handleCreate} className="bg-[#4169E1] hover:bg-blue-700 h-8 px-4 text-xs font-semibold rounded-md text-white">
                             New Role
@@ -395,7 +395,7 @@ export const RoleBuilder = () => {
                             </div>
 
                             {/* Info Blocks */}
-                            <div className="grid grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                                 {/* Hierarchy Setup */}
                                 <div>
                                     <h3 className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-4">

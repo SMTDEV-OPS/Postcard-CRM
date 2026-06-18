@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
 import { PropertyGuideView } from "./PropertyGuideView";
 import { KnowledgeHubLanding } from "./KnowledgeHubLanding";
@@ -86,10 +93,11 @@ export const KnowledgeBaseMain = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4 px-6 pt-6">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-6 pt-4 sm:pt-6">
         <Button
           variant="outline"
           size="sm"
+          className="shrink-0"
           onClick={() => {
             setSelectedPropertyId("");
             setSectionHash(undefined);
@@ -98,6 +106,18 @@ export const KnowledgeBaseMain = ({
           <ArrowLeft className="h-4 w-4 mr-2" />
           All properties
         </Button>
+        <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
+          <SelectTrigger className="w-full sm:w-64">
+            <SelectValue placeholder="Switch property" />
+          </SelectTrigger>
+          <SelectContent>
+            {properties.map((p) => (
+              <SelectItem key={p._id} value={p._id}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <PropertyGuideView
         propertyId={selectedPropertyId}

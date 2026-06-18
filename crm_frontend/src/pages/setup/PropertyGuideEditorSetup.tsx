@@ -23,6 +23,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { formGrid3 } from "@/lib/responsive";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
 import {
@@ -504,7 +505,7 @@ export function PropertyGuideEditorSetup() {
                 <p className="text-xs text-muted-foreground">
                   First image is used as the cover and hub thumbnail.
                 </p>
-                <div className="grid grid-cols-3 gap-2">
+                <div className={formGrid3}>
                   {galleryUrls.map((g) => (
                     <div key={g.fileId} className="relative aspect-video rounded-md overflow-hidden border">
                       <img src={g.url} alt="" className="h-full w-full object-cover" />

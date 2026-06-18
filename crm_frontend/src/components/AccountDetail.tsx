@@ -323,7 +323,7 @@ export const AccountDetail = ({ account, onBack, onEdit, isAdmin, isSystemAdmin,
 
             {/* Tabbed Content */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "contacts" | "leads" | "contracts" | "potential" | "activities" | "documents")} className="w-full">
-                <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start h-12 p-0 gap-6">
+                <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start h-12 p-0 gap-4 overflow-x-auto flex-nowrap md:gap-6">
                     <TabsTrigger
                         value="overview"
                         className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none h-full px-1"

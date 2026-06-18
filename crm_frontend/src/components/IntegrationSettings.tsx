@@ -91,7 +91,7 @@ export function IntegrationSettings() {
             </div>
 
             <Tabs defaultValue="ivr" className="w-full">
-                <TabsList className="grid w-full grid-cols-5 h-auto py-1">
+                <TabsList className="flex w-full h-auto overflow-x-auto py-1 md:grid md:grid-cols-5">
                     <TabsTrigger value="ivr" className="py-2.5">
                         <Phone className="w-4 h-4 mr-2" />
                         IVR / CTI

@@ -18,7 +18,7 @@ export function LeadAllocationPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-xl grid-cols-4">
+        <TabsList className="flex w-full max-w-xl overflow-x-auto md:grid md:grid-cols-4">
           <TabsTrigger value="rules">Assignment Rules</TabsTrigger>
           <TabsTrigger value="capacity">Capacity</TabsTrigger>
           <TabsTrigger value="workload">Agent Workload</TabsTrigger>

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getUnreadCount } from "@/services/notifications";
 import { getTaskSummary } from "@/services/tasks";
 import { AppShell, Sidebar, CommandPalette, SetupLayout } from "@/components/layout";
+import { MobileNavProvider } from "@/components/layout/MobileNavContext";
 import { pathnameToView, viewToPath, CRM_PATHS } from "@/navigation/crmPaths";
 import { CallCenterScreen } from "@/components/CallCenterScreen";
 import { useIncomingCall } from "@/hooks/useIncomingCall";
@@ -728,6 +729,7 @@ export const ProfessionalCRM = ({
   return (
     <>
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
+      <MobileNavProvider>
       <AppShell
         onOpenCommandPalette={() => setCommandOpen(true)}
         onQuickCreateLead={openSharedAddLeadForm}
@@ -771,6 +773,7 @@ export const ProfessionalCRM = ({
           renderContent()
         )}
       </AppShell>
+      </MobileNavProvider>
     </>
   );
 };

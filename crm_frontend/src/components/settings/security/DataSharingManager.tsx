@@ -196,6 +196,33 @@ export function DataSharingManager() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
+                    {/* Mobile: stacked cards */}
+                    <div className="md:hidden divide-y divide-gray-100">
+                        {modules.map((mod) => (
+                            <div key={mod} className="p-4 space-y-3">
+                                <div className="font-medium text-gray-900">{getModuleDisplayName(mod)}</div>
+                                <div className="flex flex-col gap-2">
+                                    <select
+                                        className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary w-full"
+                                        value={selectedDefaults[mod]}
+                                        onChange={(e) => handleDefaultChange(mod, e.target.value)}
+                                    >
+                                        <option value="private">Private</option>
+                                        <option value="public_read">Public - Read Only</option>
+                                        <option value="public_read_write">Public - Read/Write</option>
+                                        <option value="public_full">Public - Full Access (Delete)</option>
+                                    </select>
+                                    {selectedDefaults[mod] === 'private' && (
+                                        <span className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 w-fit">
+                                            <ShieldAlert className="w-3.5 h-3.5" /> Checked Hierarchy
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Desktop: table */}
+                    <div className="hidden md:block">
                     <div className="grid grid-cols-2 bg-muted/30 border-b font-medium text-sm text-gray-700 py-3 px-6">
                         <div>Module</div>
                         <div>Default Access Level</div>
@@ -223,6 +250,7 @@ export function DataSharingManager() {
                                 </div>
                             </div>
                         ))}
+                    </div>
                     </div>
                     <div className="p-6 bg-gray-50 border-t flex justify-end">
                         <Button onClick={saveDefaults} disabled={!hasUnsavedDefaults} className="gap-2">
@@ -263,6 +291,33 @@ export function DataSharingManager() {
                         </div>
                     ) : (
                         <>
+                            {/* Mobile: rule cards */}
+                            <div className="md:hidden divide-y divide-gray-100">
+                                {rules.map((rule) => (
+                                    <div key={rule._id} className="p-4 space-y-3">
+                                        <div className="font-medium text-gray-900">{getModuleDisplayName(rule.module)}</div>
+                                        <div className="text-sm space-y-1">
+                                            <p><span className="text-xs text-gray-500 uppercase">{rule.fromType}</span> — {rule.fromId?.name || "Unknown"}</p>
+                                            <div className="flex items-center gap-2 text-gray-400">
+                                                <ArrowRight className="h-4 w-4" />
+                                                <span className="text-xs">shared to</span>
+                                            </div>
+                                            <p><span className="text-xs text-gray-500 uppercase">{rule.toType}</span> — {rule.toId?.name || "Unknown"}</p>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded border">
+                                                {getLabel(rule.accessLevel)}
+                                            </span>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDeleteRule(rule._id)} className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Desktop: table */}
+                            <div className="hidden md:block overflow-x-auto">
+                            <div className="min-w-[800px]">
                             <div className="grid grid-cols-12 bg-muted/30 border-b font-medium text-xs text-gray-500 uppercase tracking-wider py-3 px-6">
                                 <div className="col-span-2">Module</div>
                                 <div className="col-span-3">Data from (Source)</div>
@@ -304,6 +359,8 @@ export function DataSharingManager() {
                                     </div>
                                 ))}
                             </div>
+                            </div>
+                            </div>
                         </>
                     )}
                 </CardContent>
@@ -330,7 +387,7 @@ export function DataSharingManager() {
                             </select>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="border rounded-lg p-4 bg-gray-50/50 space-y-4">
                                 <h4 className="text-sm font-semibold flex items-center gap-2">Data From <span className="text-muted-foreground font-normal">(Records owned by)</span></h4>
                                 <div className="space-y-2">

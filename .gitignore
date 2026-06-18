@@ -58,6 +58,8 @@ Thumbs.db
 *.temp
 .cache/
 backend/.mongo-dump-tmp/
+crm_frontend/test-results/
+crm_frontend/playwright-report/
 
 # Never commit vendor API docs
 API - Ezee & Airpay - Details.pdf

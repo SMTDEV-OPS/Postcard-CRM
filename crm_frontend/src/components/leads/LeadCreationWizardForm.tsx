@@ -38,6 +38,8 @@ import {
 import { HotelStayDateFields } from "./HotelStayDateFields";
 import { FormFieldLabelHelp, FormLabelHelp } from "@/components/help/FormLabelHelp";
 import type { LeadFormData } from "./useLeadForm";
+import { cn } from "@/lib/utils";
+import { formGrid2 } from "@/lib/responsive";
 
 export const LEAD_WIZARD_STEP_FIELDS: Record<number, string[]> = {
   1: ["firstName", "lastName", "guestContactNumber", "guestEmail"],
@@ -81,7 +83,7 @@ function CustomFieldsSection({
   return (
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
       <h4 className="text-sm font-semibold text-text">Additional information</h4>
-      <div className="grid grid-cols-2 gap-4">
+      <div className={cn(formGrid2, "gap-4")}>
         {customFields.map((field) => {
           const slug = String(field.slug || field.fieldName);
           const isRequired = field.is_required || field.isRequired;
@@ -186,7 +188,7 @@ function ReviewSummary({ form }: { form: UseFormReturn<LeadFormData> }) {
 
   return (
     <div className="rounded-lg border border-border bg-hover/50 p-4 space-y-3 text-sm">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+      <div className={cn(formGrid2, "gap-x-4 gap-y-2")}>
         <div>
           <span className="text-text-muted">Guest</span>
           <p className="font-medium text-text">{guestName || "—"}</p>
@@ -348,7 +350,7 @@ export function LeadCreationWizardForm({
                     )}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className={cn(formGrid2, "gap-4")}>
                   <FormField
                     control={form.control}
                     name="guestContactNumber"
@@ -376,7 +378,7 @@ export function LeadCreationWizardForm({
                     )}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className={cn(formGrid2, "gap-4")}>
                   <FormField
                     control={form.control}
                     name="guestEmail"
@@ -657,7 +659,7 @@ export function LeadCreationWizardForm({
                     </Select>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-4">
+                <div className={cn(formGrid2, "gap-4")}>
                   <div className="space-y-2">
                     <FormLabelHelp helpId="leads.add.guestSegment">Guest segment</FormLabelHelp>
                     <Select
@@ -726,7 +728,7 @@ export function LeadCreationWizardForm({
                   )}
                 />
                 {form.watch("corporateBooking") === "yes" && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={cn(formGrid2, "gap-4")}>
                     <FormField
                       control={form.control}
                       name="companyName"
@@ -755,7 +757,7 @@ export function LeadCreationWizardForm({
                     />
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-4">
+                <div className={cn(formGrid2, "gap-4")}>
                   <FormField
                     control={form.control}
                     name="leadType"

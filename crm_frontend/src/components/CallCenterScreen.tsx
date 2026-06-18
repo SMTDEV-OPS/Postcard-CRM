@@ -250,7 +250,7 @@ export function CallCenterScreen({
 
               {searchResult?.pmsCustomer ? (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     {pmsFields.map((field) => (
                       <div key={field.label}>
                         <p className="text-xs text-text-muted">{field.label}</p>

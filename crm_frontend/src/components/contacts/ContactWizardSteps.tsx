@@ -5,6 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Contact } from "@/services/contacts";
 import { CLIENT_STATUS_OPTIONS, CONTACT_ROLES } from "./contactFormTypes";
+import { cn } from "@/lib/utils";
+import { formGrid2 } from "@/lib/responsive";
 
 export interface ContactStepContext {
   formData: Partial<Contact>;
@@ -44,7 +46,7 @@ export function ContactStepIdentity({ formData, set, errors, clearError }: Conta
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className={formGrid2}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="contacts.wizard.designation">Designation</FormLabelHelp>
           <Input
@@ -75,7 +77,7 @@ export function ContactStepIdentity({ formData, set, errors, clearError }: Conta
 export function ContactStepReach({ formData, set }: ContactStepContext) {
   return (
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className={formGrid2}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="contacts.wizard.mobileNumber1">Mobile number 1</FormLabelHelp>
           <Input
@@ -220,7 +222,7 @@ export function ContactStepLoyalty({ formData, set, errors, clearError }: Contac
           </div>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+      <div className={cn(formGrid2, "pt-2 border-t border-border")}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="contacts.wizard.dateOfBirth">Birthday</FormLabelHelp>
           <Input
@@ -248,7 +250,7 @@ export function ContactReviewSummary({ formData }: { formData: Partial<Contact> 
 
   return (
     <div className="rounded-lg border border-border bg-hover/40 p-4 space-y-3 text-sm">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+      <div className={cn(formGrid2, "gap-x-4 gap-y-2")}>
         <div>
           <span className="text-text-muted">Name</span>
           <p className="font-medium text-text">

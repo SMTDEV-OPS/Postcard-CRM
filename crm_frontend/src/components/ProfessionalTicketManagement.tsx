@@ -10,6 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, Plus, Clock, AlertCircle, CheckCircle, User, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { useViewMode } from "@/hooks/useViewMode";
+import { ViewModeToggle } from "@/components/layout/ViewModeToggle";
+import { DataTable } from "@/components/ui/data-table";
+import { cn } from "@/lib/utils";
+import { formGrid2 } from "@/lib/responsive";
 
 interface ProfessionalTicketManagementProps {
   userRole: string;
@@ -26,6 +31,7 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
   });
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState("");
+  const { viewMode, setViewMode, showCards } = useViewMode("tickets");
 
   // Mock ticket data
   const allTickets = [
@@ -120,6 +126,8 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
       ]
     }
   ];
+
+  type Ticket = (typeof allTickets)[number];
 
   // Filter tickets based on role and filters  
   const filteredTickets = allTickets.filter(ticket => {
@@ -262,7 +270,7 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
             <DialogHeader>
               <DialogTitle>Create New Ticket</DialogTitle>
             </DialogHeader>
-            <div className="grid grid-cols-2 gap-4 py-4">
+            <div className={cn(formGrid2, "gap-4 py-4")}>
               <div className="space-y-2">
                 <FormLabelHelp helpId="tickets.title" htmlFor="ticket-title">Title</FormLabelHelp>
                 <Input id="ticket-title" placeholder="Ticket title" />
@@ -336,7 +344,7 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
                 <FormLabelHelp helpId="tickets.guestEmail" htmlFor="guest-email">Guest Email</FormLabelHelp>
                 <Input id="guest-email" type="email" placeholder="guest@email.com" />
               </div>
-              <div className="col-span-2 space-y-2">
+              <div className="col-span-full sm:col-span-2 space-y-2">
                 <FormLabelHelp helpId="tickets.description" htmlFor="ticket-description">Description</FormLabelHelp>
                 <Textarea id="ticket-description" placeholder="Detailed description of the issue..." rows={4} />
               </div>
@@ -487,13 +495,17 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
             </div>
           </div>
 
-          <div className="mt-4 text-sm text-muted-foreground">
-            Showing {filteredTickets.length} of {allTickets.length} tickets
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Showing {filteredTickets.length} of {allTickets.length} tickets
+            </p>
+            <ViewModeToggle value={viewMode} onChange={setViewMode} />
           </div>
         </CardContent>
       </Card>
 
       {/* Tickets List */}
+      {showCards ? (
       <div className="space-y-4">
         {filteredTickets.map((ticket) => (
           <Card key={ticket.id} className="hover:shadow-md transition-shadow">
@@ -512,7 +524,7 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
 
                     <p className="text-muted-foreground text-sm mb-3">{ticket.description}</p>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                       <div>
                         <span className="font-medium">Guest:</span>
                         <p className="text-muted-foreground">{ticket.guestName}</p>
@@ -596,8 +608,83 @@ export const ProfessionalTicketManagement = ({ userRole, agentName }: Profession
           </Card>
         ))}
       </div>
+      ) : (
+        <DataTable<Ticket>
+          data={filteredTickets}
+          getRowId={(t) => t.id}
+          showAsCards={false}
+          columns={[
+            {
+              id: "id",
+              header: "ID",
+              sticky: true,
+              render: (t) => <span className="font-mono text-xs">{t.id}</span>,
+            },
+            {
+              id: "title",
+              header: "Title",
+              render: (t) => (
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{t.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{t.guestName} · Room {t.roomNumber}</p>
+                </div>
+              ),
+            },
+            {
+              id: "property",
+              header: "Property",
+              render: (t) => t.property,
+            },
+            {
+              id: "status",
+              header: "Status",
+              render: (t) => (
+                <Badge className={getStatusColor(t.status)}>
+                  {t.status}
+                </Badge>
+              ),
+            },
+            {
+              id: "priority",
+              header: "Priority",
+              render: (t) => (
+                <Badge className={getPriorityColor(t.priority)}>
+                  {t.priority}
+                </Badge>
+              ),
+            },
+            {
+              id: "assignedTo",
+              header: "Assigned",
+              render: (t) => t.assignedTo,
+            },
+          ]}
+          rowActions={(t) => (
+            <Select onValueChange={(value) => handleStatusChange(t.id, value)}>
+              <SelectTrigger className="w-28 text-xs h-8">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="in-progress">In Progress</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          emptyState={
+            <Card>
+              <CardContent className="p-12 text-center">
+                <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No tickets found</h3>
+                <p className="text-muted-foreground">Try adjusting your filters or search criteria</p>
+              </CardContent>
+            </Card>
+          }
+        />
+      )}
 
-      {filteredTickets.length === 0 && (
+      {filteredTickets.length === 0 && showCards && (
         <Card>
           <CardContent className="p-12 text-center">
             <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

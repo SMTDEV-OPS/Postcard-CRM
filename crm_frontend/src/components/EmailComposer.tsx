@@ -549,7 +549,7 @@ export const EmailComposer = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[95vh] flex flex-col p-0 gap-0">
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex-col gap-0 rounded-none border-0 p-0 sm:h-auto sm:max-h-[95vh] sm:max-w-5xl sm:rounded-lg sm:border">
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200 bg-white">
           <DialogTitle className="text-xl font-bold text-slate-900">

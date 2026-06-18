@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Search, Filter, Plus, Mail, Calendar as CalendarIcon, Clock, User as UserIcon, TrendingUp, Eye, Users, AlertTriangle, FileText, Edit, X } from "lucide-react";
+import { Filter, Plus, Mail, Calendar as CalendarIcon, Clock, User as UserIcon, TrendingUp, Eye, Users, AlertTriangle, FileText, Edit, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,10 @@ import { AddLeadWizard } from "@/components/leads/AddLeadWizard";
 import { useLeadForm } from "@/components/leads/useLeadForm";
 import { useActiveProperties } from "@/hooks/useActiveProperties";
 import { HelpInfoButton } from "@/components/help/HelpInfoButton";
+import { FilterBar } from "@/components/patterns/FilterBar";
+import { useViewMode } from "@/hooks/useViewMode";
+import { ViewModeToggle } from "@/components/layout/ViewModeToggle";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 interface ProfessionalLeadManagementProps {
   userRole: string;
@@ -76,6 +80,7 @@ const ProfessionalLeadManagement = ({
   const [pipelineStages, setPipelineStages] = useState<PipelineStage[]>([]);
   const [isLoadingStages, setIsLoadingStages] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const { viewMode, setViewMode, showCards } = useViewMode("leads");
 
   const {
     form,
@@ -611,6 +616,214 @@ const ProfessionalLeadManagement = ({
     </Card>
   );
 
+  const leadTableColumns = useMemo<DataTableColumn<(typeof allLeads)[number]>[]>(
+    () => [
+      {
+        id: "name",
+        header: "Lead",
+        sortKey: "name",
+        sticky: true,
+        render: (lead) => (
+          <div className="min-w-0">
+            <div className="font-medium truncate">{lead.name}</div>
+            <div className="text-xs text-muted-foreground truncate">
+              {lead.phone || lead.email || "—"}
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "property",
+        header: "Property",
+        sortKey: "property",
+        render: (lead) => lead.property || "—",
+      },
+      {
+        id: "stage",
+        header: "Stage",
+        render: (lead) => lead.stage || "—",
+      },
+      {
+        id: "temperature",
+        header: "Temp",
+        render: (lead) => (
+          <Badge className={getTemperatureColor(lead.temperature)}>{lead.temperature}</Badge>
+        ),
+      },
+      {
+        id: "assignedTo",
+        header: "Assigned",
+        render: (lead) => lead.assignedTo || "—",
+      },
+      {
+        id: "dealAmount",
+        header: "Value",
+        render: (lead) => formatInr(lead.dealAmount),
+      },
+    ],
+    []
+  );
+
+  const leadFilterControls = (
+    <>
+      <Select
+        value={selectedFilters.status}
+        onValueChange={(value) => setSelectedFilters((prev) => ({ ...prev, status: value }))}
+      >
+        <SelectTrigger className="w-full md:w-32">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Status</SelectItem>
+          <SelectItem value="NEW">New</SelectItem>
+          <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+          <SelectItem value="TENTATIVE">Tentative</SelectItem>
+          <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+          <SelectItem value="LOST">Lost</SelectItem>
+          <SelectItem value="CLOSED_AUTO">Auto Closed</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={selectedFilters.stage}
+        onValueChange={(value) => setSelectedFilters((prev) => ({ ...prev, stage: value }))}
+        disabled={isLoadingStages}
+      >
+        <SelectTrigger className="w-full md:w-44">
+          <SelectValue placeholder={isLoadingStages ? "Loading stages…" : "Pipeline stage"} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All pipeline stages</SelectItem>
+          {sortedPipelineStages.length === 0 && !isLoadingStages ? (
+            <SelectItem value="__none" disabled>
+              Configure stages in Setup → Pipelines
+            </SelectItem>
+          ) : (
+            sortedPipelineStages.map((stage) => (
+              <SelectItem key={stage._id} value={stage._id}>
+                {stage.name}
+              </SelectItem>
+            ))
+          )}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={selectedFilters.property}
+        onValueChange={(value) => setSelectedFilters((prev) => ({ ...prev, property: value }))}
+      >
+        <SelectTrigger className="w-full md:w-40">
+          <SelectValue placeholder="Property" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Properties</SelectItem>
+          {activeProperties.map((p) => (
+            <SelectItem key={p._id} value={p.name}>
+              {p.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={selectedFilters.source}
+        onValueChange={(value) => setSelectedFilters((prev) => ({ ...prev, source: value }))}
+      >
+        <SelectTrigger className="w-full md:w-32">
+          <SelectValue placeholder="Source" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Sources</SelectItem>
+          <SelectItem value="DIRECT_CALL">Direct Call</SelectItem>
+          <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
+          <SelectItem value="BRAND_WEBSITE">Website</SelectItem>
+          <SelectItem value="EMAIL">Email</SelectItem>
+          <SelectItem value="TRAVEL_AGENT">Travel Agent</SelectItem>
+          <SelectItem value="OTA">OTA</SelectItem>
+          <SelectItem value="REFERRAL">Referral</SelectItem>
+          <SelectItem value="SOCIAL">Social Media</SelectItem>
+          <SelectItem value="WALK_IN">Walk In</SelectItem>
+          <SelectItem value="IVR">IVR</SelectItem>
+          <SelectItem value="MANUAL">Manual</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={selectedFilters.temperature}
+        onValueChange={(value) => setSelectedFilters((prev) => ({ ...prev, temperature: value }))}
+      >
+        <SelectTrigger className="w-full md:w-32">
+          <SelectValue placeholder="Temperature" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Temperature</SelectItem>
+          <SelectItem value="Hot">Hot</SelectItem>
+          <SelectItem value="Warm">Warm</SelectItem>
+          <SelectItem value="Cold">Cold</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={selectedFilters.bookingType}
+        onValueChange={(value) => setSelectedFilters((prev) => ({ ...prev, bookingType: value }))}
+      >
+        <SelectTrigger className="w-full md:w-40">
+          <SelectValue placeholder="Booking Type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Types</SelectItem>
+          <SelectItem value="Tentative Booking">Tentative Booking</SelectItem>
+          <SelectItem value="Amendment">Amendment</SelectItem>
+          <SelectItem value="Corporate Booking">Corporate Booking</SelectItem>
+          <SelectItem value="Direct Customer">Direct Customer</SelectItem>
+          <SelectItem value="Confirmed Booking">Confirmed Booking</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {userRole !== "callcenter" && (
+        <Select
+          value={selectedFilters.assignedTo}
+          onValueChange={(value) =>
+            setSelectedFilters((prev) => ({
+              ...prev,
+              assignedTo: value,
+            }))
+          }
+        >
+          <SelectTrigger className="w-full md:w-40">
+            <SelectValue placeholder="Assigned To" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Agents</SelectItem>
+            {userList.map((user) => (
+              <SelectItem key={user.id} value={user.name || user.email}>
+                {user.name || user.email}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      <Button variant="outline" onClick={clearFilters} className="w-full md:w-auto">
+        <Filter className="h-4 w-4 mr-2" />
+        Clear
+      </Button>
+    </>
+  );
+
+  const emptyLeadsState = (
+    <Card>
+      <CardContent className="p-12 text-center">
+        <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-semibold mb-2">No leads found</h3>
+        <p className="text-muted-foreground">Try adjusting your filters or search criteria</p>
+        <Button variant="outline" className="mt-4" onClick={clearFilters}>
+          Clear all filters
+        </Button>
+      </CardContent>
+    </Card>
+  );
+
   const openQuotationForLead = (leadId: string, propertyName?: string) => {
     const targetLead = leads.find((item) => item.id === leadId);
     if (!targetLead) {
@@ -665,7 +878,7 @@ const ProfessionalLeadManagement = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold">
@@ -685,7 +898,7 @@ const ProfessionalLeadManagement = ({
           open={isAddLeadOpen}
           onOpenChange={setIsAddLeadOpen}
           trigger={
-            <Button className="bg-primary hover:bg-primary/90">
+            <Button className="hidden bg-primary hover:bg-primary/90 sm:inline-flex">
               <Plus className="h-4 w-4 mr-2" />
               Add Lead
             </Button>
@@ -704,6 +917,16 @@ const ProfessionalLeadManagement = ({
           isSubmitting={isSubmitting}
         />
       </div>
+
+      <Button
+        type="button"
+        className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 sm:hidden"
+        size="icon"
+        aria-label="Add lead"
+        onClick={() => setIsAddLeadOpen(true)}
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
 
       {/* Tabs for different views */}
       <Tabs defaultValue="leads" className="space-y-6">
@@ -761,197 +984,51 @@ const ProfessionalLeadManagement = ({
                     )}
                   </div>
 
-                  <div className="flex flex-col lg:flex-row gap-4">
-                    {/* Search */}
-                    <div className="flex-1 relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search leads by name, phone, email, or property..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setSearchQuery(v);
-                          if (v.trim()) {
-                            setSearchParams({ q: v.trim() }, { replace: true });
-                          } else {
-                            setSearchParams({}, { replace: true });
-                          }
-                        }}
-                        className="pl-9"
-                      />
-                    </div>
+                  <FilterBar
+                    searchValue={searchQuery}
+                    onSearchChange={(v) => {
+                      setSearchQuery(v);
+                      if (v.trim()) {
+                        setSearchParams({ q: v.trim() }, { replace: true });
+                      } else {
+                        setSearchParams({}, { replace: true });
+                      }
+                    }}
+                    searchPlaceholder="Search leads by name, phone, email, or property..."
+                    mobileTitle="Lead filters"
+                  >
+                    {leadFilterControls}
+                  </FilterBar>
 
-                    {/* Filters */}
-                    <div className="flex gap-2">
-                      <Select value={selectedFilters.status} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, status: value }))}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Status</SelectItem>
-                          <SelectItem value="NEW">New</SelectItem>
-                          <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                          <SelectItem value="TENTATIVE">Tentative</SelectItem>
-                          <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                          <SelectItem value="LOST">Lost</SelectItem>
-                          <SelectItem value="CLOSED_AUTO">Auto Closed</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Select
-                        value={selectedFilters.stage}
-                        onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, stage: value }))}
-                        disabled={isLoadingStages}
-                      >
-                        <SelectTrigger className="w-44">
-                          <SelectValue
-                            placeholder={
-                              isLoadingStages ? "Loading stages…" : "Pipeline stage"
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All pipeline stages</SelectItem>
-                          {sortedPipelineStages.length === 0 && !isLoadingStages ? (
-                            <SelectItem value="__none" disabled>
-                              Configure stages in Setup → Pipelines
-                            </SelectItem>
-                          ) : (
-                            sortedPipelineStages.map((stage) => (
-                              <SelectItem key={stage._id} value={stage._id}>
-                                {stage.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-
-                      <Select value={selectedFilters.property} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, property: value }))}>
-                        <SelectTrigger className="w-40">
-                          <SelectValue placeholder="Property" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Properties</SelectItem>
-                          {activeProperties.map((p) => (
-                            <SelectItem key={p._id} value={p.name}>
-                              {p.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-
-
-                      <Select value={selectedFilters.source} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, source: value }))}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue placeholder="Source" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Sources</SelectItem>
-                          <SelectItem value="DIRECT_CALL">Direct Call</SelectItem>
-                          <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
-                          <SelectItem value="BRAND_WEBSITE">Website</SelectItem>
-                          <SelectItem value="EMAIL">Email</SelectItem>
-                          <SelectItem value="TRAVEL_AGENT">Travel Agent</SelectItem>
-                          <SelectItem value="OTA">OTA</SelectItem>
-                          <SelectItem value="REFERRAL">Referral</SelectItem>
-                          <SelectItem value="SOCIAL">Social Media</SelectItem>
-                          <SelectItem value="WALK_IN">Walk In</SelectItem>
-                          <SelectItem value="IVR">IVR</SelectItem>
-                          <SelectItem value="MANUAL">Manual</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Select value={selectedFilters.temperature} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, temperature: value }))}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue placeholder="Temperature" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Temperature</SelectItem>
-                          <SelectItem value="Hot">Hot</SelectItem>
-                          <SelectItem value="Warm">Warm</SelectItem>
-                          <SelectItem value="Cold">Cold</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Select value={selectedFilters.bookingType} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, bookingType: value }))}>
-                        <SelectTrigger className="w-40">
-                          <SelectValue placeholder="Booking Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Types</SelectItem>
-                          <SelectItem value="Tentative Booking">Tentative Booking</SelectItem>
-                          <SelectItem value="Amendment">Amendment</SelectItem>
-                          <SelectItem value="Corporate Booking">Corporate Booking</SelectItem>
-                          <SelectItem value="Direct Customer">Direct Customer</SelectItem>
-                          <SelectItem value="Confirmed Booking">Confirmed Booking</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      {userRole !== 'callcenter' && (
-                        <Select
-                          value={selectedFilters.assignedTo}
-                          onValueChange={(value) =>
-                            setSelectedFilters((prev) => ({
-                              ...prev,
-                              assignedTo: value,
-                            }))
-                          }
-                        >
-                          <SelectTrigger className="w-40">
-                            <SelectValue placeholder="Assigned To" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Agents</SelectItem>
-                            {userList.map((user) => (
-                              <SelectItem
-                                key={user.id}
-                                value={user.name || user.email}
-                              >
-                                {user.name || user.email}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      {isLoadingLeads
+                        ? "Loading leads..."
+                        : `Showing ${filteredLeads.length} of ${allLeads.length} leads`}
+                      {loadError && (
+                        <span className="ml-2 text-red-600">({loadError})</span>
                       )}
-
-                      <Button variant="outline" onClick={clearFilters}>
-                        <Filter className="h-4 w-4 mr-2" />
-                        Clear
-                      </Button>
                     </div>
-                  </div>
-
-                  <div className="mt-4 text-sm text-muted-foreground">
-                    {isLoadingLeads
-                      ? "Loading leads..."
-                      : `Showing ${filteredLeads.length} of ${allLeads.length} leads`}
-                    {loadError && (
-                      <span className="ml-2 text-red-600">
-                        ({loadError})
-                      </span>
-                    )}
+                    <ViewModeToggle value={viewMode} onChange={setViewMode} />
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Leads Grid */}
-              <div className="space-y-4">
-                {filteredLeads.map((lead) => renderLeadCard(lead))}
-              </div>
-
-              {filteredLeads.length === 0 && !isLoadingLeads && (
-                <Card>
-                  <CardContent className="p-12 text-center">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No leads found</h3>
-                    <p className="text-muted-foreground">Try adjusting your filters or search criteria</p>
-                    <Button variant="outline" className="mt-4" onClick={clearFilters}>
-                      Clear all filters
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+              <DataTable
+                columns={leadTableColumns}
+                data={filteredLeads}
+                getRowId={(lead) => lead.id}
+                isLoading={isLoadingLeads}
+                showAsCards={showCards}
+                renderCard={(lead) => renderLeadCard(lead)}
+                emptyState={emptyLeadsState}
+                rowActions={(lead) => (
+                  <Button size="sm" variant="outline" onClick={() => setViewLeadId(lead.id)}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    View
+                  </Button>
+                )}
+              />
             </>
           )}
         </TabsContent>

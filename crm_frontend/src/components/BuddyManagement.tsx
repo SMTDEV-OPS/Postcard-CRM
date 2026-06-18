@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Calendar, UserCheck, History, TrendingUp, Users, X, Edit, Trash2 } from "lucide-react";
+import { formGrid2 } from "@/lib/responsive";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -439,7 +440,7 @@ export const BuddyManagement = ({
                       </Select>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className={formGrid2}>
                       <div className="space-y-2">
                         <Label htmlFor="fromDate">Start Date *</Label>
                         <Input
@@ -824,7 +825,7 @@ export const BuddyManagement = ({
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className={formGrid2}>
                 <div className="space-y-2">
                   <Label htmlFor="editFromDate">Start Date *</Label>
                   <Input

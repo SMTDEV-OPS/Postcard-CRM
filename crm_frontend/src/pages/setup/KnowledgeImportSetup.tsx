@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formGrid3 } from "@/lib/responsive";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
 import {
@@ -137,7 +138,7 @@ export function KnowledgeImportSetup() {
             </SelectContent>
           </Select>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className={formGrid3}>
           <div>
             <Label>City</Label>
             <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. South Goa" />

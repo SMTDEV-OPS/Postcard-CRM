@@ -23,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { formGrid2 } from "@/lib/responsive";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from "date-fns";
 
@@ -121,7 +122,7 @@ export function HolidaysSetup() {
               <FormLabelHelp helpId="setup.holidays.name" required>Name</FormLabelHelp>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className={formGrid2}>
               <div>
                 <FormLabelHelp helpId="setup.holidays.startDate" required>Start date</FormLabelHelp>
                 <Input

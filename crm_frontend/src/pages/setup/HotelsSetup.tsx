@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { formGrid2 } from "@/lib/responsive";
 import { useToast } from "@/hooks/use-toast";
 
 function makePropertyCode(name: string): string {
@@ -255,7 +256,7 @@ function HotelFormFields({
       {codePreview && (
         <p className="text-xs text-muted-foreground">Code: {codePreview}</p>
       )}
-      <div className="grid grid-cols-2 gap-3">
+      <div className={formGrid2}>
         <div>
           <FormLabelHelp helpId="setup.hotels.city">City</FormLabelHelp>
           <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />

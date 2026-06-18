@@ -6,6 +6,8 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FilterBar } from "@/components/patterns/FilterBar";
 import { EmptyState } from "@/components/patterns/EmptyState";
+import { useViewMode } from "@/hooks/useViewMode";
+import { ViewModeToggle } from "@/components/layout/ViewModeToggle";
 import { DataTable } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/ui/error-state";
 import { TableSkeleton } from "@/components/ui/skeleton-loaders";
@@ -224,6 +226,7 @@ export const AccountManagement = ({ permissions = [], isAdmin, isSystemAdmin }: 
   const [deleteAccountConfirm, setDeleteAccountConfirm] = useState<Account | null>(null);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const { viewMode, setViewMode, showCards } = useViewMode("accounts");
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importLoading, setImportLoading] = useState(false);
@@ -974,6 +977,10 @@ export const AccountManagement = ({ permissions = [], isAdmin, isSystemAdmin }: 
               </CardContent>
             </Card>
           ) : (
+            <>
+            <div className="flex justify-end">
+              <ViewModeToggle value={viewMode} onChange={setViewMode} />
+            </div>
         <DataTable<Account>
           sort={{
             column: sortColumn,
@@ -1054,7 +1061,21 @@ export const AccountManagement = ({ permissions = [], isAdmin, isSystemAdmin }: 
             </div>
           )}
           onRowClick={(a) => setSelectedAccount(a)}
+          showAsCards={showCards}
+          renderCard={(a) => (
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-semibold text-foreground">{a.name}</span>
+                <Badge variant="outline" className="text-xs">
+                  {(a.organizationType || a.type || "").replace(/_/g, " ")}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">{a.city || "No city"}</p>
+              <p className="text-sm text-muted-foreground">Contact: {getPrimaryContact(a)}</p>
+            </div>
+          )}
         />
+            </>
           )}
         </TabsContent>
 

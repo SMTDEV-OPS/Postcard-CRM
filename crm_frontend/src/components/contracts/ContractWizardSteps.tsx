@@ -8,6 +8,7 @@ import type { Contract, ContractChannel } from "@/services/contracts";
 import type { Contact } from "@/services/contacts";
 import type { PostcardPropertyOption } from "@/constants/postcardProperties";
 import { cn } from "@/lib/utils";
+import { formGrid2 } from "@/lib/responsive";
 
 export interface ContractCreateForm {
   companyName: string;
@@ -170,7 +171,7 @@ export function ContractCreateReview({
 
   return (
     <div className="rounded-lg border border-border bg-hover/40 p-4 space-y-3 text-sm">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+      <div className={cn(formGrid2, "gap-x-4 gap-y-2")}>
         <div>
           <span className="text-text-muted">Company</span>
           <p className="font-medium text-text">{form.companyName || "—"}</p>
@@ -213,7 +214,7 @@ export function ContractOverviewStep({
 
   return (
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4 text-sm">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+      <div className={cn(formGrid2, "gap-x-4 gap-y-3")}>
         <div>
           <span className="text-text-muted">Company</span>
           <p className="font-medium text-text">{contract.companyName}</p>

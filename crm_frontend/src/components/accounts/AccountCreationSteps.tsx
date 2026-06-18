@@ -17,6 +17,7 @@ import { Account } from "@/services/accounts";
 import { Conglomerate } from "@/services/conglomerates";
 import { Property } from "@/services/properties";
 import { cn } from "@/lib/utils";
+import { formGrid2 } from "@/lib/responsive";
 import {
   AccountFormData,
   ACCOUNT_TYPE_OPTIONS,
@@ -60,7 +61,7 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
           placeholder="Legal entity name"
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className={formGrid2}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.organization.organizationType">Organization type</FormLabelHelp>
           <Select
@@ -99,7 +100,7 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
       {isTravelTrade(formData) && (
         <TravelTradeOrganizationFields formData={formData} set={set} />
       )}
-      <div className="grid grid-cols-2 gap-3">
+      <div className={formGrid2}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.organization.email">Email</FormLabelHelp>
           <Input
@@ -125,7 +126,7 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
 export function AccountStepClassification({ formData, set }: StepContext) {
   return (
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className={formGrid2}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.classification.accountLevel">Account level</FormLabelHelp>
           <Select value={formData.accountLevel} onValueChange={(v) => set({ accountLevel: v })}>
@@ -179,7 +180,7 @@ export function AccountStepClassification({ formData, set }: StepContext) {
           </label>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+      <div className={cn(formGrid2, "pt-2 border-t border-border")}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.classification.industryCategory">Industry category</FormLabelHelp>
           <Select
@@ -235,7 +236,7 @@ export function AccountStepHierarchy({ formData, set, conglomerates, availableAc
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className={formGrid2}>
           <div className="space-y-1.5">
             <FormLabelHelp helpId="accounts.wizard.hierarchy.conglomerateId">Conglomerate</FormLabelHelp>
             <Select
@@ -400,7 +401,7 @@ export function AccountStepLocation({ formData, set }: StepContext) {
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className={formGrid2}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.location.locality">Locality / area</FormLabelHelp>
           <Input
@@ -422,7 +423,7 @@ export function AccountStepLocation({ formData, set }: StepContext) {
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className={formGrid2}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.location.addressLine1">Address</FormLabelHelp>
           <Input
@@ -475,7 +476,7 @@ export function AccountStepCompliance({ ctx }: { ctx: StepContext }) {
         <h4 className="text-sm font-medium text-text">Sales team</h4>
         <div className="space-y-2">
           <FormLabelHelp helpId="accounts.wizard.compliance.primaryAccountManager" className="text-sm">Primary account manager (PAM)</FormLabelHelp>
-          <div className="grid grid-cols-2 gap-3">
+          <div className={formGrid2}>
             <Input
               placeholder="Manager name"
               value={formData.primaryAccountManager?.name || ""}
@@ -648,7 +649,7 @@ export function AccountReviewSummary({
 
   return (
     <div className="rounded-lg border border-border bg-hover/40 p-4 space-y-3 text-sm">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+      <div className={cn(formGrid2, "gap-x-4 gap-y-2")}>
         <div>
           <span className="text-text-muted">Account name</span>
           <p className="font-medium text-text">{formData.name || "—"}</p>

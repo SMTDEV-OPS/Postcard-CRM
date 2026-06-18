@@ -249,7 +249,7 @@ export function SettingsDashboard({
         subtitle="Manage your CRM settings, automations, and more."
       />
       <div
-        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
         style={{ gap: 24 }}
       >
         {categories.map((cat) => {

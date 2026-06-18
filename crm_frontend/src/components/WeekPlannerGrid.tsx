@@ -112,8 +112,8 @@ export function WeekPlannerGrid({
         </div>
       </div>
 
-      <div className="border rounded-lg overflow-hidden bg-background">
-        <div className="grid" style={{ gridTemplateColumns: `80px repeat(${days.length}, minmax(0, 1fr))` }}>
+      <div className="overflow-x-auto rounded-lg border border-border bg-background">
+        <div className="grid min-w-[640px]" style={{ gridTemplateColumns: `80px repeat(${days.length}, minmax(0, 1fr))` }}>
           <div className="border-b px-2 py-3 text-xs text-muted-foreground">Time</div>
           {days.map((day) => (
             <div key={day.toISOString()} className="border-b border-l px-2 py-2">

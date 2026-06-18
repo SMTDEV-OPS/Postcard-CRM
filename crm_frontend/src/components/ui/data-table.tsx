@@ -81,6 +81,10 @@ export interface DataTableProps<T> {
   /** Custom className per row for conditional styling */
   rowClassName?: (row: T) => string | undefined
   className?: string
+  /** Card layout for mobile / card view mode */
+  renderCard?: (row: T) => React.ReactNode
+  /** When true, render cards instead of table (use with renderCard) */
+  showAsCards?: boolean
 }
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50]
@@ -101,6 +105,8 @@ export function DataTable<T>({
   onRowClick,
   rowClassName,
   className,
+  renderCard,
+  showAsCards = false,
 }: DataTableProps<T>) {
   const allIds = React.useMemo(
     () => new Set(data.map((r) => getRowId(r))),
@@ -185,6 +191,68 @@ export function DataTable<T>({
 
   if (data.length === 0 && emptyState) {
     return <div className={cn(className)}>{emptyState}</div>
+  }
+
+  if (showAsCards && renderCard) {
+    return (
+      <div className={cn("space-y-4", className)}>
+        {someSelected && bulkActionsBar && (
+          <div className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-4 py-2">
+            <span className="text-sm text-muted-foreground">
+              {selectedIds.size} selected
+            </span>
+            {bulkActionsBar}
+          </div>
+        )}
+        <div className="space-y-3">
+          {data.map((row) => {
+            const id = getRowId(row)
+            return (
+              <div
+                key={id}
+                className={cn(
+                  "rounded-lg border border-border bg-card p-4 transition-colors",
+                  onRowClick && "cursor-pointer hover:bg-muted/30",
+                  rowClassName?.(row)
+                )}
+                onClick={() => onRowClick?.(row)}
+                onKeyDown={(e) => {
+                  if (onRowClick && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault()
+                    onRowClick(row)
+                  }
+                }}
+                role={onRowClick ? "button" : undefined}
+                tabIndex={onRowClick ? 0 : undefined}
+              >
+                {selectable && onSelectionChange && (
+                  <div className="mb-3 flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedIds.has(id)}
+                      onCheckedChange={(checked) =>
+                        handleSelectRow(id, checked === true)
+                      }
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label="Select row"
+                    />
+                    <span className="text-xs text-muted-foreground">Select</span>
+                  </div>
+                )}
+                {renderCard(row)}
+                {rowActions && (
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+                    {rowActions(row)}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        {pagination && pagination.total > pagination.pageSize && (
+          <div className="flex justify-center pt-2">{/* pagination reused below if needed */}</div>
+        )}
+      </div>
+    )
   }
 
   return (

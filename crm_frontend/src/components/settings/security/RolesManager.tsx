@@ -332,7 +332,7 @@ export function RolesManager() {
                                 </div>
                             </CardHeader>
                             <CardContent className="p-6">
-                                <div className="grid grid-cols-2 gap-8">
+                                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
                                     <div className="space-y-6">
                                         <div>
                                             <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Hierarchy Setup</h4>

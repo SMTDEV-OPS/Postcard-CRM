@@ -191,7 +191,7 @@ const QuotationsTab = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-4 mt-3 text-sm">
+                <div className="grid grid-cols-2 gap-3 mt-3 text-sm sm:grid-cols-4 sm:gap-4">
                   <div>
                     <span className="text-muted-foreground">Rooms:</span>{" "}
                     <span className="font-medium">{quote.rooms || 1}</span>
@@ -1649,7 +1649,7 @@ export const AdminLeads = ({ canManageUsers, permissions, isAdmin, onViewLead }:
           )}
           {!isLoadingDetail && selectedDetail && (
             <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-5">
                 <TabsTrigger value="details">Details</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
                 <TabsTrigger value="emails">Emails</TabsTrigger>

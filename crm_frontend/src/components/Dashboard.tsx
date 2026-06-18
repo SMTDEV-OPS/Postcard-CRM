@@ -363,7 +363,7 @@ const Dashboard = ({
           </CardHeader>
           <CardContent className="p-4">
             <div className="flex flex-col items-center gap-4 sm:flex-row">
-              <div className="h-[180px] w-[180px]">
+              <div className="h-[140px] w-[140px] sm:h-[180px] sm:w-[180px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie

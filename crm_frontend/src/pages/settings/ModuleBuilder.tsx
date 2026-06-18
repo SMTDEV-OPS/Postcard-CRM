@@ -173,7 +173,7 @@ export function ModuleBuilder() {
             </div>
 
             <Tabs defaultValue="leads" onValueChange={(v) => setActiveModule(v as CustomFieldModule)}>
-                <TabsList className="grid w-full grid-cols-3 max-w-md">
+                <TabsList className="flex w-full max-w-md overflow-x-auto md:grid md:grid-cols-3">
                     {MODULES.map(m => (
                         <TabsTrigger key={m.id} value={m.id}>{m.label}</TabsTrigger>
                     ))}
@@ -191,9 +191,9 @@ export function ModuleBuilder() {
                     ) : (fields && fields.length > 0) ? (
                         <div className="space-y-3">
                             {fields.map((field) => (
-                                <div key={field._id} className={`flex items-center justify-between p-4 border rounded-lg ${!field.isActive ? 'opacity-60 bg-muted/50' : 'bg-card'}`}>
+                                <div key={field._id} className={`flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg ${!field.isActive ? 'opacity-60 bg-muted/50' : 'bg-card'}`}>
                                     <div className="flex items-center gap-4">
-                                        <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
+                                        <GripVertical className="h-6 w-6 sm:h-5 sm:w-5 text-muted-foreground cursor-grab shrink-0" />
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <p className="font-semibold">{field.label}</p>
@@ -237,18 +237,18 @@ export function ModuleBuilder() {
                         <DialogTitle>{editingField ? "Edit Field" : "Create New Field"}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
+                        <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-4 sm:gap-4">
                             <FormLabelHelp helpId="setup.fields.label" className="text-right justify-end" required>Label</FormLabelHelp>
-                            <Input className="col-span-3" value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. Current CRM" />
+                            <Input className="sm:col-span-3" value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. Current CRM" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
+                        <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-4 sm:gap-4">
                             <FormLabelHelp helpId="setup.fields.apiKey" className="text-right justify-end">API Key</FormLabelHelp>
-                            <Input className="col-span-3 font-mono" value={fieldName} onChange={e => setFieldName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))} placeholder="e.g. current_crm" disabled={!!editingField} />
+                            <Input className="sm:col-span-3 font-mono" value={fieldName} onChange={e => setFieldName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))} placeholder="e.g. current_crm" disabled={!!editingField} />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
+                        <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-4 sm:gap-4">
                             <FormLabelHelp helpId="setup.fields.type" className="text-right justify-end" required>Type</FormLabelHelp>
                             <Select value={dataType} onValueChange={setDataType} disabled={!!editingField}>
-                                <SelectTrigger className="col-span-3">
+                                <SelectTrigger className="sm:col-span-3">
                                     <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -258,18 +258,18 @@ export function ModuleBuilder() {
                         </div>
 
                         {dataType === "DROPDOWN" && (
-                            <div className="grid grid-cols-4 items-start gap-4">
+                            <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-4 sm:gap-4">
                                 <FormLabelHelp helpId="setup.fields.options" className="text-right justify-end mt-2">Options</FormLabelHelp>
-                                <div className="col-span-3 space-y-1">
+                                <div className="sm:col-span-3 space-y-1">
                                     <Input value={optionsStr} onChange={e => setOptionsStr(e.target.value)} placeholder="Yes, No, Maybe" />
                                     <p className="text-xs text-muted-foreground">Comma separated values</p>
                                 </div>
                             </div>
                         )}
 
-                        <div className="grid grid-cols-4 items-center gap-4">
+                        <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-4 sm:gap-4">
                             <FormLabelHelp helpId="setup.fields.required" className="text-right justify-end">Required</FormLabelHelp>
-                            <div className="col-span-3 flex items-center space-x-2">
+                            <div className="sm:col-span-3 flex items-center space-x-2">
                                 <Switch checked={isRequired} onCheckedChange={setIsRequired} />
                             </div>
                         </div>

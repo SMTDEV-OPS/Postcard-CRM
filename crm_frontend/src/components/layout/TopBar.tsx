@@ -1,11 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Command, Building2, User } from "lucide-react";
+import { Search, Plus, Command, Building2, User, Menu, MoreHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/shared/Button";
 import { NotificationBell } from "@/components/NotificationBell";
 import { CRM_PATHS } from "@/navigation/crmPaths";
 import { globalSearch, type GlobalSearchResults } from "@/services/search";
+import { useMobileNav } from "./MobileNavContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 interface TopBarProps {
   onOpenCommandPalette?: () => void;
   onQuickCreateLead?: () => void;
@@ -18,6 +25,7 @@ export function TopBar({
   onQuickCreateAccount,
 }: TopBarProps) {
   const navigate = useNavigate();
+  const { setOpen: setMobileNavOpen } = useMobileNav();
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<GlobalSearchResults | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -103,8 +111,16 @@ export function TopBar({
   const showDropdown = dropdownOpen && search.trim().length >= 2;
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-surface/95 px-6 backdrop-blur-sm">
-      <div ref={containerRef} className="relative flex-1 max-w-md">
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface/95 px-3 backdrop-blur-sm sm:gap-4 sm:px-6">
+      <button
+        type="button"
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-hover hover:text-text md:hidden"
+        onClick={() => setMobileNavOpen(true)}
+        aria-label="Open navigation menu"
+      >
+        <Menu className="h-5 w-5" strokeWidth={1.5} />
+      </button>
+      <div ref={containerRef} className="relative min-w-0 flex-1 max-w-md">
         <form onSubmit={handleSearchSubmit}>
           <Search
             className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-text-faint"
@@ -221,7 +237,7 @@ export function TopBar({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         {onOpenCommandPalette && (
           <Button
             variant="ghost"
@@ -229,17 +245,46 @@ export function TopBar({
             icon={Command}
             onClick={onOpenCommandPalette}
             aria-label="Command palette"
+            className="hidden sm:inline-flex"
           />
         )}
-        {onQuickCreateLead && (
-          <Button variant="primary" size="sm" icon={Plus} onClick={onQuickCreateLead}>
-            New lead
-          </Button>
+        {(onQuickCreateLead || onQuickCreateAccount) && (
+          <div className="hidden sm:flex sm:items-center sm:gap-2">
+            {onQuickCreateLead && (
+              <Button variant="primary" size="sm" icon={Plus} onClick={onQuickCreateLead}>
+                New lead
+              </Button>
+            )}
+            {onQuickCreateAccount && (
+              <Button variant="primary" size="sm" icon={Plus} onClick={onQuickCreateAccount}>
+                New account
+              </Button>
+            )}
+          </div>
         )}
-        {onQuickCreateAccount && (
-          <Button variant="primary" size="sm" icon={Plus} onClick={onQuickCreateAccount}>
-            New account
-          </Button>
+        {(onQuickCreateLead || onQuickCreateAccount) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-text-muted hover:bg-hover sm:hidden"
+                aria-label="Quick create"
+              >
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {onQuickCreateLead && (
+                <DropdownMenuItem onClick={onQuickCreateLead}>New lead</DropdownMenuItem>
+              )}
+              {onQuickCreateAccount && (
+                <DropdownMenuItem onClick={onQuickCreateAccount}>New account</DropdownMenuItem>
+              )}
+              {onOpenCommandPalette && (
+                <DropdownMenuItem onClick={onOpenCommandPalette}>Command palette</DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
         <NotificationBell />
       </div>

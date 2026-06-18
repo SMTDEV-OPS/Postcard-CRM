@@ -13,6 +13,13 @@ import {
 import { countFieldsForCategory } from "@/help/helpRegistry";
 import { helpArticleUrl } from "@/help/useHelpTopic";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const SUPPORT_EMAIL =
   import.meta.env.VITE_SUPPORT_EMAIL || "support@svayammeraki.com";
@@ -133,7 +140,46 @@ export function HelpCenter({ isAdmin = false }: HelpCenterProps) {
         </div>
       )}
 
-      <div className="flex gap-8">
+      <div className="flex flex-col gap-4 md:flex-row md:gap-8">
+        <div className="md:hidden">
+          <Select
+            value={activePath ?? activeCategory ?? "home"}
+            onValueChange={(v) => {
+              if (v === "home") {
+                setActiveCategory(null);
+                setActivePath(null);
+                setQuery("");
+                return;
+              }
+              if (LEARNING_PATHS.some((p) => p.id === v)) {
+                setActivePath(v);
+                setActiveCategory(null);
+                setQuery("");
+                return;
+              }
+              setActiveCategory(v);
+              setActivePath(null);
+              setQuery("");
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Browse help" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="home">Home</SelectItem>
+              {categoriesWithTopics.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+              {LEARNING_PATHS.map((path) => (
+                <SelectItem key={path.id} value={path.id}>
+                  Path: {path.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <aside className="hidden w-48 shrink-0 md:block">
           <nav className="sticky top-4 space-y-0.5">
             <button

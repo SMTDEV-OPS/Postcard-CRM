@@ -867,14 +867,14 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
         }
       />
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(260px,280px)_1fr_minmax(280px,300px)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(260px,280px)_1fr_minmax(280px,300px)]">
         {/* LEFT — identity & stage */}
-        <div className="space-y-4 xl:sticky xl:top-4 xl:self-start">
+        <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
           <div
             ref={leadInfoRef}
             className="rounded-md border border-border bg-surface p-5 shadow-sm"
           >
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
               {[
                 { label: "Guest Name", value: guestName || "—" },
                 { label: "Phone", value: guestPhone || "—" },

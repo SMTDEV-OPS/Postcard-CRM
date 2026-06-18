@@ -1,8 +1,15 @@
 import { ReactNode } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { HelpPageHeader } from "@/components/help/HelpPageHeader";
 import { SETUP_PATH_TO_HELP_ID } from "@/help/helpContent";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sliders,
   GitBranch,
@@ -52,6 +59,7 @@ export function SetupLayout({
   children,
 }: SetupLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const isSetupRoute = location.pathname.startsWith("/setup");
 
   if (!isSetupRoute) {
@@ -63,8 +71,22 @@ export function SetupLayout({
   const resolvedHelpId = helpId ?? SETUP_PATH_TO_HELP_ID[lookupKey];
 
   return (
-    <div className="flex gap-8 animate-panel-enter">
-      <aside className="w-52 shrink-0">
+    <div className="flex flex-col gap-4 md:flex-row md:gap-8 animate-panel-enter">
+      <div className="md:hidden">
+        <Select value={location.pathname} onValueChange={(v) => navigate(v)}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Setup section" />
+          </SelectTrigger>
+          <SelectContent>
+            {SETUP_LINKS.map(({ to, label }) => (
+              <SelectItem key={to} value={to}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <aside className="hidden w-52 shrink-0 md:block">
         <nav className="space-y-0.5 rounded-md border border-border bg-surface p-2">
           {SETUP_LINKS.map(({ to, label, icon: Icon }) => (
             <NavLink

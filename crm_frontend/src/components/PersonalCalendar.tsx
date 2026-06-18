@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formGrid2 } from "@/lib/responsive";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
@@ -250,7 +251,7 @@ export const PersonalCalendar = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">My Calendar</h1>
           <p className="text-slate-500 mt-1">Manage your scheduled follow-ups and reminders</p>
@@ -528,7 +529,7 @@ export const PersonalCalendar = ({
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className={formGrid2}>
               <div>
                 <Label className="text-sm font-semibold text-slate-600 mb-2 block">Due Date *</Label>
                 <Input

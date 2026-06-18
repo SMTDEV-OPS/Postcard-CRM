@@ -45,7 +45,7 @@ export function FormWizardShell({
       <DialogContent
         className={cn(
           maxWidthClass[maxWidth],
-          "flex flex-col gap-0 p-0 overflow-hidden",
+          "flex flex-col gap-0 p-0 overflow-hidden max-w-[calc(100vw-1rem)]",
           maxWidth === "3xl" && "sm:max-w-3xl",
           maxWidth === "4xl" && "sm:max-w-4xl",
           maxHeight === "min(90vh,720px)" && "h-[min(90vh,720px)]",
@@ -53,15 +53,15 @@ export function FormWizardShell({
           maxHeight === "min(90vh,860px)" && "h-[min(90vh,860px)]"
         )}
       >
-        <DialogHeader className="px-6 pt-5 pb-3 border-b border-border shrink-0">
+        <DialogHeader className="px-4 pt-4 pb-3 border-b border-border shrink-0 sm:px-6 sm:pt-5">
           <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
           {subtitle && <DialogDescription className="text-sm">{subtitle}</DialogDescription>}
           {stepIndicator && <div className="pt-3">{stepIndicator}</div>}
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">{children}</div>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 min-h-0 sm:px-6">{children}</div>
 
-        <div className="shrink-0 flex justify-between gap-2 px-6 py-4 border-t border-border bg-surface">
+        <div className="shrink-0 flex flex-col-reverse gap-2 px-4 py-3 border-t border-border bg-surface sm:flex-row sm:justify-between sm:px-6 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {footer}
         </div>
       </DialogContent>

@@ -238,6 +238,34 @@ export function GroupsManager() {
                         />
                     </div>
                 </CardHeader>
+                {/* Mobile card list */}
+                <div className="md:hidden divide-y">
+                    {filteredGroups.length === 0 ? (
+                        <div className="p-8 text-center text-muted-foreground">No groups found.</div>
+                    ) : (
+                        filteredGroups.map((g) => (
+                            <div key={g._id} className="p-4 space-y-3">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="font-medium flex items-center gap-2 min-w-0">
+                                        <FolderGit2 className="h-4 w-4 text-purple-600 shrink-0" />
+                                        <span className="truncate">{g.name}</span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground shrink-0">{g.memberCount} members</span>
+                                </div>
+                                {g.description && (
+                                    <p className="text-sm text-muted-foreground">{g.description}</p>
+                                )}
+                                <div className="flex justify-end gap-2">
+                                    <Button variant="ghost" size="sm" onClick={() => handleEdit(g)}>Edit</Button>
+                                    <Button variant="ghost" size="sm" onClick={() => handleDelete(g._id, g.name)} className="text-red-600 hover:text-red-700 hover:bg-red-50">Delete</Button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
+                <div className="min-w-[640px]">
                 <div className="grid grid-cols-12 gap-4 p-4 border-b bg-muted/30 text-sm font-semibold text-gray-700">
                     <div className="col-span-3">Group Name</div>
                     <div className="col-span-5">Description</div>
@@ -267,6 +295,8 @@ export function GroupsManager() {
                             </div>
                         ))
                     )}
+                </div>
+                </div>
                 </div>
             </Card>
 

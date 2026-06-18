@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { disableCheckInDate, disableCheckoutDate, startOfDay } from "@/lib/leadDates";
 import type { UseFormReturn } from "react-hook-form";
 import { useActiveProperties } from "@/hooks/useActiveProperties";
+import { formGrid2, formGrid3 } from "@/lib/responsive";
 
 function LeadMgmtHotelDates({
   index,
@@ -29,7 +30,7 @@ function LeadMgmtHotelDates({
   const checkIn = form.watch(`hotels.${index}.checkInDate`);
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className={formGrid2}>
       <FormField
         control={form.control}
         name={`hotels.${index}.checkInDate`}
@@ -763,7 +764,7 @@ const LeadManagement = () => {
                     </Select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className={formGrid2}>
                     <div>
                       <label className="text-sm font-medium mb-1 block">Check-in From</label>
                       <Input
@@ -782,7 +783,7 @@ const LeadManagement = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className={formGrid2}>
                     <div>
                       <label className="text-sm font-medium mb-1 block">Lead Creation From</label>
                       <Input
@@ -820,7 +821,7 @@ const LeadManagement = () => {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   {/* Guest Name Section */}
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className={formGrid3}>
                     <FormField
                       control={form.control}
                       name="firstName"
@@ -925,7 +926,7 @@ const LeadManagement = () => {
 
                         <LeadMgmtHotelDates index={index} form={form} />
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className={formGrid2}>
                           <FormField
                             control={form.control}
                             name={`hotels.${index}.roomCategory`}
@@ -1027,7 +1028,7 @@ const LeadManagement = () => {
                   />
 
                   {/* Contact Details */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={formGrid2}>
                     <FormField
                       control={form.control}
                       name="contactNumber"
@@ -1056,7 +1057,7 @@ const LeadManagement = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={formGrid2}>
                     <FormField
                       control={form.control}
                       name="email"
@@ -1166,7 +1167,7 @@ const LeadManagement = () => {
                   </div>
 
                   {/* Lead Type and Source */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={formGrid2}>
                     <FormField
                       control={form.control}
                       name="leadType"

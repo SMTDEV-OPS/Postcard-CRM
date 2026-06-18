@@ -319,7 +319,7 @@ export const TodaysFollowUps = ({
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-semibold text-slate-600 mb-2 block">Due date *</Label>
                 <Input type="date" value={newTask.dueAt} onChange={(e) => setNewTask({ ...newTask, dueAt: e.target.value })} className="h-10 border-slate-200" />
@@ -376,6 +376,54 @@ export const TodaysFollowUps = ({
               <p className="text-slate-500">No follow-ups found</p>
             </div>
           ) : (
+            <>
+            {/* Mobile card list */}
+            <div className="md:hidden divide-y divide-slate-200">
+              {tasks.map((task) => {
+                const dueDate = task.dueAt ? new Date(task.dueAt) : null;
+                const isOverdue =
+                  task.status === "OPEN" &&
+                  !!dueDate &&
+                  dueDate.getTime() < Date.now();
+                const leadId = task.lead?.id || task.leadId;
+                const hasLead = !!leadId && !!onViewLead;
+                return (
+                  <div
+                    key={task.id}
+                    className={`p-4 space-y-3 ${isOverdue ? "border-l-2 border-red-400" : ""}`}
+                    onClick={() => hasLead && leadId && onViewLead?.(leadId)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className={`font-medium ${hasLead ? "text-emerald-600" : ""}`}>{task.title}</p>
+                        {task.description && (
+                          <p className="text-sm text-slate-600 mt-1 line-clamp-2">{task.description}</p>
+                        )}
+                      </div>
+                      <Badge variant="outline" className={getStatusBadge(task.status)}>
+                        {task.status}
+                      </Badge>
+                    </div>
+                    <p className={`text-xs ${isOverdue ? "text-red-600" : "text-slate-500"}`}>
+                      {dueDate ? format(dueDate, "MMM d, yyyy 'at' h:mm a") : "No due date"}
+                    </p>
+                    {task.status === "OPEN" && (
+                      <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                        <Button size="sm" variant="outline" onClick={() => handleComplete(task)} className="border-emerald-200 text-emerald-600 hover:bg-emerald-50">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Complete
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => handleCancel(task.id)} className="border-red-200 text-red-600 hover:bg-red-50">
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -528,6 +576,8 @@ export const TodaysFollowUps = ({
                 })}
               </TableBody>
             </Table>
+            </div>
+            </>
             )}
         </CardContent>
       </Card>

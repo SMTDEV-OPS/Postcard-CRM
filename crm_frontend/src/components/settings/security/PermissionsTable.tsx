@@ -27,6 +27,8 @@ export function PermissionsTable({ permissions, isEditable, onPermissionChange }
 
     return (
         <div className="border rounded-md overflow-hidden bg-white shadow-sm">
+            <div className="overflow-x-auto">
+            <div className="min-w-[520px]">
             <div className="grid grid-cols-5 bg-muted/30 border-b font-medium text-sm text-gray-700 py-3">
                 <div className="px-4 col-span-1">Module</div>
                 <div className="px-4 text-center">View</div>
@@ -107,6 +109,8 @@ export function PermissionsTable({ permissions, isEditable, onPermissionChange }
 
                     </div>
                 ))}
+            </div>
+            </div>
             </div>
         </div>
     );

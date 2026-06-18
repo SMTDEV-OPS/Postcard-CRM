@@ -40,9 +40,13 @@ import {
   Plus,
   RefreshCw,
   ChevronRight,
+  ChevronLeft,
   Paperclip,
 } from "lucide-react";
 import { EmailComposer } from "./EmailComposer";
+import { cn } from "@/lib/utils";
+
+type MobilePane = "folders" | "list" | "message";
 
 export const EmailClient = () => {
   const { toast } = useToast();
@@ -59,6 +63,7 @@ export const EmailClient = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
+  const [mobilePane, setMobilePane] = useState<MobilePane>("list");
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -137,6 +142,7 @@ export const EmailClient = () => {
 
   const handleSelectMessage = async (message: EmailMessage) => {
     setSelectedMessage(message);
+    setMobilePane("message");
 
     // Mark as read if unread
     if (!message.isRead) {
@@ -271,8 +277,23 @@ export const EmailClient = () => {
   return (
     <div className="flex h-[calc(100vh-10rem)] overflow-hidden rounded-md border border-border bg-surface shadow-sm animate-panel-enter">
       {/* Folder Sidebar */}
-      <div className="w-56 border-r bg-muted/30 flex flex-col">
+      <div
+        className={cn(
+          "border-r bg-muted/30 flex flex-col md:w-56",
+          mobilePane === "folders" ? "flex-1 w-full md:flex" : "hidden md:flex"
+        )}
+      >
         <div className="p-4 border-b bg-card">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="md:hidden -ml-2 mb-2 h-8 px-2"
+            onClick={() => setMobilePane("list")}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back to messages
+          </Button>
           <Button
             onClick={() => setIsComposeOpen(true)}
             className="w-full font-medium"
@@ -292,6 +313,7 @@ export const EmailClient = () => {
                   setSelectedMessage(null);
                   setThread([]);
                   setOffset(0);
+                  setMobilePane("list");
                 }}
                 className={`
                   w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm transition-all duration-200
@@ -320,8 +342,25 @@ export const EmailClient = () => {
       </div>
 
       {/* Email List */}
-      <div className="w-80 border-r flex flex-col bg-background">
-        <div className="p-3 border-b bg-card">
+      <div
+        className={cn(
+          "border-r flex flex-col bg-background md:w-80",
+          mobilePane === "list" ? "flex-1 w-full md:flex" : "hidden md:flex"
+        )}
+      >
+        <div className="p-3 border-b bg-card space-y-2">
+          <div className="flex items-center gap-2 md:hidden">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 shrink-0"
+              onClick={() => setMobilePane("folders")}
+            >
+              <Mail className="h-4 w-4 mr-1" />
+              {currentFolder?.name || selectedFolder}
+            </Button>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -394,10 +433,30 @@ export const EmailClient = () => {
       </div>
 
       {/* Email Viewer */}
-      <div className="flex-1 flex flex-col bg-background">
+      <div
+        className={cn(
+          "flex-1 flex flex-col bg-background",
+          mobilePane === "message" ? "flex w-full" : "hidden md:flex"
+        )}
+      >
         {selectedMessage ? (
           <>
-            <div className="p-4 border-b bg-card flex items-center justify-between">
+            <div className="p-4 border-b bg-card">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="md:hidden -ml-2 mb-2 h-8 px-2"
+                onClick={() => {
+                  setMobilePane("list");
+                  setSelectedMessage(null);
+                  setThread([]);
+                }}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                {currentFolder?.name || "Inbox"}
+              </Button>
+              <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-lg font-semibold truncate">
@@ -426,7 +485,7 @@ export const EmailClient = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 ml-4">
+              <div className="flex items-center gap-1 ml-4 shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -466,6 +525,7 @@ export const EmailClient = () => {
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
+              </div>
               </div>
             </div>
             <ScrollArea className="flex-1">

@@ -30,6 +30,8 @@ import { cn } from "@/lib/utils";
 import { CRM_PATHS } from "@/navigation/crmPaths";
 import { HelpInfoButton } from "@/components/help/HelpInfoButton";
 import { NAV_PATH_TO_HELP_ID } from "@/help/helpContent";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useMobileNav } from "./MobileNavContext";
 
 interface NavItem {
   title: string;
@@ -68,6 +70,7 @@ export function Sidebar({
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
+  const { open: mobileOpen, setOpen: setMobileOpen, close: closeMobileNav } = useMobileNav();
 
   const isAdminLike = !!isAdmin || userRole === "admin";
   const isBackendSession = permissions.length > 0;
@@ -137,6 +140,10 @@ export function Sidebar({
   ];
 
   useEffect(() => {
+    if (mobileOpen) setCollapsed(false);
+  }, [mobileOpen]);
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
@@ -163,6 +170,7 @@ export function Sidebar({
         <NavLink
           to={item.path}
           end={item.path === CRM_PATHS.dashboard}
+          onClick={() => closeMobileNav()}
           className={({ isActive }) =>
             cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
           }
@@ -203,13 +211,8 @@ export function Sidebar({
       </div>
     );
 
-  return (
-    <aside
-      className={cn(
-        "flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-base",
-        collapsed ? "w-16" : "w-[248px]"
-      )}
-    >
+  const sidebarInner = (
+    <>
       <div className={cn("flex h-[72px] shrink-0 items-center border-b border-sidebar-border", collapsed ? "justify-center px-2" : "justify-between px-5")}>
         {!collapsed && (
           <img
@@ -245,7 +248,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
-            className="rounded p-1.5 text-white/50 transition-colors hover:bg-sidebar-accent hover:text-white"
+            className="hidden rounded p-1.5 text-white/50 transition-colors hover:bg-sidebar-accent hover:text-white md:inline-flex"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} strokeWidth={1.5} />}
@@ -265,6 +268,7 @@ export function Sidebar({
             <div className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
               <NavLink
                 to={CRM_PATHS.settings}
+                onClick={() => closeMobileNav()}
                 className={({ isActive }) =>
                   cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
                 }
@@ -289,6 +293,7 @@ export function Sidebar({
             <div className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
               <NavLink
                 to={CRM_PATHS.knowledge}
+                onClick={() => closeMobileNav()}
                 className={({ isActive }) =>
                   cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
                 }
@@ -315,6 +320,7 @@ export function Sidebar({
             <div key={item.path} className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
               <NavLink
                 to={item.path}
+                onClick={() => closeMobileNav()}
                 className={({ isActive }) =>
                   cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
                 }
@@ -338,6 +344,7 @@ export function Sidebar({
         <div className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
           <NavLink
             to={CRM_PATHS.help}
+            onClick={() => closeMobileNav()}
             className={({ isActive }) =>
               cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
             }
@@ -424,6 +431,28 @@ export function Sidebar({
           </div>
         )}
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      <aside
+        className={cn(
+          "hidden md:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-base",
+          collapsed ? "w-16" : "w-[248px]"
+        )}
+      >
+        {sidebarInner}
+      </aside>
+
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent
+          side="left"
+          className="w-[min(100vw-1rem,280px)] border-sidebar-border bg-sidebar p-0 text-sidebar-foreground md:hidden [&>button]:text-white/70"
+        >
+          <div className="flex h-full flex-col">{sidebarInner}</div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
