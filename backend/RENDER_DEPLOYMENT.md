@@ -57,6 +57,7 @@ Default admin after seed: `admin@postcardcrm.local` / `Admin@123` (change after 
 | `PMS_CRM_BASE_URL` | Yes (Call Center) | e.g. `https://staging.postcardresorts.com` |
 | `PMS_CRM_API_KEY` | Yes (Call Center) | From PMS team — server-side only |
 | `PMS_CRM_SECRET_KEY` | Yes (Call Center) | From PMS team — never commit to git |
+| `KNOWLARITY_WEBHOOK_SECRET` | Yes (Knowlarity Log Push) | Shared secret for `X-Webhook-Secret` header on `/api/public/knowlarity-call-log` |
 | `NODE_ENV` | Yes | `production` |
 | `NODE_OPTIONS` | Recommended | `--max-old-space-size=4096` |
 | `PORT` | Auto | Render sets automatically |

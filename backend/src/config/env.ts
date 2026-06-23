@@ -14,6 +14,7 @@ export interface AppConfig {
     region: string;
     bucketName: string;
   };
+  knowlarityWebhookSecret: string;
 }
 
 function getEnv(name: string, fallback?: string): string {
@@ -64,4 +65,5 @@ export const config: AppConfig = {
     region: getEnv("AWS_REGION", ""),
     bucketName: getEnv("AWS_S3_BUCKET_NAME", ""),
   },
+  knowlarityWebhookSecret: getEnv("KNOWLARITY_WEBHOOK_SECRET", ""),
 };

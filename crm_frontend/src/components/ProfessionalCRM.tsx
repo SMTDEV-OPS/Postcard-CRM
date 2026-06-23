@@ -7,7 +7,6 @@ import { AppShell, Sidebar, CommandPalette, SetupLayout } from "@/components/lay
 import { MobileNavProvider } from "@/components/layout/MobileNavContext";
 import { pathnameToView, viewToPath, CRM_PATHS } from "@/navigation/crmPaths";
 import { CallCenterScreen } from "@/components/CallCenterScreen";
-import { useIncomingCall } from "@/hooks/useIncomingCall";
 import { AgentDashboard } from "@/components/AgentDashboard";
 import { EnhancedCallInterface } from "@/components/EnhancedCallInterface";
 import ProfessionalLeadManagement from "@/components/ProfessionalLeadManagement";
@@ -87,16 +86,6 @@ export const ProfessionalCRM = ({
   const { view: activeView, leadId: selectedLeadId } = pathnameToView(location.pathname);
   const previousView =
     (location.state as { from?: string } | null)?.from ?? "admin-leads";
-  const [incomingCall, setIncomingCall] = useState(false);
-  const [incomingPhone, setIncomingPhone] = useState<string | undefined>();
-
-  const { incomingCall: incomingCallPayload, clearIncomingCall } = useIncomingCall({
-    onIncomingCall: (payload) => {
-      setIncomingPhone(payload.phone);
-      setIncomingCall(true);
-      navigate(CRM_PATHS.calls);
-    },
-  });
   const [commandOpen, setCommandOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -191,14 +180,7 @@ export const ProfessionalCRM = ({
       case 'calls':
         return (
           <CallCenterScreen
-            incomingCallActive={incomingCall || Boolean(incomingCallPayload)}
-            incomingPhoneNumber={incomingPhone ?? incomingCallPayload?.phone}
             agentName={userName}
-            onLeadCreated={() => {
-              setIncomingCall(false);
-              setIncomingPhone(undefined);
-              clearIncomingCall();
-            }}
           />
         );
       case 'leads':

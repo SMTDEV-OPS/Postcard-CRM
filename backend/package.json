@@ -27,6 +27,7 @@
     "db:reset": "ts-node scripts/resetDatabase.ts",
     "db:clone:moustache-to-postcard": "bash scripts/cloneMoustacheToPostcard.sh",
     "list:users": "ts-node scripts/listUsers.ts",
+    "fix:user-profiles": "ts-node scripts/assignMissingUserProfiles.ts",
     "test:v2-allocation": "ts-node scripts/testV2Allocation.ts",
     "reset:password": "ts-node scripts/resetPassword.ts",
     "lint": "echo \"no linter configured yet\"",

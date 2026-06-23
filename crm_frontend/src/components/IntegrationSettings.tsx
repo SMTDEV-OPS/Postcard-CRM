@@ -7,11 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Phone, MessageCircle, Share2, Upload, Link, Key, Copy, CheckCircle2, AlertCircle } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { KnowlarityAgentMappingPanel } from "@/components/KnowlarityAgentMappingPanel";
 import { API_BASE_URL } from "@/services/api"; // Or extract the base hostname programmatically
 
 export function IntegrationSettings() {
-    const { user } = useAuth();
     const [copied, setCopied] = useState<string | null>(null);
 
     // Derive URLs for display
@@ -21,11 +20,29 @@ export function IntegrationSettings() {
 
     const webhooks = {
         ivr: `${backendBase}/public/ivr-webhook`,
-        knowlarity: `${backendBase}/public/knowlarity-webhook`,
+        knowlarityCallLog: `${backendBase}/public/knowlarity-call-log`,
         whatsapp: `${backendBase}/public/whatsapp-webhook`,
         social: `${backendBase}/public/social-webhook`,
         website: `${backendBase}/public/website-leads`,
     };
+
+    const knowlarityCurl = `curl -X POST "${webhooks.knowlarityCallLog}" \\
+  -H "Content-Type: application/json" \\
+  -H "X-Webhook-Secret: YOUR_SHARED_SECRET" \\
+  -d '{
+    "call_date": "2026-06-10",
+    "call_time": "14:32:05",
+    "caller_number": "+919876543210",
+    "call_direction": "inbound",
+    "called_number": "+911800123456",
+    "call_status": "answered",
+    "agent_number": "+919811122233",
+    "call_transfer_status": "not_transferred",
+    "caller_duration": "245",
+    "recording_url": "https://recordings.knowlarity.com/abc123.mp3",
+    "call_uuid": "550e8400-e29b-41d4-a716-446655440000",
+    "hangup_cause": "NORMAL_CLEARING"
+  }'`;
 
     const copyToClipboard = (text: string, id: string) => {
         navigator.clipboard.writeText(text);
@@ -91,10 +108,14 @@ export function IntegrationSettings() {
             </div>
 
             <Tabs defaultValue="ivr" className="w-full">
-                <TabsList className="flex w-full h-auto overflow-x-auto py-1 md:grid md:grid-cols-5">
+                <TabsList className="flex w-full h-auto overflow-x-auto py-1 md:grid md:grid-cols-6">
                     <TabsTrigger value="ivr" className="py-2.5">
                         <Phone className="w-4 h-4 mr-2" />
-                        IVR / CTI
+                        IVR
+                    </TabsTrigger>
+                    <TabsTrigger value="knowlarity" className="py-2.5">
+                        <Phone className="w-4 h-4 mr-2" />
+                        Knowlarity
                     </TabsTrigger>
                     <TabsTrigger value="whatsapp" className="py-2.5">
                         <MessageCircle className="w-4 h-4 mr-2" />
@@ -153,28 +174,82 @@ export function IntegrationSettings() {
                                     Paste this URL into the App / Flow builder in your IVR provider as a standard HTTP POST event.
                                 </p>
                             </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
-                            <div className="space-y-2 pt-4 border-t">
-                                <Label>Knowlarity CTI Webhook URL</Label>
+                <TabsContent value="knowlarity" className="mt-4 space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Knowlarity Log Push</CardTitle>
+                            <CardDescription>
+                                Post-call logs from Knowlarity are stored under the mapped call-center agent.
+                                Configure Log Push in Knowlarity to POST to this URL after each answered call.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Log Push URL</Label>
                                 <div className="flex gap-2">
                                     <Input
                                         readOnly
-                                        value={webhooks.knowlarity}
+                                        value={webhooks.knowlarityCallLog}
                                         className="font-mono text-sm bg-muted/50"
                                     />
                                     <Button
                                         variant="outline"
                                         size="icon"
-                                        onClick={() => copyToClipboard(webhooks.knowlarity, 'knowlarity')}
+                                        onClick={() => copyToClipboard(webhooks.knowlarityCallLog, "knowlarity-log")}
                                     >
-                                        {copied === 'knowlarity' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                        {copied === "knowlarity-log" ? (
+                                            <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                        ) : (
+                                            <Copy className="w-4 h-4" />
+                                        )}
                                     </Button>
                                 </div>
                                 <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1.5">
                                     <AlertCircle className="w-3 h-3" />
-                                    POST with <code className="bg-muted px-1 rounded text-xs">From</code>, <code className="bg-muted px-1 rounded text-xs">CallSid</code>, <code className="bg-muted px-1 rounded text-xs">AgentId</code> (CRM user ID), and <code className="bg-muted px-1 rounded text-xs">Event</code> (ringing/answered). Routes incoming calls to the agent&apos;s call center screen.
+                                    Share with Knowlarity. Include header{" "}
+                                    <code className="bg-muted px-1 rounded text-xs">X-Webhook-Secret</code> (set{" "}
+                                    <code className="bg-muted px-1 rounded text-xs">KNOWLARITY_WEBHOOK_SECRET</code> on
+                                    Render).
                                 </p>
                             </div>
+                            <div className="space-y-2">
+                                <Label>Sample cURL</Label>
+                                <div className="flex gap-2">
+                                    <textarea
+                                        readOnly
+                                        value={knowlarityCurl}
+                                        className="min-h-[220px] w-full rounded-md border border-input bg-muted/50 p-3 font-mono text-xs"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="shrink-0"
+                                        onClick={() => copyToClipboard(knowlarityCurl, "knowlarity-curl")}
+                                    >
+                                        {copied === "knowlarity-curl" ? (
+                                            <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                        ) : (
+                                            <Copy className="w-4 h-4" />
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Agent mapping</CardTitle>
+                            <CardDescription>
+                                Map Knowlarity <code className="bg-muted px-1 rounded text-xs">agent_number</code> to
+                                CRM call-center users.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <KnowlarityAgentMappingPanel />
                         </CardContent>
                     </Card>
                 </TabsContent>

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { UserModel } from "../models/user";
 import { UserRoleModel } from "../models/userRole";
 import { RoleModel } from "../models/role";
+import { ProfileModel } from "../models/profile";
 import { requireAuth, requirePermissions } from "../middleware/auth";
 import { badRequest, forbidden, notFound, unauthorized } from "../utils/httpError";
 import { AccessControlService } from "../services/auth/AccessControlService";
@@ -18,6 +19,7 @@ const createUserSchema = z.object({
   password: z.string().min(6),
   regions: z.array(z.string()).nullish(),
   roleId: z.string().nullish(),
+  profileId: z.string().nullish(),
   reportsTo: z.string().nullish(), // ID of the manager
 });
 
@@ -27,9 +29,41 @@ const updateUserSchema = z.object({
   status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
   regions: z.array(z.string()).optional(),
   roleId: z.string().optional(),
+  profileId: z.string().optional().nullable(),
   password: z.string().min(6).optional(),
   reportsTo: z.string().optional().nullable(),
 });
+
+async function resolveProfileId(
+  profileId: string | null | undefined,
+  roleId: string | null | undefined
+): Promise<string | undefined> {
+  if (profileId) {
+    return profileId;
+  }
+
+  if (roleId) {
+    const role = await RoleModel.findById(roleId).lean();
+    if (role?.name?.toLowerCase() === "admin role") {
+      const adminProfile = await ProfileModel.findOne({ name: "Admin" }).lean();
+      if (adminProfile) {
+        return adminProfile._id.toString();
+      }
+    }
+  }
+
+  const salesProfile = await ProfileModel.findOne({ name: "Sales Executive" }).lean();
+  if (salesProfile) {
+    return salesProfile._id.toString();
+  }
+
+  const reservationsProfile = await ProfileModel.findOne({ name: "Reservations" }).lean();
+  if (reservationsProfile) {
+    return reservationsProfile._id.toString();
+  }
+
+  return undefined;
+}
 
 usersRouter.use(requireAuth);
 
@@ -116,7 +150,7 @@ usersRouter.post(
         console.error("User Validation Error:", JSON.stringify(parsed.error.format(), null, 2));
         throw badRequest(`VALIDATION FAILED: ${parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(", ")}`);
       }
-      const { name, email, phone, regions, roleId, password, reportsTo } =
+      const { name, email, phone, regions, roleId, profileId, password, reportsTo } =
         parsed.data;
 
       const existing = await UserModel.findOne({ email });
@@ -125,6 +159,7 @@ usersRouter.post(
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
+      const resolvedProfileId = await resolveProfileId(profileId, roleId);
 
       // Create user first
       const user = await UserModel.create({
@@ -133,6 +168,7 @@ usersRouter.post(
         phone,
         regions,
         roleId,
+        profileId: resolvedProfileId,
         passwordHash,
         reportsTo,
       });
@@ -150,6 +186,7 @@ usersRouter.post(
         name: user.name,
         email: user.email,
         roleId: user.roleId,
+        profileId: user.profileId,
         reportsTo: user.reportsTo,
         hierarchyPath: user.hierarchyPath,
       });
@@ -176,8 +213,15 @@ usersRouter.patch(
         delete update.password;
       }
 
-      // Handle reportsTo change specifically
       const oldUser = await UserModel.findById(req.params.id);
+
+      if (
+        parsed.data.profileId === undefined &&
+        parsed.data.roleId !== undefined &&
+        !oldUser?.profileId
+      ) {
+        update.profileId = await resolveProfileId(undefined, parsed.data.roleId);
+      }
 
       const user = await UserModel.findByIdAndUpdate(
         req.params.id,

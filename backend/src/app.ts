@@ -31,7 +31,8 @@ import { leadWorkflowRouter } from "./routes/leadWorkflow";
 import { emailRouter } from "./routes/email";
 import { publicWebsiteLeadsRouter } from "./routes/public/websiteLeads";
 import { publicIvrWebhooksRouter } from "./routes/public/ivrWebhooks";
-import { publicKnowlarityWebhooksRouter } from "./routes/public/knowlarityWebhooks";
+import { publicKnowlarityCallLogRouter } from "./routes/public/knowlarityCallLog";
+import { adminKnowlarityAgentMappingsRouter } from "./routes/admin/knowlarityAgentMappings";
 import { publicWhatsappWebhooksRouter } from "./routes/public/whatsappWebhooks";
 import { publicSocialWebhooksRouter } from "./routes/public/socialWebhooks";
 import { publicEmailWebhooksRouter } from "./routes/public/emailWebhooks";
@@ -168,12 +169,12 @@ app.use("/api/admin/integrations", adminIntegrationsRouter);
 app.use("/api/admin/allocation", allocationRouter);
 app.use("/api/admin/allocation/routing-rules", allocationRoutingRulesRouter);
 app.use("/api/admin/followup-rules", adminFollowupRulesRouter);
-app.use("/api/admin/workflows", adminWorkflowsRouter);
+app.use("/api/admin/knowlarity/agent-mappings", adminKnowlarityAgentMappingsRouter);
 
 // Public endpoints (no authentication required)
 app.use("/api/public/website-leads", publicWebsiteLeadsRouter);
 app.use("/api/public/ivr-webhook", publicIvrWebhooksRouter);
-app.use("/api/public/knowlarity-webhook", publicKnowlarityWebhooksRouter);
+app.use("/api/public/knowlarity-call-log", publicKnowlarityCallLogRouter);
 app.use("/api/public/whatsapp-webhook", publicWhatsappWebhooksRouter);
 app.use("/api/public/social-webhook", publicSocialWebhooksRouter);
 app.use("/api/public/email-webhook", publicEmailWebhooksRouter);

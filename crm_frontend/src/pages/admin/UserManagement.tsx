@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
+import { getProfiles, IProfile } from "@/services/profiles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormLabelHelp } from "@/components/help/FormLabelHelp";
@@ -38,6 +39,7 @@ interface User {
     email: string;
     phone?: string;
     roleId?: string;
+    profileId?: string;
     reportsTo?: string;
     hierarchyPath?: string;
     status: "ACTIVE" | "INACTIVE";
@@ -145,10 +147,11 @@ interface DrawerProps {
     editingUser: User | null;
     users: User[];
     roles: Role[];
+    profiles: IProfile[];
     onSaved: () => void;
 }
 
-function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, onSaved }: DrawerProps) {
+function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, profiles, onSaved }: DrawerProps) {
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -159,6 +162,7 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, o
         phone: "",
         password: "",
         roleId: "",
+        profileId: "",
         reportsTo: "none",
     });
 
@@ -172,13 +176,26 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, o
                 phone: editingUser.phone || "",
                 password: "",
                 roleId: editingUser.roleId || "",
+                profileId: editingUser.profileId || "",
                 reportsTo: editingUser.reportsTo || "none",
             });
         } else {
-            setForm({ name: "", email: "", phone: "", password: "", roleId: "", reportsTo: "none" });
+            setForm({ name: "", email: "", phone: "", password: "", roleId: "", profileId: "", reportsTo: "none" });
         }
         setErrors({});
     }, [editingUser, open]);
+
+    // Auto-assign Admin profile when Admin Role is selected and no profile chosen yet
+    useEffect(() => {
+        if (!form.roleId || form.profileId) return;
+        const role = roles.find((r) => r._id === form.roleId);
+        if (role?.name?.toLowerCase() === "admin role") {
+            const adminProfile = profiles.find((p) => p.name.toLowerCase() === "admin");
+            if (adminProfile) {
+                setForm((prev) => ({ ...prev, profileId: adminProfile._id }));
+            }
+        }
+    }, [form.roleId, form.profileId, roles, profiles]);
 
     const set = (field: string, value: string) => {
         setForm((prev) => ({ ...prev, [field]: value }));
@@ -214,6 +231,7 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, o
                 reportsTo: form.reportsTo === "none" ? null : form.reportsTo,
             };
             if (form.roleId) payload.roleId = form.roleId;
+            if (form.profileId) payload.profileId = form.profileId;
             if (form.password) payload.password = form.password;
 
             const res = await fetch(url, {
@@ -402,6 +420,27 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, o
                         </div>
 
                         <div className="space-y-1.5">
+                            <FormLabelHelp helpId="setup.users.profile" className="text-sm font-medium" required>Profile</FormLabelHelp>
+                            <Select
+                                value={form.profileId || "none"}
+                                onValueChange={(v) => set("profileId", v === "none" ? "" : v)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="No profile assigned" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">No profile</SelectItem>
+                                    {profiles.map((p) => (
+                                        <SelectItem key={p._id} value={p._id}>
+                                            {p.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">Controls feature permissions (e.g. create leads, manage users).</p>
+                        </div>
+
+                        <div className="space-y-1.5">
                             <FormLabelHelp helpId="setup.users.reportsTo" className="text-sm font-medium">Reports To</FormLabelHelp>
                             <Select value={form.reportsTo} onValueChange={(v) => set("reportsTo", v)}>
                                 <SelectTrigger>
@@ -458,12 +497,14 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, o
 function UserDetailPanel({
     user,
     roles,
+    profiles,
     users,
     onClose,
     onEdit
 }: {
     user: User | null;
     roles: Role[];
+    profiles: IProfile[];
     users: User[];
     onClose: () => void;
     onEdit: () => void;
@@ -471,6 +512,7 @@ function UserDetailPanel({
     if (!user) return null;
 
     const roleName = roles.find(r => r._id === user.roleId)?.name || "No role Assigned";
+    const profileName = profiles.find(p => p._id === user.profileId)?.name || "No profile assigned";
     const managerName = users.find(u => u._id === user.reportsTo)?.name || "Top-level";
 
     return (
@@ -552,6 +594,15 @@ function UserDetailPanel({
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
+                                    <div className="h-8 w-8 rounded-full bg-violet-500/10 flex items-center justify-center flex-shrink-0">
+                                        <Shield className="h-4 w-4 text-violet-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Profile</p>
+                                        <p className="text-sm font-medium">{profileName}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0">
                                         {user.reportsTo ? <UserAvatar name={managerName} size="sm" /> : <Users className="h-4 w-4 text-muted-foreground" />}
                                     </div>
@@ -576,6 +627,7 @@ export const UserManagement = () => {
 
     const [users, setUsers] = useState<User[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
+    const [profiles, setProfiles] = useState<IProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
@@ -612,9 +664,10 @@ export const UserManagement = () => {
     const loadData = async () => {
         setIsLoading(true);
         try {
-            const [u, r] = await Promise.all([fetchUsers(), fetchRoles()]);
+            const [u, r, p] = await Promise.all([fetchUsers(), fetchRoles(), getProfiles()]);
             setUsers(u);
             setRoles(r);
+            setProfiles(p);
         } catch (err) {
             toast({ title: "Error", description: "Failed to load user data", variant: "destructive" });
         } finally {
@@ -696,6 +749,7 @@ export const UserManagement = () => {
     // ── Lookup helpers ─────────────────────────────────────────────────────────
 
     const getRoleName = (id?: string) => roles.find((r) => r._id === id)?.name ?? "—";
+    const getProfileName = (id?: string) => profiles.find((p) => p._id === id)?.name ?? "—";
     const getManagerName = (id?: string) => users.find((u) => u._id === id)?.name ?? "—";
 
     // ── Render ─────────────────────────────────────────────────────────────────
@@ -790,7 +844,7 @@ export const UserManagement = () => {
                             <tr className="border-b border-border bg-muted/40 text-muted-foreground text-xs uppercase tracking-wide">
                                 <th className="text-left py-3 px-4 font-semibold">User</th>
                                 <th className="text-left py-3 px-4 font-semibold">Role</th>
-                                <th className="text-left py-3 px-4 font-semibold hidden sm:table-cell">Team</th>
+                                <th className="text-left py-3 px-4 font-semibold hidden sm:table-cell">Profile</th>
                                 <th className="text-left py-3 px-4 font-semibold hidden md:table-cell">Reports To</th>
                                 <th className="text-left py-3 px-4 font-semibold">Status</th>
                                 <th className="text-right py-3 px-4 font-semibold">Actions</th>
@@ -869,9 +923,16 @@ export const UserManagement = () => {
                                             )}
                                         </td>
 
-                                        {/* Team */}
+                                        {/* Profile */}
                                         <td className="py-3.5 px-4 text-sm hidden sm:table-cell">
-                                            <span className="text-muted-foreground">—</span>
+                                            {user.profileId ? (
+                                                <span className="flex items-center gap-1.5 text-sm">
+                                                    <Shield className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                                    {getProfileName(user.profileId)}
+                                                </span>
+                                            ) : (
+                                                <span className="text-muted-foreground text-xs">No profile</span>
+                                            )}
                                         </td>
 
                                         {/* Reports To */}
@@ -950,12 +1011,14 @@ export const UserManagement = () => {
                 editingUser={editingUser}
                 users={users}
                 roles={roles}
+                profiles={profiles}
                 onSaved={() => { void loadData(); }}
             />
 
             <UserDetailPanel
                 user={viewingUser}
                 roles={roles}
+                profiles={profiles}
                 users={users}
                 onClose={() => setViewingUser(null)}
                 onEdit={() => {
