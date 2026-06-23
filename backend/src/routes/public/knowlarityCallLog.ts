@@ -22,11 +22,24 @@ const knowlarityLogPushSchema = z.object({
 });
 
 function validateWebhookSecret(req: Request): boolean {
-  const secret = config.knowlarityWebhookSecret;
+  const secret = config.knowlarityWebhookSecret?.trim();
   if (!secret) return true;
-  const header = req.get("x-webhook-secret");
+  const header = req.get("x-webhook-secret")?.trim();
   return header === secret;
 }
+
+/** Reachability probe — Knowlarity can GET this before configuring Log Push. */
+publicKnowlarityCallLogRouter.get("/", (_req, res) => {
+  const secret = config.knowlarityWebhookSecret?.trim();
+  res.json({
+    status: "ready",
+    method: "POST",
+    path: "/api/public/knowlarity-call-log",
+    authRequired: Boolean(secret),
+    secretConfigured: Boolean(secret),
+    secretLength: secret ? secret.length : 0,
+  });
+});
 
 publicKnowlarityCallLogRouter.post("/", async (req, res) => {
   try {

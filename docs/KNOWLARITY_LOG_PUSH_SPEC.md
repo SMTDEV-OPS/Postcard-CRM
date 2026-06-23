@@ -12,6 +12,16 @@ Post-call only. **No CTI / live call routing.**
 | **Auth** | Header `X-Webhook-Secret: <shared-secret>` (provided separately) |
 | **When to push** | After call ends, for answered calls |
 | **Retries** | Safe — CRM deduplicates on `call_uuid` |
+| **Reachability (GET)** | `GET https://postcard-crm.onrender.com/api/public/knowlarity-call-log` → `{"status":"ready",...}` |
+
+## Troubleshooting
+
+| HTTP | Meaning | Fix |
+|------|---------|-----|
+| **404** `Cannot POST ...` | Route not on this server | Use `postcard-crm` (hyphen), not `postcardcrm`. Wait for Render deploy after code push. |
+| **401** `Unauthorized` | Route works; secret mismatch | Use full `KNOWLARITY_WEBHOOK_SECRET` value in `X-Webhook-Secret` header (64 hex chars). |
+| **400** | Invalid JSON / missing required field | Include `call_date`, `call_time`, `caller_number`, `call_direction`, `call_status`, `call_uuid`. |
+| **200** `ignored` / `agent_not_mapped` | Webhook accepted; no CRM user for `agent_number` | Map agent numbers in CRM **Settings → Integrations → Knowlarity → Agent mapping**. |
 
 ## JSON payload
 
@@ -107,4 +117,4 @@ Set on the backend service:
 
 | Variable | Description |
 |----------|-------------|
-| `KNOWLARITY_WEBHOOK_SECRET` | Shared secret for `X-Webhook-Secret` header validation |
+| `KNOWLARITY_WEBHOOK_SECRET` | Shared secret for `X-Webhook-Secret` header validation. Generate with `openssl rand -hex 32` (64 hex characters). |

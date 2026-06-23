@@ -13,17 +13,17 @@ import { API_BASE_URL } from "@/services/api"; // Or extract the base hostname p
 export function IntegrationSettings() {
     const [copied, setCopied] = useState<string | null>(null);
 
-    // Derive URLs for display
-    const origin = window.location.origin; // e.g. https://crm.postcard.com 
-    // Map this to your actual backend domain in production, for now we will assume the API_BASE_URL is relative or has the domain.
-    const backendBase = (API_BASE_URL.startsWith('http') ? API_BASE_URL : origin + '/api');
+    const apiRoot = API_BASE_URL.replace(/\/$/, "");
+    const publicApiBase = apiRoot.endsWith("/api") ? apiRoot : `${apiRoot}/api`;
+    const publicWebhook = (path: string) => `${publicApiBase}/public/${path}`;
 
     const webhooks = {
-        ivr: `${backendBase}/public/ivr-webhook`,
-        knowlarityCallLog: `${backendBase}/public/knowlarity-call-log`,
-        whatsapp: `${backendBase}/public/whatsapp-webhook`,
-        social: `${backendBase}/public/social-webhook`,
-        website: `${backendBase}/public/website-leads`,
+        ivr: publicWebhook("ivr-webhook"),
+        knowlarityCallLog: publicWebhook("knowlarity-call-log"),
+        knowlarityCallLogProbe: publicWebhook("knowlarity-call-log"),
+        whatsapp: publicWebhook("whatsapp-webhook"),
+        social: publicWebhook("social-webhook"),
+        website: publicWebhook("website-leads"),
     };
 
     const knowlarityCurl = `curl -X POST "${webhooks.knowlarityCallLog}" \\
@@ -210,10 +210,36 @@ export function IntegrationSettings() {
                                 </div>
                                 <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1.5">
                                     <AlertCircle className="w-3 h-3" />
-                                    Share with Knowlarity. Include header{" "}
-                                    <code className="bg-muted px-1 rounded text-xs">X-Webhook-Secret</code> (set{" "}
-                                    <code className="bg-muted px-1 rounded text-xs">KNOWLARITY_WEBHOOK_SECRET</code> on
-                                    Render).
+                                    Use hostname <strong>postcard-crm</strong> (with hyphen), not postcardcrm.
+                                    Include header{" "}
+                                    <code className="bg-muted px-1 rounded text-xs">X-Webhook-Secret</code> — full 64-char
+                                    value from Render <code className="bg-muted px-1 rounded text-xs">KNOWLARITY_WEBHOOK_SECRET</code>.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Reachability check (GET)</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        readOnly
+                                        value={webhooks.knowlarityCallLogProbe}
+                                        className="font-mono text-sm bg-muted/50"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => copyToClipboard(webhooks.knowlarityCallLogProbe, "knowlarity-probe")}
+                                    >
+                                        {copied === "knowlarity-probe" ? (
+                                            <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                        ) : (
+                                            <Copy className="w-4 h-4" />
+                                        )}
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Knowlarity can open this URL in a browser — expect{" "}
+                                    <code className="bg-muted px-1 rounded text-xs">{`{"status":"ready"}`}</code>.
+                                    A 404 means wrong hostname or deploy not finished.
                                 </p>
                             </div>
                             <div className="space-y-2">
@@ -245,7 +271,9 @@ export function IntegrationSettings() {
                             <CardTitle>Agent mapping</CardTitle>
                             <CardDescription>
                                 Map Knowlarity <code className="bg-muted px-1 rounded text-xs">agent_number</code> to
-                                CRM call-center users.
+                                CRM call-center users. Required when Log Push returns{" "}
+                                <code className="bg-muted px-1 rounded text-xs">{"status\":\"ignored\""}</code> with{" "}
+                                <code className="bg-muted px-1 rounded text-xs">agent_not_mapped</code>.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>

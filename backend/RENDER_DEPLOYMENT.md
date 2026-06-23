@@ -57,7 +57,7 @@ Default admin after seed: `admin@postcardcrm.local` / `Admin@123` (change after 
 | `PMS_CRM_BASE_URL` | Yes (Call Center) | e.g. `https://staging.postcardresorts.com` |
 | `PMS_CRM_API_KEY` | Yes (Call Center) | From PMS team — server-side only |
 | `PMS_CRM_SECRET_KEY` | Yes (Call Center) | From PMS team — never commit to git |
-| `KNOWLARITY_WEBHOOK_SECRET` | Yes (Knowlarity Log Push) | Shared secret for `X-Webhook-Secret` header on `/api/public/knowlarity-call-log` |
+| `KNOWLARITY_WEBHOOK_SECRET` | Yes (Knowlarity Log Push) | 64-char hex from `openssl rand -hex 32`. Share the **full** value with Knowlarity as `X-Webhook-Secret`. |
 | `NODE_ENV` | Yes | `production` |
 | `NODE_OPTIONS` | Recommended | `--max-old-space-size=4096` |
 | `PORT` | Auto | Render sets automatically |
@@ -75,6 +75,8 @@ After changing env vars: **Manual Deploy → Clear build cache & deploy**.
 
 - Logs show: `Connected to MongoDB`, `PMS CRM integration { configured: true, ... }`, and `PostcardCRM API listening on port ...`
 - `GET /health` returns e.g. `{"status":"ok","pmsCrmConfigured":true,"gitCommit":"abc123...","nodeEnv":"production"}`
+- Knowlarity Log Push: `GET https://postcard-crm.onrender.com/api/public/knowlarity-call-log` returns `{"status":"ready",...}` (after latest deploy)
+- Knowlarity Log Push: `POST` with wrong `X-Webhook-Secret` returns **401** (proves route + secret are configured); **404** means wrong hostname (`postcardcrm` vs `postcard-crm`) or deploy not finished
 - PMS lookup (authenticated): `GET /guests/search-by-phone/9800907654` must include `pmsLookupStatus` and, for staging test phone, `pmsCustomer`
 - Frontend login works with seeded admin user
 
@@ -89,6 +91,10 @@ Verify: `GET https://postcard-crm.onrender.com/health` should return `pmsCrmConf
 ### Troubleshooting
 
 **PMS works in Render logs but not in Call Center UI**: Netlify is likely pointing at the wrong backend URL (`postcardcrm` vs `postcard-crm`). Update `VITE_API_BASE_URL` and clear-cache redeploy.
+
+**Knowlarity webhook 404**: Use `https://postcard-crm.onrender.com` (hyphen). Confirm `gitCommit` on `/health` includes the Knowlarity Log Push deploy. `GET /api/public/knowlarity-call-log` should return `status: ready`.
+
+**Knowlarity webhook 401**: Route works; `X-Webhook-Secret` does not match `KNOWLARITY_WEBHOOK_SECRET` on Render (check full 64-char value, no truncation or extra spaces).
 
 **Build fails with TS errors**: Ensure `npm run build` runs (installs all deps). Check build logs for `npm install --include=dev`.
 
