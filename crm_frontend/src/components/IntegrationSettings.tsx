@@ -271,8 +271,8 @@ export function IntegrationSettings() {
                             <CardTitle>Agent mapping</CardTitle>
                             <CardDescription>
                                 Map Knowlarity <code className="bg-muted px-1 rounded text-xs">agent_number</code> to
-                                CRM call-center users. Required when Log Push returns{" "}
-                                <code className="bg-muted px-1 rounded text-xs">{"status\":\"ignored\""}</code> with{" "}
+                                CRM call-center users. Required when Log Push returns status{" "}
+                                <code className="bg-muted px-1 rounded text-xs">ignored</code> with reason{" "}
                                 <code className="bg-muted px-1 rounded text-xs">agent_not_mapped</code>.
                             </CardDescription>
                         </CardHeader>

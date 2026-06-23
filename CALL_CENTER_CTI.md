@@ -25,7 +25,8 @@ Agents search by phone via `GET /api/guests/search-by-phone/:phone`.
 | Item | Value |
 |------|-------|
 | **URL** | `POST https://postcard-crm.onrender.com/api/public/knowlarity-call-log` |
-| **Auth** | Header `X-Webhook-Secret` (matches `KNOWLARITY_WEBHOOK_SECRET` on Render) |
+| **Reachability** | `GET https://postcard-crm.onrender.com/api/public/knowlarity-call-log` → `{"status":"ready"}` |
+| **Auth** | Header `X-Webhook-Secret` (full 64-char value from `KNOWLARITY_WEBHOOK_SECRET` on Render) |
 | **UI** | Settings → Integrations → Knowlarity |
 
 ### Agent mapping
