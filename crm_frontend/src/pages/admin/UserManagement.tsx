@@ -204,9 +204,10 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, p
 
     const validate = () => {
         const errs: Record<string, string> = {};
+        const email = form.email.trim();
         if (!form.name.trim()) errs.name = "Name is required";
-        if (!form.email.trim()) errs.email = "Email is required";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email address";
+        if (!email) errs.email = "Email is required";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Invalid email address";
         if (!editingUser && !form.password) errs.password = "Password is required";
         if (!editingUser && form.password && form.password.length < 6) errs.password = "Password must be at least 6 characters";
         if (editingUser && form.password && form.password.length < 6) errs.password = "Password must be at least 6 characters";
@@ -294,7 +295,7 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, p
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+                <form onSubmit={handleSubmit} noValidate className="flex flex-col flex-1 min-h-0">
                 <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
                     {/* Personal Info Section */}
                     <div className="space-y-4">
@@ -336,10 +337,12 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, p
                                 </FormLabelHelp>
                                 <Input
                                     id="um-email"
-                                    type="email"
+                                    type="text"
+                                    inputMode="email"
+                                    autoComplete="email"
                                     placeholder="priya@postcard.in"
                                     value={form.email}
-                                    onChange={(e) => set("email", e.target.value)}
+                                    onChange={(e) => set("email", e.target.value.trim())}
                                     disabled={!!editingUser}
                                     className={errors.email ? "border-destructive" : ""}
                                 />

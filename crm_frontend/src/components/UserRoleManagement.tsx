@@ -110,10 +110,19 @@ export const UserRoleManagement = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!email || !password) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
       toast({
         title: "Error",
         description: "Email and password are required",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast({
+        title: "Error",
+        description: "Invalid email address",
         variant: "destructive",
       });
       return;
@@ -122,8 +131,8 @@ export const UserRoleManagement = () => {
     try {
       setIsSubmitting(true);
       await createUser({
-        name: `${firstName} ${lastName}`.trim() || email.trim(),
-        email: email.trim(),
+        name: `${firstName} ${lastName}`.trim() || trimmedEmail,
+        email: trimmedEmail,
         password,      });
 
       toast({
@@ -495,11 +504,12 @@ export const UserRoleManagement = () => {
           <Label htmlFor="user-email">Email *</Label>
           <Input
             id="user-email"
-            type="email"
+            type="text"
+            inputMode="email"
+            autoComplete="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value.trim())}
             placeholder="user@example.com"
-            required
           />
         </div>
 
