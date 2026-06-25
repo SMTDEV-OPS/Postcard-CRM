@@ -9,12 +9,18 @@ import { requireAuth, requirePermissions } from "../middleware/auth";
 import { badRequest, forbidden, notFound, unauthorized } from "../utils/httpError";
 import { AccessControlService } from "../services/auth/AccessControlService";
 import { PERMISSIONS } from "../constants/permissions";
+import { sanitizeEmailInput } from "../utils/phoneUtils";
 
 export const usersRouter = Router();
 
+const emailField = z.preprocess(
+  (val) => (typeof val === "string" ? sanitizeEmailInput(val) : val),
+  z.string().email()
+);
+
 const createUserSchema = z.object({
   name: z.string().min(1),
-  email: z.string().email(),
+  email: emailField,
   phone: z.string().nullish(),
   password: z.string().min(6),
   regions: z.array(z.string()).nullish(),

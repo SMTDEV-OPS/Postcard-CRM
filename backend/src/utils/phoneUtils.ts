@@ -77,6 +77,15 @@ export function formatPhoneForDisplay(phone: string | undefined | null, region: 
     }
 }
 
+const INVISIBLE_EMAIL_CHARS = /[\u200B-\u200D\uFEFF\u2060\u00AD]/g;
+
+/**
+ * Strip invisible Unicode (word joiner, zero-width space, BOM) and normalize casing.
+ */
+export function sanitizeEmailInput(email: string): string {
+    return email.replace(INVISIBLE_EMAIL_CHARS, "").trim().toLowerCase();
+}
+
 /**
  * Normalize email to lowercase and trim
  * @param email - Raw email string
@@ -87,7 +96,7 @@ export function normalizeEmail(email: string | undefined | null): string | null 
         return null;
     }
 
-    const cleaned = email.trim().toLowerCase();
+    const cleaned = sanitizeEmailInput(email);
 
     if (cleaned === '') {
         return null;

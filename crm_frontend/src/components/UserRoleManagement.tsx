@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createUser, listUsers, User } from "@/services/users";
 import { listRoles, Role, listRoleOwners, addRoleOwners, removeRoleOwner, RoleUser } from "@/services/roles";
 import { listGroups, listUsersInGroup, Group } from "@/services/groups";
+import { isValidEmail, sanitizeEmailInput } from "@/utils/emailUtils";
 
 export const UserRoleManagement = () => {
   const { toast } = useToast();
@@ -110,7 +111,7 @@ export const UserRoleManagement = () => {
   };
 
   const handleCreateUser = async () => {
-    const trimmedEmail = email.trim();
+    const trimmedEmail = sanitizeEmailInput(email);
     if (!trimmedEmail || !password) {
       toast({
         title: "Error",
@@ -119,7 +120,7 @@ export const UserRoleManagement = () => {
       });
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+    if (!isValidEmail(trimmedEmail)) {
       toast({
         title: "Error",
         description: "Invalid email address",
@@ -508,7 +509,7 @@ export const UserRoleManagement = () => {
             inputMode="email"
             autoComplete="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value.trim())}
+            onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
             placeholder="user@example.com"
           />
         </div>

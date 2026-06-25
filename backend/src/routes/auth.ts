@@ -7,11 +7,15 @@ import { signJwt, requireAuth } from "../middleware/auth";
 import { logger } from "../config/logger";
 import { AccessControlService } from "../services/auth/AccessControlService";
 import { logAudit } from "../utils/auditLog";
+import { sanitizeEmailInput } from "../utils/phoneUtils";
 
 export const authRouter = Router();
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.preprocess(
+    (val) => (typeof val === "string" ? sanitizeEmailInput(val) : val),
+    z.string().email()
+  ),
   password: z.string().min(6),
 });
 

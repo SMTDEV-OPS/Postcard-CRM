@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
 import { getProfiles, IProfile } from "@/services/profiles";
+import { isValidEmail, sanitizeEmailInput } from "@/utils/emailUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormLabelHelp } from "@/components/help/FormLabelHelp";
@@ -204,10 +205,10 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, p
 
     const validate = () => {
         const errs: Record<string, string> = {};
-        const email = form.email.trim();
+        const email = sanitizeEmailInput(form.email);
         if (!form.name.trim()) errs.name = "Name is required";
         if (!email) errs.email = "Email is required";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Invalid email address";
+        else if (!isValidEmail(email)) errs.email = "Invalid email address";
         if (!editingUser && !form.password) errs.password = "Password is required";
         if (!editingUser && form.password && form.password.length < 6) errs.password = "Password must be at least 6 characters";
         if (editingUser && form.password && form.password.length < 6) errs.password = "Password must be at least 6 characters";
@@ -226,7 +227,7 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, p
 
             const payload: Record<string, unknown> = {
                 name: form.name.trim(),
-                email: form.email.trim(),
+                email: sanitizeEmailInput(form.email),
                 phone: form.phone.trim() || undefined,
 
                 reportsTo: form.reportsTo === "none" ? null : form.reportsTo,
@@ -342,7 +343,7 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, p
                                     autoComplete="email"
                                     placeholder="priya@postcard.in"
                                     value={form.email}
-                                    onChange={(e) => set("email", e.target.value.trim())}
+                                    onChange={(e) => set("email", sanitizeEmailInput(e.target.value))}
                                     disabled={!!editingUser}
                                     className={errors.email ? "border-destructive" : ""}
                                 />
