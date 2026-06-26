@@ -77,14 +77,14 @@ const accountSchema = z.object({
   // Account ↔ Property mapping (multi-property)
   propertyIds: z.array(z.string()).optional(),
 
-  // Step 9: Sales Assignment
+  // Step 9: Sales Assignment (userId optional — wizard may collect name/city only)
   primaryAccountManager: z.object({
-    userId: z.string(),
+    userId: z.string().optional(),
     name: z.string(),
     city: z.string(),
   }).optional(),
   secondaryAccountManagers: z.array(z.object({
-    userId: z.string(),
+    userId: z.string().optional(),
     name: z.string(),
     city: z.string(),
   })).optional(),
@@ -100,8 +100,8 @@ const accountSchema = z.object({
     year: z.number().optional(),
     fromYear: z.number().optional(),
     toYear: z.number().optional(),
-    fromMonth: z.number().min(1).max(12),
-    toMonth: z.number().min(1).max(12),
+    fromMonth: z.number().min(1).max(12).optional(),
+    toMonth: z.number().min(1).max(12).optional(),
   }).refine((d) => d.toYear == null || d.fromYear == null || d.toYear >= d.fromYear, { message: "To year must be >= from year" })).optional(),
 
   // Contact & Legacy
@@ -315,8 +315,14 @@ accountsRouter.post(
       }
       const parsed = accountSchema.safeParse(req.body);
       if (!parsed.success) {
-        console.error("Validation error:", parsed.error);
-        throw badRequest("Invalid account payload");
+        const flattened = parsed.error.flatten();
+        console.error("Validation error:", flattened);
+        const firstFieldError = Object.values(flattened.fieldErrors).flat()[0];
+        throw badRequest(
+          typeof firstFieldError === "string"
+            ? `Invalid account payload: ${firstFieldError}`
+            : "Invalid account payload"
+        );
       }
 
       const data = parsed.data;

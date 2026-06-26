@@ -566,10 +566,23 @@ export async function createLead(input: CreateLeadInput): Promise<ILead> {
   const orgIdForLead = propertyId || accountId || (await getDefaultOrgId());
 
   // Perform assignment based on mode
-  const assignment = await performAssignment(
+  let assignment = await performAssignment(
     input,
     orgIdForLead?.toString()
   );
+
+  if (
+    !assignment.assignedToUserId &&
+    input.createdByUserId &&
+    input.source === LeadSource.MANUAL
+  ) {
+    assignment = {
+      ...assignment,
+      assignedToUserId: new Types.ObjectId(input.createdByUserId),
+      assignmentMethod: "manual",
+      assignmentSource: "manual",
+    };
+  }
 
   const leadNumber = generateLeadNumber();
   const contactDetails = buildContactDetails(input.guestContact, guest);

@@ -231,6 +231,7 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
   const queryClient = useQueryClient();
   const [leadDetail, setLeadDetail] = useState<LeadDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [leadEmails, setLeadEmails] = useState<EmailMessage[]>([]);
   const [isLoadingEmails, setIsLoadingEmails] = useState(false);
@@ -284,6 +285,8 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
   const canAssign = !!isAdmin || permissions?.includes("leads.assign") || permissions?.includes("leads.manage");
 
   useEffect(() => {
+    setLoadError(null);
+    setLeadDetail(null);
     void loadLeadDetail();
     void loadUsers();
     void loadPaymentLinks();
@@ -367,15 +370,21 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
   const loadLeadDetail = async () => {
     try {
       setIsLoading(true);
+      setLoadError(null);
       const detail = await getLeadDetail(leadId);
       setLeadDetail(detail);
       void loadLeadEmails(leadId);
     } catch (err) {
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Unable to load lead details",
-        variant: "destructive",
-      });
+      setLeadDetail(null);
+      const message = err instanceof Error ? err.message : "Unable to load lead details";
+      setLoadError(message);
+      if (!embedded) {
+        toast({
+          title: "Error",
+          description: message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -561,19 +570,33 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
   };
 
   if (isLoading) {
-    return <PageSkeleton variant="detail" />;
+    return <PageSkeleton variant="detail" embedded={embedded} />;
   }
 
   if (!leadDetail) {
+    const isPermissionError = loadError?.toLowerCase().includes("permission");
     return (
-      <div className="space-y-4">
-        <Button variant="ghost" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
+      <div className={embedded ? "space-y-4 p-4" : "space-y-4"}>
+        {!embedded && (
+          <Button variant="ghost" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        )}
         <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Lead not found</p>
+          <CardContent className="py-12 text-center space-y-2">
+            <p className="font-medium text-foreground">
+              {loadError ? "Unable to load lead" : "Lead not found"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {loadError ??
+                "This lead may have been deleted or you may not have access to view it."}
+            </p>
+            {isPermissionError && (
+              <p className="text-sm text-muted-foreground">
+                If this lead was assigned to a teammate, switch to My Team Leads to find it.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -834,42 +857,56 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
         title={guestName || "Lead"}
         subtitle={guestPhone || lead.source ? subtitleEl : undefined}
         actions={
-          <>
-            <Button variant="secondary" icon={Phone} size="sm">
-              Call
+          <div className={embedded ? "flex flex-wrap gap-2 justify-end max-w-full" : undefined}>
+            <Button variant="secondary" icon={Phone} size="sm" aria-label="Call">
+              {embedded ? null : "Call"}
             </Button>
-            <Button variant="secondary" icon={MessageSquare} size="sm">
-              WhatsApp
+            <Button variant="secondary" icon={MessageSquare} size="sm" aria-label="WhatsApp">
+              {embedded ? null : "WhatsApp"}
             </Button>
             <Button
               variant="secondary"
               icon={Mail}
               size="sm"
+              aria-label="New email"
               onClick={() => {
                 setReplyToEmailItem(null);
                 setIsComposeEmailOpen(true);
               }}
             >
-              New Email
+              {embedded ? null : "New Email"}
             </Button>
             <Button
               variant="secondary"
               icon={FileText}
               size="sm"
+              aria-label="Send quotation"
               onClick={() => setIsQuotationDialogOpen(true)}
             >
-              Send Quotation
+              {embedded ? null : "Send Quotation"}
             </Button>
-            <Button variant="primary" icon={Edit2} size="sm" onClick={() => setIsEditLeadDetailsDialogOpen(true)}>
-              Edit Lead
+            <Button
+              variant="primary"
+              icon={Edit2}
+              size="sm"
+              aria-label="Edit lead"
+              onClick={() => setIsEditLeadDetailsDialogOpen(true)}
+            >
+              {embedded ? null : "Edit Lead"}
             </Button>
-          </>
+          </div>
         }
       />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(260px,280px)_1fr_minmax(280px,300px)]">
+      <div
+        className={
+          embedded
+            ? "grid grid-cols-1 gap-4"
+            : "grid grid-cols-1 gap-6 lg:grid-cols-[minmax(260px,280px)_1fr_minmax(280px,300px)]"
+        }
+      >
         {/* LEFT — identity & stage */}
-        <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+        <div className={embedded ? "space-y-4" : "space-y-4 lg:sticky lg:top-4 lg:self-start"}>
           <div
             ref={leadInfoRef}
             className="rounded-md border border-border bg-surface p-5 shadow-sm"

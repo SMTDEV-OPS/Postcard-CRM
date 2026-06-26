@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ import { FilterBar } from "@/components/patterns/FilterBar";
 import { useViewMode } from "@/hooks/useViewMode";
 import { ViewModeToggle } from "@/components/layout/ViewModeToggle";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CRM_PATHS } from "@/navigation/crmPaths";
 
 interface ProfessionalLeadManagementProps {
   userRole: string;
@@ -56,6 +57,7 @@ const ProfessionalLeadManagement = ({
   permissions,
 }: ProfessionalLeadManagementProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [viewLeadId, setViewLeadId] = useState<string | null>(null);
   const [editLeadDetail, setEditLeadDetail] = useState<LeadDetail | null>(null);
   const [isEditLeadOpen, setIsEditLeadOpen] = useState(false);
@@ -97,7 +99,7 @@ const ProfessionalLeadManagement = ({
     refreshCustomFields,
     resetForm,
     submitLead,
-  } = useLeadForm();
+  } = useLeadForm({ assignToUserId: backendUserId });
 
   const { properties: activeProperties } = useActiveProperties();
 
@@ -595,7 +597,7 @@ const ProfessionalLeadManagement = ({
               size="sm"
               variant="outline"
               className="w-full justify-start"
-              onClick={() => setViewLeadId(lead.id)}
+              onClick={() => handleViewLead(lead.id)}
             >
               <Eye className="h-4 w-4 mr-2" />
               View
@@ -842,11 +844,23 @@ const ProfessionalLeadManagement = ({
     setShowQuotationDialog(true);
   };
 
+  const handleViewLead = (leadId: string) => {
+    if (window.matchMedia("(max-width: 640px)").matches) {
+      navigate(CRM_PATHS.leadDetail(leadId));
+      return;
+    }
+    setViewLeadId(leadId);
+  };
+
   const onSubmit = async (data: Parameters<typeof submitLead>[0]) => {
     try {
       await submitLead(data);
 
-      toast.success("Lead created successfully!");
+      toast.success(
+        backendUserId
+          ? "Lead created and assigned to you."
+          : "Lead created successfully!"
+      );
       setIsAddLeadOpen(false);
       resetForm();
 
@@ -1023,7 +1037,7 @@ const ProfessionalLeadManagement = ({
                 renderCard={(lead) => renderLeadCard(lead)}
                 emptyState={emptyLeadsState}
                 rowActions={(lead) => (
-                  <Button size="sm" variant="outline" onClick={() => setViewLeadId(lead.id)}>
+                  <Button size="sm" variant="outline" onClick={() => handleViewLead(lead.id)}>
                     <Eye className="h-4 w-4 mr-1" />
                     View
                   </Button>
@@ -1147,14 +1161,14 @@ const ProfessionalLeadManagement = ({
       />
 
       <Dialog open={!!viewLeadId} onOpenChange={(open) => !open && setViewLeadId(null)}>
-        <DialogContent className="max-w-[min(1200px,95vw)] h-[90vh] p-0 gap-0 overflow-hidden flex flex-col">
+        <DialogContent className="max-w-[min(1200px,95vw)] h-[min(90vh,900px)] p-0 gap-0 overflow-hidden flex flex-col">
           <DialogHeader className="flex flex-row items-center justify-between border-b px-4 py-3 shrink-0 space-y-0">
             <DialogTitle>Lead details</DialogTitle>
             <Button variant="ghost" size="icon" onClick={() => setViewLeadId(null)} aria-label="Close">
               <X className="h-4 w-4" />
             </Button>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 min-h-[50vh] overflow-y-auto">
             {viewLeadId && (
               <LeadDetailPage
                 leadId={viewLeadId}

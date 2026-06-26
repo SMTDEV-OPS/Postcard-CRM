@@ -33,6 +33,9 @@ import { isTravelTrade } from "./travelTradeStepPlan";
 import { TravelTradeOrganizationFields } from "./TravelTradeSteps";
 import { TravelTradeReviewBlock } from "./TravelTradeReview";
 
+const TRAVEL_TRADE_INDUSTRY_CATEGORY = "Hospitality, Travel & Leisure";
+const TRAVEL_TRADE_INDUSTRY_SUB_CATEGORY = "Travel & Tourism";
+
 export interface StepContext {
   formData: AccountFormData;
   set: (patch: Partial<AccountFormData>) => void;
@@ -68,8 +71,12 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
             value={formData.organizationType}
             onValueChange={(v) => {
               const patch: Partial<AccountFormData> = { organizationType: v };
-              if (v === "TRAVEL_AGENT" && !formData.travelTradeProfile) {
-                patch.travelTradeProfile = emptyTravelTradeProfile();
+              if (v === "TRAVEL_AGENT") {
+                if (!formData.travelTradeProfile) {
+                  patch.travelTradeProfile = emptyTravelTradeProfile();
+                }
+                patch.industryCategory = TRAVEL_TRADE_INDUSTRY_CATEGORY;
+                patch.industrySubCategory = TRAVEL_TRADE_INDUSTRY_SUB_CATEGORY;
               }
               set(patch);
             }}
@@ -183,22 +190,28 @@ export function AccountStepClassification({ formData, set }: StepContext) {
       <div className={cn(formGrid2, "pt-2 border-t border-border")}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.classification.industryCategory">Industry category</FormLabelHelp>
-          <Select
-            value={formData.industryCategory || "none"}
-            onValueChange={(v) => set({ industryCategory: v === "none" ? "" : v, industrySubCategory: "" })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
-              {Object.keys(INDUSTRY_CATEGORIES).map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isTravelTrade(formData) ? (
+            <div className="flex h-10 items-center rounded-md border border-border bg-muted/40 px-3 text-sm text-text">
+              {TRAVEL_TRADE_INDUSTRY_CATEGORY}
+            </div>
+          ) : (
+            <Select
+              value={formData.industryCategory || "none"}
+              onValueChange={(v) => set({ industryCategory: v === "none" ? "" : v, industrySubCategory: "" })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Select —</SelectItem>
+                {Object.keys(INDUSTRY_CATEGORIES).map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.classification.industrySize">Industry size</FormLabelHelp>

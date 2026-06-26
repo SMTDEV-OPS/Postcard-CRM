@@ -177,6 +177,21 @@ export const AccountCreationWizard = ({
 
   const buildPayload = () => {
     const sanitized: Record<string, unknown> = { ...formData };
+
+    // Map wizard field names to API field names
+    if (formData.industryCategory) {
+      sanitized.industry = formData.industryCategory;
+    }
+    if (formData.industrySubCategory) {
+      sanitized.industrySubCategory = formData.industrySubCategory;
+    }
+    if (formData.industrySize) {
+      sanitized.industryStatus = formData.industrySize;
+    }
+    delete sanitized.industryCategory;
+    delete sanitized.industrySize;
+    delete sanitized.zone;
+
     const legacyMap: Record<string, string> = {
       CORPORATE: "CORPORATE",
       TRAVEL_AGENT: "TRAVEL_AGENT",
@@ -191,26 +206,69 @@ export const AccountCreationWizard = ({
     sanitized.type = legacyMap[formData.organizationType] || "OTHER";
     if (!sanitized.conglomerateId) delete sanitized.conglomerateId;
     if (!sanitized.parentAccountId) delete sanitized.parentAccountId;
+
     const pam = formData.primaryAccountManager;
-    if (!pam?.name && !pam?.userId) {
+    if (!pam?.userId?.trim()) {
+      // Omit PAM without userId — backend assigns creator as PAM
       delete sanitized.primaryAccountManager;
-    } else if (pam.userId === "") {
-      sanitized.primaryAccountManager = { name: pam.name, city: pam.city };
+    } else {
+      sanitized.primaryAccountManager = {
+        userId: pam.userId.trim(),
+        name: pam.name,
+        city: pam.city,
+      };
     }
+
     if (formData.secondaryAccountManagers?.length) {
-      sanitized.secondaryAccountManagers = formData.secondaryAccountManagers
-        .filter((m) => m.name?.trim() || m.userId?.trim())
-        .map((m) => {
-          const s = { ...m };
-          if (s.userId === "") delete (s as { userId?: string }).userId;
-          return s;
-        });
+      const sams = formData.secondaryAccountManagers
+        .filter((m) => m.userId?.trim())
+        .map((m) => ({
+          userId: m.userId!.trim(),
+          name: m.name,
+          city: m.city,
+        }));
+      if (sams.length) {
+        sanitized.secondaryAccountManagers = sams;
+      } else {
+        delete sanitized.secondaryAccountManagers;
+      }
+    } else {
+      delete sanitized.secondaryAccountManagers;
     }
+
+    if (typeof sanitized.website === "string" && sanitized.website.trim()) {
+      const website = sanitized.website.trim();
+      if (!/^https?:\/\//i.test(website)) {
+        sanitized.website = `https://${website}`;
+      }
+    }
+
     delete sanitized.profileStatus;
     sanitized.isHeadquarter = formData.isHeadquarter ?? false;
     if (!isTravelTrade(formData)) {
       delete sanitized.travelTradeProfile;
+    } else {
+      sanitized.industry = formData.industryCategory || "Hospitality, Travel & Leisure";
+      sanitized.industrySubCategory =
+        formData.industrySubCategory || "Travel & Tourism";
+      if (sanitized.travelTradeProfile) {
+        const profile = sanitized.travelTradeProfile as Record<string, unknown>;
+        const operatorTypes = (profile.operatorTypes as string[]) ?? [];
+        for (const key of ["inbound", "luxury", "series", "domestic", "groupsIncentives"] as const) {
+          const stepMap: Record<string, string> = {
+            inbound: "INBOUND",
+            luxury: "LUXURY",
+            series: "SERIES",
+            domestic: "DOMESTIC_AGENT",
+            groupsIncentives: "GROUPS_INCENTIVES",
+          };
+          if (!operatorTypes.includes(stepMap[key])) {
+            delete profile[key];
+          }
+        }
+      }
     }
+    delete sanitized.type;
     for (const key of Object.keys(sanitized)) {
       if (sanitized[key] === "") delete sanitized[key];
     }

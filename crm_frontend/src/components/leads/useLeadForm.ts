@@ -136,7 +136,7 @@ export function buildLeadPayload(
   data: LeadFormData,
   hotelOptions: Property[],
   customData: Record<string, unknown>,
-  options?: { accountId?: string }
+  options?: { accountId?: string; assignToUserId?: string }
 ): CreateLeadPayload {
   const guestFullName = [data.firstName, data.middleName, data.lastName].filter(Boolean).join(" ").trim();
 
@@ -165,7 +165,7 @@ export function buildLeadPayload(
     bookingSourceToLeadSource[data.bookingSource] || (data.source as string) || "MANUAL";
   const mappedLeadType = leadTypeToEnum[data.leadType || ""] || (data.leadType as string) || "STAY";
 
-  return {
+  const payload: CreateLeadPayload = {
     accountId: options?.accountId,
     guestContact: {
       name: guestFullName,
@@ -187,10 +187,18 @@ export function buildLeadPayload(
     bookingSource: data.bookingSource || undefined,
     customData: Object.keys(customData).length > 0 ? customData : undefined,
   };
+
+  if (options?.assignToUserId) {
+    payload.assignmentMode = "manual";
+    payload.assignedToUserId = options.assignToUserId;
+  }
+
+  return payload;
 }
 
 export interface UseLeadFormOptions {
   defaultAccountId?: string;
+  assignToUserId?: string;
   prefill?: Partial<LeadFormData>;
   onCreated?: (lead: Awaited<ReturnType<typeof createLead>>) => void;
 }
@@ -291,6 +299,7 @@ export function useLeadForm(options: UseLeadFormOptions = {}) {
     try {
       const payload = buildLeadPayload(data, hotelOptions, customData, {
         accountId: options.defaultAccountId,
+        assignToUserId: options.assignToUserId,
       });
       const created = await createLead(payload);
       options.onCreated?.(created);

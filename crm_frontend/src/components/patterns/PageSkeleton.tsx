@@ -2,9 +2,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface PageSkeletonProps {
   variant?: "dashboard" | "table" | "detail";
+  embedded?: boolean;
 }
 
-export function PageSkeleton({ variant = "table" }: PageSkeletonProps) {
+export function PageSkeleton({ variant = "table", embedded = false }: PageSkeletonProps) {
   if (variant === "dashboard") {
     return (
       <div className="space-y-6 animate-panel-enter">
@@ -23,6 +24,16 @@ export function PageSkeleton({ variant = "table" }: PageSkeletonProps) {
   }
 
   if (variant === "detail") {
+    if (embedded) {
+      return (
+        <div className="min-h-[40vh] space-y-4 p-4 animate-panel-enter">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-28 w-full rounded-md" />
+          <Skeleton className="h-40 w-full rounded-md" />
+          <Skeleton className="h-56 w-full rounded-md" />
+        </div>
+      );
+    }
     return (
       <div className="grid gap-6 lg:grid-cols-[280px_1fr_300px] animate-panel-enter">
         <Skeleton className="h-96 rounded-md" />
