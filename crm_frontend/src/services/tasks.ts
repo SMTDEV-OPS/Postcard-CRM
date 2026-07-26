@@ -16,6 +16,7 @@ export interface Task {
   ownerUserId: string;
   createdByUserId?: string;
   leadId?: string;
+  accountId?: string;
   orgId?: string;
   dueAt: string;
   status: TaskStatus;
@@ -47,11 +48,17 @@ export interface Task {
     leadNumber: string;
     status: string;
   };
+  account?: {
+    _id?: string;
+    id?: string;
+    name: string;
+  };
 }
 
 export interface TaskListQuery {
   ownerUserId?: string;
   leadId?: string;
+  accountId?: string;
   status?: TaskStatus;
   fromDue?: string;
   toDue?: string;
@@ -62,6 +69,7 @@ export interface CreateTaskPayload {
   description?: string;
   ownerUserId: string;
   leadId?: string;
+  accountId?: string;
   dueAt: string;
   type?: TaskType;
 }

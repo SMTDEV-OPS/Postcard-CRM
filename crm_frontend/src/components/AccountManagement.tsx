@@ -66,19 +66,25 @@ import {
 } from "@/services/accounts";
 import { AccountCreationWizard } from "./AccountCreationWizard";
 import { WeekPlanner } from "./WeekPlanner";
-import { ORGANIZATION_TYPES } from "@/constants/accountData";
+import { ORGANIZATION_TYPES, formatOrganizationTypeLabel, toCanonicalOrganizationType } from "@/constants/accountData";
 import { downloadAccountImportTemplate } from "@/utils/accountImportTemplate";
 import { AccountDetail } from "./AccountDetail";
 
 const ORG_TYPE_COLORS: Record<string, { border: string; bg: string; hover: string }> = {
   CORPORATE: { border: "border-l-4 border-l-blue-500", bg: "bg-blue-50/40 dark:bg-blue-950/15", hover: "hover:bg-blue-50/70 dark:hover:bg-blue-950/25" },
   TRAVEL_AGENT: { border: "border-l-4 border-l-emerald-500", bg: "bg-emerald-50/40 dark:bg-emerald-950/15", hover: "hover:bg-emerald-50/70 dark:hover:bg-emerald-950/25" },
+  GOVERNMENT_INSTITUTIONS: { border: "border-l-4 border-l-amber-500", bg: "bg-amber-50/40 dark:bg-amber-950/15", hover: "hover:bg-amber-50/70 dark:hover:bg-amber-950/25" },
+  GOVERNMENT: { border: "border-l-4 border-l-amber-500", bg: "bg-amber-50/40 dark:bg-amber-950/15", hover: "hover:bg-amber-50/70 dark:hover:bg-amber-950/25" },
+  GOVERNMENT_BODIES: { border: "border-l-4 border-l-amber-500", bg: "bg-amber-50/40 dark:bg-amber-950/15", hover: "hover:bg-amber-50/70 dark:hover:bg-amber-950/25" },
+  EMBASSY_CONSULATE: { border: "border-l-4 border-l-rose-500", bg: "bg-rose-50/40 dark:bg-rose-950/15", hover: "hover:bg-rose-50/70 dark:hover:bg-rose-950/25" },
+  EMBASSIES_AND_CONSULATES: { border: "border-l-4 border-l-rose-500", bg: "bg-rose-50/40 dark:bg-rose-950/15", hover: "hover:bg-rose-50/70 dark:hover:bg-rose-950/25" },
+  PSU: { border: "border-l-4 border-l-teal-500", bg: "bg-teal-50/40 dark:bg-teal-950/15", hover: "hover:bg-teal-50/70 dark:hover:bg-teal-950/25" },
+  PUBLIC_SECTOR_UNIT: { border: "border-l-4 border-l-teal-500", bg: "bg-teal-50/40 dark:bg-teal-950/15", hover: "hover:bg-teal-50/70 dark:hover:bg-teal-950/25" },
+  LIFESTYLE_HIGH_NET_WORTH: { border: "border-l-4 border-l-fuchsia-500", bg: "bg-fuchsia-50/40 dark:bg-fuchsia-950/15", hover: "hover:bg-fuchsia-50/70 dark:hover:bg-fuchsia-950/25" },
+  OTHER: { border: "border-l-4 border-l-slate-500", bg: "bg-slate-50/40 dark:bg-slate-950/15", hover: "hover:bg-slate-50/70 dark:hover:bg-slate-950/25" },
   EVENT_PLANNER: { border: "border-l-4 border-l-purple-500", bg: "bg-purple-50/40 dark:bg-purple-950/15", hover: "hover:bg-purple-50/70 dark:hover:bg-purple-950/25" },
   PCO: { border: "border-l-4 border-l-violet-500", bg: "bg-violet-50/40 dark:bg-violet-950/15", hover: "hover:bg-violet-50/70 dark:hover:bg-violet-950/25" },
   AIRLINE: { border: "border-l-4 border-l-sky-500", bg: "bg-sky-50/40 dark:bg-sky-950/15", hover: "hover:bg-sky-50/70 dark:hover:bg-sky-950/25" },
-  GOVERNMENT: { border: "border-l-4 border-l-amber-500", bg: "bg-amber-50/40 dark:bg-amber-950/15", hover: "hover:bg-amber-50/70 dark:hover:bg-amber-950/25" },
-  EMBASSY_CONSULATE: { border: "border-l-4 border-l-rose-500", bg: "bg-rose-50/40 dark:bg-rose-950/15", hover: "hover:bg-rose-50/70 dark:hover:bg-rose-950/25" },
-  PSU: { border: "border-l-4 border-l-teal-500", bg: "bg-teal-50/40 dark:bg-teal-950/15", hover: "hover:bg-teal-50/70 dark:hover:bg-teal-950/25" },
   CUSTOM: { border: "border-l-4 border-l-slate-500", bg: "bg-slate-50/40 dark:bg-slate-950/15", hover: "hover:bg-slate-50/70 dark:hover:bg-slate-950/25" },
 };
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -382,7 +388,11 @@ export const AccountManagement = ({ permissions = [], isAdmin, isSystemAdmin }: 
   // Filter accounts (client-side for status when we have server-filtered list)
   const filteredAccounts = accounts.filter((account) => {
     const effectiveStatus = account.profileStatus === "NA" ? "NA" : (account.status || "ACTIVE");
-    if (orgTypeFilters.length > 0 && !orgTypeFilters.includes(account.organizationType)) {
+    if (
+      orgTypeFilters.length > 0 &&
+      !orgTypeFilters.includes(toCanonicalOrganizationType(account.organizationType) as OrganizationType) &&
+      !orgTypeFilters.includes(account.organizationType)
+    ) {
       return false;
     }
     if (cityFilter !== "ALL" && account.city !== cityFilter) {
@@ -1000,7 +1010,7 @@ export const AccountManagement = ({ permissions = [], isAdmin, isSystemAdmin }: 
                 </div>
               )
             },
-            { id: "type", header: "Type", render: (a) => <Badge variant="outline">{(a.organizationType || a.type || "").replace(/_/g, " ")}</Badge> },
+            { id: "type", header: "Type", render: (a) => <Badge variant="outline">{formatOrganizationTypeLabel(a.organizationType || a.type)}</Badge> },
             { id: "status", header: "Status", render: (a) => (
               <Badge
                 variant="outline"
@@ -1067,7 +1077,7 @@ export const AccountManagement = ({ permissions = [], isAdmin, isSystemAdmin }: 
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-semibold text-foreground">{a.name}</span>
                 <Badge variant="outline" className="text-xs">
-                  {(a.organizationType || a.type || "").replace(/_/g, " ")}
+                  {formatOrganizationTypeLabel(a.organizationType || a.type)}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground">{a.city || "No city"}</p>

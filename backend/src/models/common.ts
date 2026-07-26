@@ -82,12 +82,18 @@ export enum HeatLevel {
 }
 
 export enum ClosedReason {
-  // Existing values
+  // Current selectable reasons (Lost UI)
+  DESTINATION_CHANGED = "DESTINATION_CHANGED",
+  EXPERIENCES_NOT_AVAILABLE = "EXPERIENCES_NOT_AVAILABLE",
+  CONFIRMED_ANOTHER_TA = "CONFIRMED_ANOTHER_TA",
+  CONFIRMED_ANOTHER_SALESPERSON = "CONFIRMED_ANOTHER_SALESPERSON",
+  CONFIRMED_RESERVATIONS = "CONFIRMED_RESERVATIONS",
+  LOST_TO_ALTERNATE_HOTEL = "LOST_TO_ALTERNATE_HOTEL",
+  // Legacy values retained for historical records and auto-close jobs
   PRICE = "PRICE",
   NO_AVAILABILITY = "NO_AVAILABILITY",
   GUEST_NOT_RESPONDING = "GUEST_NOT_RESPONDING",
   OTHER = "OTHER",
-  // New SOP values
   SOLD_OUT = "SOLD_OUT",
   BUDGET = "BUDGET",
   BOOKED_OTA = "BOOKED_OTA",
@@ -100,6 +106,46 @@ export enum ClosedReason {
   POLICY_ALCOHOL = "POLICY_ALCOHOL",
   POLICY_CREDIT_CARD = "POLICY_CREDIT_CARD",
   PROPERTY_MAINTENANCE = "PROPERTY_MAINTENANCE",
+}
+
+/** Reasons shown when marking a lead Lost (excludes legacy auto-close codes). */
+export const SELECTABLE_CLOSED_REASONS: ClosedReason[] = [
+  ClosedReason.DESTINATION_CHANGED,
+  ClosedReason.EXPERIENCES_NOT_AVAILABLE,
+  ClosedReason.CONFIRMED_ANOTHER_TA,
+  ClosedReason.CONFIRMED_ANOTHER_SALESPERSON,
+  ClosedReason.CONFIRMED_RESERVATIONS,
+  ClosedReason.LOST_TO_ALTERNATE_HOTEL,
+];
+
+export const CLOSED_REASON_LABELS: Record<string, string> = {
+  DESTINATION_CHANGED: "Destination changed",
+  EXPERIENCES_NOT_AVAILABLE: "Experiences not available",
+  CONFIRMED_ANOTHER_TA: "Confirmed through another source – Another TA",
+  CONFIRMED_ANOTHER_SALESPERSON: "Confirmed through another source – Another Sales person",
+  CONFIRMED_RESERVATIONS: "Confirmed through another source – Reservations",
+  LOST_TO_ALTERNATE_HOTEL: "Lost to alternate hotel",
+  PRICE: "Price",
+  NO_AVAILABILITY: "No availability",
+  GUEST_NOT_RESPONDING: "Guest not responding",
+  OTHER: "Other",
+  SOLD_OUT: "Sold out",
+  BUDGET: "Budget",
+  BOOKED_OTA: "Booked elsewhere – OTA",
+  BOOKED_WEBSITE: "Booked elsewhere – Website",
+  BOOKED_OTHER_PROPERTY: "Booked elsewhere – Other property",
+  NO_RESPONSE: "No response",
+  POLICY_UNDER_18: "Policy – Under 18",
+  POLICY_LOCAL_ID: "Policy – Local ID",
+  POLICY_PET: "Policy – Pet",
+  POLICY_ALCOHOL: "Policy – Alcohol",
+  POLICY_CREDIT_CARD: "Policy – Credit card",
+  PROPERTY_MAINTENANCE: "Property under maintenance",
+};
+
+export function formatClosedReasonLabel(reason?: string | null): string {
+  if (!reason) return "—";
+  return CLOSED_REASON_LABELS[reason] ?? reason;
 }
 
 export enum CommunicationChannel {

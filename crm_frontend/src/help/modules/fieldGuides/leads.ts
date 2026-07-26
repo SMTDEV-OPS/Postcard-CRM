@@ -7,7 +7,8 @@ export const LEADS_ADD_STEP1_FIELDS = [
   field(`${T}.middleName`, "Middle name", "Optional middle name or initial.", "Fill only if the guest provided it or it appears on ID documents.", { example: "R." }),
   field(`${T}.lastName`, "Last name", "Guest's family or surname.", "Required for identification and quotations.", { required: true, example: "Sharma" }),
   field(`${T}.guestContactNumber`, "Contact number", "Primary mobile number for calls and WhatsApp.", "Use 10-digit Indian mobile or full international format with country code.", { required: true, example: "9876543210" }),
-  field(`${T}.guestEmail`, "Email", "Primary email for confirmations and quotations.", "Must be a valid email format. Used for duplicate detection.", { required: true, example: "priya@email.com" }),
+  field(`${T}.guestEmail`, "Email", "Primary email for confirmations and quotations.", "Optional on first contact — many guests share email later. Used for duplicate detection when provided.", { example: "priya@email.com" }),
+  field(`${T}.vipStatus`, "VIP / VVIP", "Guest importance tag.", "Mark VIP or VVIP when the guest requires elevated handling."),
   field(`${T}.alternateContact`, "Alternate contact", "Secondary phone if the guest has one.", "Optional backup number for reachability.", { example: "9123456780" }),
   field(`${T}.occupation`, "Occupation", "Guest's profession or role.", "Helps personalize communication; optional.", { example: "Marketing Director" }),
 ];

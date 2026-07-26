@@ -33,6 +33,13 @@ export type LeadSource =
   | "CSV_UPLOAD";
 
 export type ClosedReason =
+  | "DESTINATION_CHANGED"
+  | "EXPERIENCES_NOT_AVAILABLE"
+  | "CONFIRMED_ANOTHER_TA"
+  | "CONFIRMED_ANOTHER_SALESPERSON"
+  | "CONFIRMED_RESERVATIONS"
+  | "LOST_TO_ALTERNATE_HOTEL"
+  // Legacy values retained for historical records
   | "PRICE"
   | "NO_AVAILABILITY"
   | "GUEST_NOT_RESPONDING"
@@ -49,6 +56,49 @@ export type ClosedReason =
   | "POLICY_ALCOHOL"
   | "POLICY_CREDIT_CARD"
   | "PROPERTY_MAINTENANCE";
+
+/** Reasons shown when marking a lead Lost. */
+export const SELECTABLE_CLOSED_REASONS: { value: ClosedReason; label: string }[] = [
+  { value: "DESTINATION_CHANGED", label: "Destination changed" },
+  { value: "EXPERIENCES_NOT_AVAILABLE", label: "Experiences not available" },
+  { value: "CONFIRMED_ANOTHER_TA", label: "Confirmed through another source – Another TA" },
+  { value: "CONFIRMED_ANOTHER_SALESPERSON", label: "Confirmed through another source – Another Sales person" },
+  { value: "CONFIRMED_RESERVATIONS", label: "Confirmed through another source – Reservations" },
+  { value: "LOST_TO_ALTERNATE_HOTEL", label: "Lost to alternate hotel" },
+];
+
+const CLOSED_REASON_LABELS: Record<string, string> = Object.fromEntries([
+  ...SELECTABLE_CLOSED_REASONS.map((r) => [r.value, r.label] as const),
+  ["PRICE", "Price"],
+  ["NO_AVAILABILITY", "No availability"],
+  ["GUEST_NOT_RESPONDING", "Guest not responding"],
+  ["OTHER", "Other"],
+  ["SOLD_OUT", "Sold out"],
+  ["BUDGET", "Budget"],
+  ["BOOKED_OTA", "Booked elsewhere – OTA"],
+  ["BOOKED_WEBSITE", "Booked elsewhere – Website"],
+  ["BOOKED_OTHER_PROPERTY", "Booked elsewhere – Other property"],
+  ["NO_RESPONSE", "No response"],
+  ["POLICY_UNDER_18", "Policy – Under 18"],
+  ["POLICY_LOCAL_ID", "Policy – Local ID"],
+  ["POLICY_PET", "Policy – Pet"],
+  ["POLICY_ALCOHOL", "Policy – Alcohol"],
+  ["POLICY_CREDIT_CARD", "Policy – Credit card"],
+  ["PROPERTY_MAINTENANCE", "Property under maintenance"],
+]);
+
+export function formatClosedReasonLabel(reason?: string | null): string {
+  if (!reason) return "—";
+  return CLOSED_REASON_LABELS[reason] ?? reason;
+}
+
+export type VipStatus = "NONE" | "VIP" | "VVIP";
+
+export const VIP_STATUS_OPTIONS: { value: VipStatus; label: string }[] = [
+  { value: "NONE", label: "None" },
+  { value: "VIP", label: "VIP" },
+  { value: "VVIP", label: "VVIP" },
+];
 
 export type HeatLevel = "COLD" | "WARM" | "HOT" | "NOT_INTERESTED";
 
@@ -157,6 +207,7 @@ export interface Lead {
   estimatedValue?: string;
   notes?: string;
   closedReason?: string; // Add closedReason
+  vipStatus?: VipStatus;
 }
 
 export type LeadScope = "own" | "team" | "all";
@@ -208,6 +259,7 @@ export interface CreateLeadPayload {
   roomsRequested?: number;
   followUp?: { dueAt: string; notes?: string };
   preserveManualHeatLevel?: boolean;
+  vipStatus?: VipStatus;
 }
 
 export interface EligibleAssignee {

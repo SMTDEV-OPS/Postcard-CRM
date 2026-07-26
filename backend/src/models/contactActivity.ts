@@ -4,6 +4,14 @@ import crypto from "crypto";
 export type ContactActivityType =
   | "SALES_CALL"
   | "TELECALL"
+  | "TRAINING"
+  | "NETWORKING"
+  | "COLD_CALL"
+  | "INTERNAL_MEETING"
+  | "SITE_INSPECTION"
+  | "OFF_BASE_TRAVEL"
+  | "VIRTUAL_MEETING"
+  // Legacy values remain valid so historical records can still be read/updated.
   | "EMAIL"
   | "CLIENT_SITE_INSPECTION";
 
@@ -104,7 +112,19 @@ const contactActivitySchema = new Schema<IContactActivity>(
     },
     activityType: {
       type: String,
-      enum: ["SALES_CALL", "TELECALL", "EMAIL", "CLIENT_SITE_INSPECTION"],
+      enum: [
+        "SALES_CALL",
+        "TELECALL",
+        "TRAINING",
+        "NETWORKING",
+        "COLD_CALL",
+        "INTERNAL_MEETING",
+        "SITE_INSPECTION",
+        "OFF_BASE_TRAVEL",
+        "VIRTUAL_MEETING",
+        "EMAIL",
+        "CLIENT_SITE_INSPECTION",
+      ],
       required: true,
       index: true,
     },

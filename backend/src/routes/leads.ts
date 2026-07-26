@@ -8,7 +8,8 @@ import {
   LeadSource,
   LeadStatus,
   LeadType,
-  CallStatus
+  CallStatus,
+  ClosedReason,
 } from "../models/common";
 import { LeadModel, ILead } from "../models/lead";
 import { LeadActivityModel, LeadActivityType } from "../models/leadActivity";
@@ -132,6 +133,7 @@ const leadCreateSchema = z.object({
   customerType: z.string().optional(),
   occasion: z.string().optional(),
   roomsRequested: z.number().int().min(0).optional(),
+  vipStatus: z.enum(["NONE", "VIP", "VVIP"]).optional(),
   followUp: z
     .object({
       dueAt: z.string(),
@@ -276,6 +278,7 @@ leadsRouter.post("/", async (req, res, next) => {
       customerType: data.customerType ?? data.customData?.customerType ?? data.customData?.customer_type,
       occasion: data.occasion,
       roomsRequested: data.roomsRequested,
+      vipStatus: data.vipStatus,
       followUp: data.followUp
         ? { dueAt: new Date(data.followUp.dueAt), notes: data.followUp.notes }
         : undefined,
@@ -630,6 +633,9 @@ const leadUpdateSchema = z.object({
   alternateContact: z.string().optional(),
   specialRequests: z.string().optional(),
   companyName: z.string().optional(),
+  closedReason: z.nativeEnum(ClosedReason).optional(),
+  closedReasonNote: z.string().optional(),
+  vipStatus: z.enum(["NONE", "VIP", "VVIP"]).optional(),
 });
 
 leadsRouter.patch("/:id", async (req, res, next) => {
@@ -720,6 +726,23 @@ leadsRouter.patch("/:id", async (req, res, next) => {
     if (parsed.data.alternateContact !== undefined) existing.alternateContact = parsed.data.alternateContact;
     if (parsed.data.specialRequests !== undefined) existing.specialRequests = parsed.data.specialRequests;
     if (parsed.data.companyName !== undefined) existing.companyName = parsed.data.companyName;
+    if (parsed.data.closedReason !== undefined) {
+      existing.closedReason = parsed.data.closedReason;
+      if (!existing.closedAt) existing.closedAt = new Date();
+    }
+    if (parsed.data.closedReasonNote !== undefined) {
+      existing.closedReasonNote = parsed.data.closedReasonNote;
+    }
+    if (parsed.data.vipStatus !== undefined) {
+      (existing as any).vipStatus = parsed.data.vipStatus;
+      const tags = new Set(existing.tags || []);
+      tags.delete("VIP");
+      tags.delete("VVIP");
+      if (parsed.data.vipStatus === "VIP" || parsed.data.vipStatus === "VVIP") {
+        tags.add(parsed.data.vipStatus);
+      }
+      existing.tags = Array.from(tags);
+    }
     if (parsed.data.accountId) {
       const { Types } = await import("mongoose");
       if (Types.ObjectId.isValid(parsed.data.accountId)) {

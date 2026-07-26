@@ -231,17 +231,32 @@ Follow-up timing is driven by Setup → Follow-up Rules based on lead heat.`,
     relatedIds: ["followups.calendar", "setup.followup-rules"],
   }),
   topic({
+    id: "followups.activities",
+    category: "followups",
+    title: "Activities",
+    summary: "View scheduled activities across every account mapped to you.",
+    body: `Open **Activities** from the sidebar to see scheduled account and contact activities in one place.
+
+- The list shows activity type, time, account, contact, and linked lead.
+- Use the calendar on the right to select a date.
+- Filter by activity type or mapped account.
+
+Only activities from accounts where you are the primary or secondary account manager are included.`,
+    tags: ["activities", "accounts", "calendar"],
+    relatedIds: ["followups.calendar", "accounts.detail"],
+  }),
+  topic({
     id: "followups.calendar",
     category: "followups",
     title: "Calendar & week planner",
-    summary: "Personal calendar and week planner for scheduled follow-ups and meetings.",
-    body: `**My Calendar** shows your scheduled follow-ups and tasks by day.
+    summary: "Personal calendar for activities, follow-ups, meetings, and tasks.",
+    body: `**Calendar** combines your mapped-account activities with your own lead, account, and general follow-up tasks.
 
 **Week Planner** gives a weekly grid view for planning outreach.
 
-Both sync from follow-up tasks created on leads or by automation rules.`,
+Follow-up tasks created on leads or by automation rules appear automatically.`,
     tags: ["calendar", "planner"],
-    relatedIds: ["followups.today"],
+    relatedIds: ["followups.today", "followups.activities"],
   }),
   topic({
     id: "calls.center",
@@ -846,6 +861,7 @@ export const NAV_PATH_TO_HELP_ID: Record<string, string> = {
   "/accounts": "accounts.list",
   "/accounts/dashboard": "accounts.dashboard",
   "/follow-ups": "followups.today",
+  "/activities": "followups.activities",
   "/calendar": "followups.calendar",
   "/week-planner": "followups.calendar",
   "/reports": "reports.main",

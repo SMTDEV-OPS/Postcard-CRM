@@ -99,6 +99,15 @@ export function Sidebar({
         );
       }
       if (item.path === CRM_PATHS.accounts || item.path === CRM_PATHS.accountsDashboard) return true;
+      if (item.path === CRM_PATHS.activities) {
+        return permissions.some(
+          (p) =>
+            p === "accounts.manage_activities" ||
+            p === "contacts.read_all" ||
+            p === "contacts.read_own"
+        );
+      }
+      if (item.path === CRM_PATHS.calendar) return true;
       if (item.path === CRM_PATHS.reports) return permissions.includes("reports.view");
       if (item.path === CRM_PATHS.buddy) return canAccessBuddy;
       if (item.path === CRM_PATHS.tickets) {
@@ -128,6 +137,8 @@ export function Sidebar({
     { title: "Accounts", path: CRM_PATHS.accounts, icon: Building2, roles: [] },
     { title: "Accounts Dashboard", path: CRM_PATHS.accountsDashboard, icon: LayoutGrid, roles: [] },
     { title: "Follow Ups", path: CRM_PATHS.followUps, icon: Clock, roles: ["callcenter", "salesexecutive", "saleshead", "ccmanager", "management", "admin"] },
+    { title: "Activities", path: CRM_PATHS.activities, icon: Activity, roles: [] },
+    { title: "Calendar", path: CRM_PATHS.calendar, icon: Calendar, roles: ["callcenter", "salesexecutive", "saleshead", "ccmanager", "management", "admin"] },
     { title: "Reports", path: CRM_PATHS.reports, icon: BarChart2, roles: ["management", "admin"] },
     { title: "Buddy", path: CRM_PATHS.buddy, icon: UserCheck, roles: [] },
     { title: "Tickets", path: CRM_PATHS.tickets, icon: Ticket, roles: [] },

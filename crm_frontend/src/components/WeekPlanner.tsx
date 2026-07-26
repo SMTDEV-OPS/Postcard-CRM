@@ -28,6 +28,7 @@ import {
 } from "@/services/weekPlanner";
 import { WeekPlannerGrid, type WeekPlannerEvent } from "@/components/WeekPlannerGrid";
 import { ActivityWizard } from "@/components/activities/ActivityWizard";
+import { formatContactActivityType } from "@/services/contactActivities";
 
 interface AddTaskDialogProps {
   open: boolean;
@@ -181,7 +182,7 @@ export function WeekPlanner() {
       if (!a.startsAt) continue;
       result.push({
         id: `activity-${a._id}`,
-        title: a.activityType.replace(/_/g, " "),
+        title: formatContactActivityType(a.activityType),
         subtitle: a.contactId?.name || a.accountId?.name,
         startTime: new Date(a.startsAt),
         endTime: a.endsAt ? new Date(a.endsAt) : undefined,

@@ -12,8 +12,9 @@ import { WizardStepIndicator } from "@/components/forms/WizardStepIndicator";
 import { DatePicker } from "@/components/ui/date-picker";
 import { getAccountContacts, type Contact } from "@/services/contacts";
 import {
+  CONTACT_ACTIVITY_TYPE_OPTIONS,
   createContactActivity,
-  type ContactActivityType,
+  type SelectableContactActivityType,
 } from "@/services/contactActivities";
 
 const STEPS = [
@@ -28,16 +29,9 @@ const STEP_SUBTITLES: Record<number, string> = {
   3: "Review and save",
 };
 
-const ACTIVITY_TYPES: { value: ContactActivityType; label: string }[] = [
-  { value: "SALES_CALL", label: "Sales call" },
-  { value: "TELECALL", label: "Tele call" },
-  { value: "EMAIL", label: "Email" },
-  { value: "CLIENT_SITE_INSPECTION", label: "Client site inspection" },
-];
-
 export interface ActivityFormState {
   contactId: string;
-  activityType: ContactActivityType;
+  activityType: SelectableContactActivityType;
   category: string;
   startsAtDate: string;
   startsAtTime: string;
@@ -171,7 +165,7 @@ export function ActivityWizard({
   };
 
   const contactName = contacts.find((c) => c.id === form.contactId)?.name;
-  const typeLabel = ACTIVITY_TYPES.find((t) => t.value === form.activityType)?.label;
+  const typeLabel = CONTACT_ACTIVITY_TYPE_OPTIONS.find((t) => t.value === form.activityType)?.label;
 
   const footer = (
     <>
@@ -246,13 +240,13 @@ export function ActivityWizard({
               <Label>Activity type</Label>
               <Select
                 value={form.activityType}
-                onValueChange={(v) => set({ activityType: v as ContactActivityType })}
+                onValueChange={(v) => set({ activityType: v as SelectableContactActivityType })}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {ACTIVITY_TYPES.map((t) => (
+                  {CONTACT_ACTIVITY_TYPE_OPTIONS.map((t) => (
                     <SelectItem key={t.value} value={t.value}>
                       {t.label}
                     </SelectItem>

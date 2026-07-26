@@ -6,6 +6,7 @@ export const CRM_PATHS = {
   leads: "/leads",
   leadDetail: (id: string) => `/leads/${id}`,
   followUps: "/follow-ups",
+  activities: "/activities",
   calendar: "/calendar",
   weekPlanner: "/week-planner",
   accounts: "/accounts",
@@ -51,6 +52,7 @@ export function pathnameToView(pathname: string): { view: string; leadId?: strin
   }
   if (p === "/leads") return { view: "leads" };
   if (p === "/follow-ups") return { view: "todays-followups" };
+  if (p === "/activities") return { view: "activities" };
   if (p === "/calendar") return { view: "my-calendar" };
   if (p === "/week-planner") return { view: "week-planner" };
   if (p === "/accounts/dashboard") return { view: "accounts-dashboard" };
@@ -90,6 +92,8 @@ export function viewToPath(view: string, leadId?: string): string {
       return leadId ? CRM_PATHS.leadDetail(leadId) : CRM_PATHS.leads;
     case "todays-followups":
       return CRM_PATHS.followUps;
+    case "activities":
+      return CRM_PATHS.activities;
     case "my-calendar":
       return CRM_PATHS.calendar;
     case "week-planner":

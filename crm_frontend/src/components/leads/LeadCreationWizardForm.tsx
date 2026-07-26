@@ -42,7 +42,7 @@ import { cn } from "@/lib/utils";
 import { formGrid2 } from "@/lib/responsive";
 
 export const LEAD_WIZARD_STEP_FIELDS: Record<number, string[]> = {
-  1: ["firstName", "lastName", "guestContactNumber", "guestEmail"],
+  1: ["firstName", "lastName", "guestContactNumber"],
   2: ["hotels"],
   3: ["bookingSource", "heatLevel"],
 };
@@ -200,6 +200,12 @@ function ReviewSummary({ form }: { form: UseFormReturn<LeadFormData> }) {
         <div>
           <span className="text-text-muted">Email</span>
           <p className="font-medium text-text">{data.guestEmail || "—"}</p>
+        </div>
+        <div>
+          <span className="text-text-muted">VIP / VVIP</span>
+          <p className="font-medium text-text">
+            {data.vipStatus && data.vipStatus !== "NONE" ? data.vipStatus : "—"}
+          </p>
         </div>
         <div>
           <span className="text-text-muted">Booking source</span>
@@ -384,14 +390,38 @@ export function LeadCreationWizardForm({
                     name="guestEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormFieldLabelHelp helpId="leads.add.guestEmail" required>Email</FormFieldLabelHelp>
+                        <FormFieldLabelHelp helpId="leads.add.guestEmail">Email</FormFieldLabelHelp>
                         <FormControl>
-                          <Input placeholder="guest@example.com" type="email" {...field} />
+                          <Input placeholder="guest@example.com (optional)" type="email" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="vipStatus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormFieldLabelHelp helpId="leads.add.vipStatus">VIP / VVIP</FormFieldLabelHelp>
+                        <Select onValueChange={field.onChange} value={field.value || "NONE"}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="None" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="NONE">None</SelectItem>
+                            <SelectItem value="VIP">VIP</SelectItem>
+                            <SelectItem value="VVIP">VVIP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className={cn(formGrid2, "gap-4")}>
                   <FormField
                     control={form.control}
                     name="occupation"

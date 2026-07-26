@@ -86,6 +86,7 @@ export interface ILead extends Document {
   followUpCount: number; // Track number of follow-ups
   missed_followup_count?: number; // Count of missed follow-up tasks (for workflow triggers)
   tags?: string[];
+  vipStatus?: "NONE" | "VIP" | "VVIP";
 
   // Dynamic Custom Fields
   customData?: Map<string, any>;
@@ -164,6 +165,11 @@ const leadSchema = new Schema<ILead>(
     followUpCount: { type: Number, default: 0 },
     missed_followup_count: { type: Number, default: 0 },
     tags: [{ type: String, index: true }],
+    vipStatus: {
+      type: String,
+      enum: ["NONE", "VIP", "VVIP"],
+      default: "NONE",
+    },
 
     // Dynamic Custom Fields
     customData: {

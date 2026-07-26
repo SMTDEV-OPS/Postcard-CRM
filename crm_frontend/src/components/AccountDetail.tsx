@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AccountSetupChecklist } from "@/components/accounts/AccountSetupChecklist";
 import { formatAccountTypeLabel } from "@/components/accounts/accountFormTypes";
+import { formatOrganizationTypeLabel } from "@/constants/accountData";
 import {
   AccountProfileCompany,
   AccountProfileLocation,
@@ -202,7 +203,7 @@ export const AccountDetail = ({ account, onBack, onEdit, isAdmin, isSystemAdmin,
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-text-muted">
                         {account.organizationType && (
-                            <span>{account.organizationType.replace(/_/g, " ")}</span>
+                            <span>{formatOrganizationTypeLabel(account.organizationType)}</span>
                         )}
                         {account.city && (
                             <span className="flex items-center gap-1">

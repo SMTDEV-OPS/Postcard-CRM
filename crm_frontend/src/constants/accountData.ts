@@ -1,14 +1,65 @@
+/** Canonical organization types offered in the Add Account wizard. */
 export const ORGANISATION_TYPES = [
     { value: "CORPORATE", label: "Corporate" },
+    { value: "GOVERNMENT_INSTITUTIONS", label: "Government and Institutions" },
     { value: "TRAVEL_AGENT", label: "Travel Trade" },
-    { value: "EVENT_ORGANISER", label: "Event Organiser" },
-    { value: "PROFESSIONAL_CONFERENCE_ORGANISER", label: "Professional Conference Organiser (PCO)" },
-    { value: "AIRLINE", label: "Airline" },
-    { value: "GOVERNMENT_BODIES", label: "Government Bodies" },
-    { value: "EMBASSIES_AND_CONSULATES", label: "Embassies and Consulates" },
-    { value: "PUBLIC_SECTOR_UNIT", label: "Public Sector Unit" },
-];
+    { value: "LIFESTYLE_HIGH_NET_WORTH", label: "Lifestyle & High-Net-Worth" },
+    { value: "OTHER", label: "Other" },
+] as const;
+
 export const ORGANIZATION_TYPES = ORGANISATION_TYPES;
+
+export type CanonicalOrganizationType = (typeof ORGANISATION_TYPES)[number]["value"];
+
+/** Legacy organizationType values that still exist on older account records. */
+const LEGACY_ORGANIZATION_TYPE_LABELS: Record<string, string> = {
+    EVENT_ORGANISER: "Event Organiser",
+    EVENT_PLANNER: "Event Planner",
+    PROFESSIONAL_CONFERENCE_ORGANISER: "Professional Conference Organiser (PCO)",
+    PCO: "Professional Conference Organiser (PCO)",
+    WEDDING_PLANNER: "Wedding Planner",
+    AIRLINE: "Airline",
+    GOVERNMENT: "Government and Institutions",
+    GOVERNMENT_BODIES: "Government and Institutions",
+    EMBASSY_CONSULATE: "Government and Institutions",
+    EMBASSIES_AND_CONSULATES: "Government and Institutions",
+    PSU: "Government and Institutions",
+    PUBLIC_SECTOR_UNIT: "Government and Institutions",
+    CUSTOM: "Other",
+};
+
+const GOVERNMENT_LEGACY_VALUES = new Set([
+    "GOVERNMENT",
+    "GOVERNMENT_BODIES",
+    "EMBASSY_CONSULATE",
+    "EMBASSIES_AND_CONSULATES",
+    "PSU",
+    "PUBLIC_SECTOR_UNIT",
+    "GOVERNMENT_INSTITUTIONS",
+]);
+
+export function formatOrganizationTypeLabel(type?: string | null): string {
+    if (!type) return "—";
+    const canonical = ORGANISATION_TYPES.find((o) => o.value === type);
+    if (canonical) return canonical.label;
+    if (LEGACY_ORGANIZATION_TYPE_LABELS[type]) return LEGACY_ORGANIZATION_TYPE_LABELS[type];
+    return type
+        .split("_")
+        .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
+        .join(" ");
+}
+
+/** Normalize a stored organizationType into a wizard-selectable canonical value. */
+export function toCanonicalOrganizationType(type?: string | null): CanonicalOrganizationType {
+    if (!type) return "CORPORATE";
+    if (ORGANISATION_TYPES.some((o) => o.value === type)) {
+        return type as CanonicalOrganizationType;
+    }
+    if (GOVERNMENT_LEGACY_VALUES.has(type)) return "GOVERNMENT_INSTITUTIONS";
+    if (type === "TRAVEL_AGENT") return "TRAVEL_AGENT";
+    if (type === "CORPORATE") return "CORPORATE";
+    return "OTHER";
+}
 
 export const ACCOUNT_LEVELS = [
     { value: "MASTER", label: "Master Account / Conglomerate" },
@@ -17,202 +68,101 @@ export const ACCOUNT_LEVELS = [
     { value: "SUBSIDIARY", label: "Subsidiary Account" },
 ];
 
-export const INDUSTRY_LIST = [
-    {
-        category: "Consumer & Retail",
-        subCategories: [
-            "FMCG",
-            "Retail (Organised & E-commerce)",
-            "Apparel & Fashion",
-            "Jewellery & Luxury Goods",
-            "Consumer Durables",
-            "Footwear & Accessories"
-        ]
-    },
-    {
-        category: "Technology & Digital",
-        subCategories: [
-            "IT Services",
-            "ITeS / BPO / KPO",
-            "Software & SaaS",
-            "E-commerce & Marketplaces",
-            "FinTech",
-            "EdTech",
-            "HealthTech"
-        ]
-    },
-    {
-        category: "Manufacturing & Industrial",
-        subCategories: [
-            "Automobiles & Auto Components",
-            "Engineering & Capital Goods",
-            "Electrical & Electronics",
-            "Textiles & Garments",
-            "Chemicals & Petrochemicals",
-            "Metals & Mining",
-            "Cement & Building Materials"
-        ]
-    },
-    {
-        category: "Healthcare & Life Sciences",
-        subCategories: [
-            "Pharmaceuticals",
-            "Hospitals & Healthcare Services",
-            "Diagnostics",
-            "Medical Devices",
-            "Biotechnology"
-        ]
-    },
-    {
-        category: "Financial Services",
-        subCategories: [
-            "Banking",
-            "NBFCs",
-            "Insurance",
-            "Mutual Funds & Asset Management",
-            "FinTech"
-        ]
-    },
-    {
-        category: "Hospitality, Travel & Leisure",
-        subCategories: [
-            "Hotels & Resorts",
-            "Restaurants & QSR",
-            "Travel & Tourism",
-            "Airlines",
-            "Event Management"
-        ]
-    },
-    {
-        category: "Real Estate & Infrastructure",
-        subCategories: [
-            "Real Estate & Construction",
-            "Infrastructure & EPC",
-            "Power & Utilities",
-            "Renewable Energy",
-            "Smart Cities"
-        ]
-    },
-    {
-        category: "Media & Communication",
-        subCategories: [
-            "Advertising & Marketing",
-            "Digital Media",
-            "Print & Publishing",
-            "Television & Broadcasting",
-            "Entertainment & OTT"
-        ]
-    },
-    {
-        category: "Logistics & Trade",
-        subCategories: [
-            "Logistics & Warehousing",
-            "Shipping",
-            "Courier & Express Services",
-            "Ports & ICDs"
-        ]
-    },
-    {
-        category: "Education & Training",
-        subCategories: [
-            "Schools & Universities",
-            "Coaching & Test Prep",
-            "Corporate Training"
-        ]
-    },
-    {
-        category: "Others / Niche",
-        subCategories: [
-            "Defence & Aerospace",
-            "Security Services",
-            "Waste Management",
-            "Facility Management",
-            "NGOs & Social Enterprises"
-        ]
-    }
-];
-
-export const INDUSTRY_CATEGORIES: Record<string, string[]> = {
-    "Consumer & Retail": [
-        "FMCG",
-        "Retail (Organised & E-commerce)",
-        "Apparel & Fashion",
-        "Jewellery & Luxury Goods",
-        "Consumer Durables",
-        "Footwear & Accessories"
-    ],
-    "Technology & Digital": [
-        "IT Services",
-        "ITeS / BPO / KPO",
-        "Software & SaaS",
-        "E-commerce & Marketplaces",
-        "FinTech",
-        "EdTech",
-        "HealthTech"
-    ],
-    "Manufacturing & Industrial": [
-        "Automobiles & Auto Components",
-        "Engineering & Capital Goods",
-        "Electrical & Electronics",
-        "Textiles & Garments",
-        "Chemicals & Petrochemicals",
-        "Metals & Mining",
-        "Cement & Building Materials"
-    ],
-    "Healthcare & Life Sciences": [
-        "Pharmaceuticals",
-        "Hospitals & Healthcare Services",
-        "Diagnostics",
-        "Medical Devices",
-        "Biotechnology"
-    ],
-    "Financial Services": [
-        "Banking",
-        "NBFCs",
+/** Industry categories keyed by organization type (Step 2 depends on Step 1). */
+export const INDUSTRY_CATEGORIES_BY_ORGANIZATION_TYPE: Record<CanonicalOrganizationType, string[]> = {
+    CORPORATE: [
+        "Banking & Financial Services",
+        "Investment Management / Private Equity / Venture Capital",
         "Insurance",
-        "Mutual Funds & Asset Management",
-        "FinTech"
-    ],
-    "Hospitality, Travel & Leisure": [
-        "Hotels & Resorts",
-        "Restaurants & QSR",
-        "Travel & Tourism",
-        "Airlines",
-        "Event Management"
-    ],
-    "Real Estate & Infrastructure": [
-        "Real Estate & Construction",
-        "Infrastructure & EPC",
-        "Power & Utilities",
+        "FinTech",
+        "Technology / Software / SaaS",
+        "Artificial Intelligence & Data",
+        "Telecommunications",
+        "Media & Entertainment",
+        "Advertising, Marketing & PR",
+        "Consulting",
+        "Legal Services",
+        "Accounting & Audit",
+        "Healthcare & Hospitals",
+        "Pharmaceuticals & Biotechnology",
+        "Medical Devices",
+        "Manufacturing",
+        "Automotive",
+        "Aviation & Aerospace",
+        "Shipping & Logistics",
+        "Energy, Oil & Gas",
         "Renewable Energy",
-        "Smart Cities"
+        "Construction & Infrastructure",
+        "Real Estate & Developers",
+        "Architecture & Interior Design",
+        "Retail & Consumer Goods",
+        "Fashion & Luxury Goods",
+        "E-commerce",
+        "Food & Beverage",
+        "Agriculture & Agribusiness",
+        "Mining & Metals",
+        "Education",
     ],
-    "Media & Communication": [
-        "Advertising & Marketing",
-        "Digital Media",
-        "Print & Publishing",
-        "Television & Broadcasting",
-        "Entertainment & OTT"
+    GOVERNMENT_INSTITUTIONS: [
+        "Government Department",
+        "Embassy / Consulate",
+        "Public Sector Undertaking (PSU)",
+        "Defence & Armed Forces",
+        "Education Institution",
+        "Research Institution",
+        "NGO / Non-Profit",
+        "Trade Association / Chamber of Commerce",
     ],
-    "Logistics & Trade": [
-        "Logistics & Warehousing",
-        "Shipping",
-        "Courier & Express Services",
-        "Ports & ICDs"
+    TRAVEL_AGENT: [
+        "Travel Agency B2C",
+        "Travel Agency B2B (Primary business)",
+        "Foreign Tour operator",
+        "Destination Management Company (DMC)",
+        "Luxury Travel Advisor (Independent)",
+        "MICE / Event Management",
+        "Wedding Planner",
+        "Concierge Service",
+        "Travel Consortium",
     ],
-    "Education & Training": [
-        "Schools & Universities",
-        "Coaching & Test Prep",
-        "Corporate Training"
+    LIFESTYLE_HIGH_NET_WORTH: [
+        "Family Office",
+        "Private Members Club",
+        "Yacht & Aviation Services",
+        "Celebrity / Talent Management",
+        "Art & Cultural Organisation",
+        "Sports Organisation",
     ],
-    "Others / Niche": [
-        "Defence & Aerospace",
-        "Security Services",
-        "Waste Management",
-        "Facility Management",
-        "NGOs & Social Enterprises"
-    ]
+    OTHER: [
+        "Individual / HNI",
+        "Startup",
+        "Co-working Space",
+        "Other",
+    ],
 };
+
+/** Flat list of all industry category labels (for legacy profile display / search). */
+export const INDUSTRY_LIST = Object.entries(INDUSTRY_CATEGORIES_BY_ORGANIZATION_TYPE).flatMap(
+    ([orgType, categories]) =>
+        categories.map((category) => ({
+            category,
+            organizationType: orgType,
+            subCategories: [] as string[],
+        }))
+);
+
+/** @deprecated Prefer INDUSTRY_CATEGORIES_BY_ORGANIZATION_TYPE — kept for older imports. */
+export const INDUSTRY_CATEGORIES: Record<string, string[]> = Object.fromEntries(
+    Object.values(INDUSTRY_CATEGORIES_BY_ORGANIZATION_TYPE)
+        .flat()
+        .map((category) => [category, [] as string[]])
+);
+
+export function getIndustryCategoriesForOrganizationType(
+    organizationType?: string | null
+): string[] {
+    const canonical = toCanonicalOrganizationType(organizationType);
+    return INDUSTRY_CATEGORIES_BY_ORGANIZATION_TYPE[canonical] ?? [];
+}
 
 export const INDIAN_STATES = [
     "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana",

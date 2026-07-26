@@ -36,6 +36,38 @@ import {
   TravelTradeGroupsStep,
 } from "@/components/accounts/TravelTradeSteps";
 import { normalizeTravelTradeProfile } from "@/types/travelTradeProfile";
+import { toCanonicalOrganizationType } from "@/constants/accountData";
+
+/** Map wizard organizationType → legacy Account.type enum. */
+function mapOrganizationTypeToLegacyType(organizationType: string): string {
+  switch (organizationType) {
+    case "CORPORATE":
+      return "CORPORATE";
+    case "TRAVEL_AGENT":
+      return "TRAVEL_AGENT";
+    case "GOVERNMENT_INSTITUTIONS":
+    case "GOVERNMENT":
+    case "GOVERNMENT_BODIES":
+    case "EMBASSY_CONSULATE":
+    case "EMBASSIES_AND_CONSULATES":
+    case "PSU":
+    case "PUBLIC_SECTOR_UNIT":
+      return "GOVERNMENT";
+    case "EVENT_PLANNER":
+    case "EVENT_ORGANISER":
+    case "PCO":
+    case "PROFESSIONAL_CONFERENCE_ORGANISER":
+    case "WEDDING_PLANNER":
+      return "EVENT_PLANNER";
+    case "AIRLINE":
+      return "AIRLINES";
+    case "LIFESTYLE_HIGH_NET_WORTH":
+    case "OTHER":
+    case "CUSTOM":
+    default:
+      return "OTHER";
+  }
+}
 
 export interface AccountWizardSuccessPayload {
   account: Account;
@@ -85,12 +117,25 @@ export const AccountCreationWizard = ({
       return;
     }
     if (editingAccount) {
+      const industry =
+        (editingAccount as Account & { industryCategory?: string }).industry ||
+        (editingAccount as Account & { industryCategory?: string }).industryCategory ||
+        "";
+      const industrySize =
+        editingAccount.industryStatus ||
+        (editingAccount as Account & { industrySize?: string }).industrySize ||
+        "MEDIUM";
       setFormData({
         ...emptyAccountForm,
         ...(editingAccount as AccountFormData),
+        organizationType: toCanonicalOrganizationType(editingAccount.organizationType),
         conglomerateId: (editingAccount as Account & { conglomerateId?: string }).conglomerateId || null,
         parentAccountId: editingAccount.parentAccountId || null,
         isHeadquarter: editingAccount.isHeadquarter ?? false,
+        industryCategory: industry,
+        industrySubCategory: editingAccount.industrySubCategory || "",
+        industrySize,
+        accountTypeOverride: false,
         primaryAccountManager: editingAccount.primaryAccountManager || { userId: "", name: "", city: "" },
         secondaryAccountManagers: editingAccount.secondaryAccountManagers || [],
         propertyIds: editingAccount.propertyIds || [],
@@ -190,7 +235,10 @@ export const AccountCreationWizard = ({
     }
     delete sanitized.industryCategory;
     delete sanitized.industrySize;
-    delete sanitized.zone;
+    // Persist zone; clear unused location fields when blank on submit
+    if (!sanitized.locality) delete sanitized.locality;
+    if (!sanitized.zip) delete sanitized.zip;
+    if (!sanitized.state) delete sanitized.state;
 
     const legacyMap: Record<string, string> = {
       CORPORATE: "CORPORATE",
@@ -199,11 +247,15 @@ export const AccountCreationWizard = ({
       PCO: "EVENT_PLANNER",
       AIRLINE: "AIRLINES",
       GOVERNMENT: "GOVERNMENT",
+      GOVERNMENT_INSTITUTIONS: "GOVERNMENT",
       EMBASSY_CONSULATE: "GOVERNMENT",
       PSU: "GOVERNMENT",
+      LIFESTYLE_HIGH_NET_WORTH: "OTHER",
       CUSTOM: "OTHER",
+      OTHER: "OTHER",
     };
-    sanitized.type = legacyMap[formData.organizationType] || "OTHER";
+    sanitized.type = legacyMap[formData.organizationType] || mapOrganizationTypeToLegacyType(formData.organizationType);
+    sanitized.accountTypeOverride = false;
     if (!sanitized.conglomerateId) delete sanitized.conglomerateId;
     if (!sanitized.parentAccountId) delete sanitized.parentAccountId;
 
@@ -247,28 +299,23 @@ export const AccountCreationWizard = ({
     sanitized.isHeadquarter = formData.isHeadquarter ?? false;
     if (!isTravelTrade(formData)) {
       delete sanitized.travelTradeProfile;
-    } else {
-      sanitized.industry = formData.industryCategory || "Hospitality, Travel & Leisure";
-      sanitized.industrySubCategory =
-        formData.industrySubCategory || "Travel & Tourism";
-      if (sanitized.travelTradeProfile) {
-        const profile = sanitized.travelTradeProfile as Record<string, unknown>;
-        const operatorTypes = (profile.operatorTypes as string[]) ?? [];
-        for (const key of ["inbound", "luxury", "series", "domestic", "groupsIncentives"] as const) {
-          const stepMap: Record<string, string> = {
-            inbound: "INBOUND",
-            luxury: "LUXURY",
-            series: "SERIES",
-            domestic: "DOMESTIC_AGENT",
-            groupsIncentives: "GROUPS_INCENTIVES",
-          };
-          if (!operatorTypes.includes(stepMap[key])) {
-            delete profile[key];
-          }
+    } else if (sanitized.travelTradeProfile) {
+      const profile = sanitized.travelTradeProfile as Record<string, unknown>;
+      const operatorTypes = (profile.operatorTypes as string[]) ?? [];
+      for (const key of ["inbound", "luxury", "series", "domestic", "groupsIncentives"] as const) {
+        const stepMap: Record<string, string> = {
+          inbound: "INBOUND",
+          luxury: "LUXURY",
+          series: "SERIES",
+          domestic: "DOMESTIC_AGENT",
+          groupsIncentives: "GROUPS_INCENTIVES",
+        };
+        if (!operatorTypes.includes(stepMap[key])) {
+          delete profile[key];
         }
       }
     }
-    delete sanitized.type;
+    // Keep type for API persistence (backend also remaps); do not strip industry.
     for (const key of Object.keys(sanitized)) {
       if (sanitized[key] === "") delete sanitized[key];
     }

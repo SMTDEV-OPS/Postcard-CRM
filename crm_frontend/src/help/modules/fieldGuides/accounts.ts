@@ -4,8 +4,7 @@ const W = "accounts.wizard";
 
 export const ACCOUNTS_WIZARD_ORG_FIELDS = [
   field(`${W}.organization.name`, "Account name", "Legal or trade name of the organization.", "Required. Use official entity name for contracts and GST.", { required: true, example: "Sunrise Travels Pvt Ltd" }),
-  field(`${W}.organization.organizationType`, "Organization type", "Category: Corporate, Travel Trade, Event Planner, etc.", "Determines workflow (e.g. Travel Trade shows operator steps).", { required: true }),
-  field(`${W}.organization.customOrganizationType`, "Custom type", "Free-text type when Organization type is Custom.", "Describe the partner category.", { example: "DMC consortium" }),
+  field(`${W}.organization.organizationType`, "Organization type", "Corporate, Government and Institutions, Travel Trade, Lifestyle & High-Net-Worth, or Other.", "Determines industry options and workflow (e.g. Travel Trade shows operator steps).", { required: true }),
   field(`${W}.organization.email`, "Email", "Primary business email.", "Used on account profile and communications.", { example: "sales@sunrise.com" }),
   field(`${W}.organization.website`, "Website", "Company website URL.", "Optional reference for research.", { example: "https://sunrise.com" }),
   field(`${W}.organization.travelOperatorName`, "Travel operator name", "Trade name for travel trade accounts.", "Required for Travel Trade org type.", { required: true }),
@@ -15,10 +14,8 @@ export const ACCOUNTS_WIZARD_ORG_FIELDS = [
 export const ACCOUNTS_WIZARD_CLASSIFICATION_FIELDS = [
   field(`${W}.classification.accountLevel`, "Account level", "Hierarchy tier: Master, Parent, Branch, Subsidiary.", "Defines reporting roll-up.", { required: true }),
   field(`${W}.classification.accountType`, "Account type", "Acquisition, Development, or Retention.", "Sales strategy classification.", { required: true }),
-  field(`${W}.classification.accountTypeOverride`, "Manual type override", "Lock account type regardless of automation.", "Enable when leadership assigns type manually."),
   field(`${W}.classification.isHeadquarter`, "Headquarter account", "Marks this entity as HQ for a group.", "HQ accounts appear prominently in hierarchy views."),
-  field(`${W}.classification.industryCategory`, "Industry category", "Broad industry vertical.", "Used for segmentation and reporting."),
-  field(`${W}.classification.industrySubCategory`, "Industry sub-category", "Finer industry classification.", "Depends on selected category."),
+  field(`${W}.classification.industryCategory`, "Industry category", "Industry vertical for the selected organization type.", "Options depend on organization type chosen in Step 1."),
   field(`${W}.classification.industrySize`, "Industry size", "Small, Medium, or Large band.", "Optional firmographic data."),
 ];
 
@@ -30,12 +27,9 @@ export const ACCOUNTS_WIZARD_HIERARCHY_FIELDS = [
 
 export const ACCOUNTS_WIZARD_LOCATION_FIELDS = [
   field(`${W}.location.city`, "City", "Primary city of operation.", "Used in list filters and territory views.", { example: "Mumbai" }),
-  field(`${W}.location.state`, "State", "State or province.", "Auto-suggested for major Indian cities.", { example: "Maharashtra" }),
-  field(`${W}.location.zone`, "Zone", "Sales zone or region bucket.", "Aligns with internal territory mapping."),
-  field(`${W}.location.locality`, "Locality / area", "Neighborhood or micro-market.", { example: "Bandra West" }),
   field(`${W}.location.country`, "Country", "Country of registration or operation.", { example: "India" }),
+  field(`${W}.location.zone`, "Zone", "Sales zone: North, South, East, or West.", "Aligns with internal territory mapping."),
   field(`${W}.location.addressLine1`, "Address", "Street address line.", { example: "12 Marine Drive" }),
-  field(`${W}.location.zip`, "PIN code", "Postal code.", { example: "400050" }),
 ];
 
 export const ACCOUNTS_WIZARD_COMPLIANCE_FIELDS = [
@@ -44,7 +38,7 @@ export const ACCOUNTS_WIZARD_COMPLIANCE_FIELDS = [
   field(`${W}.compliance.pmsProfileId`, "PMS profile ID", "External PMS company profile reference.", "Only if integrated; usually left blank."),
   field(`${W}.compliance.primaryAccountManager`, "Primary account manager (PAM)", "Main relationship owner.", "Name and city of sales contact."),
   field(`${W}.compliance.secondaryAccountManagers`, "Secondary managers (SAM)", "Additional account coverage.", "Add rows for co-owners or city splits."),
-  field(`${W}.compliance.contractingTypes`, "Contracting types", "Local RFP, annual contract, etc.", "Enable types and set contract periods."),
+  field(`${W}.compliance.contractingTypes`, "Contracting types", "Depends on organization type: Travel Trade (Preferred/Special/Partner Inbound, Global RFP) or Corporate (Employee Holiday Programme, ADHOC Group/FIT, Global RFP).", "Enable types and set contract periods."),
 ];
 
 export const ACCOUNTS_TRAVEL_TRADE_FIELDS = [

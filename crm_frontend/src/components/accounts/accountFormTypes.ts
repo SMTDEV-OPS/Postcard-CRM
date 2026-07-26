@@ -49,12 +49,36 @@ export function formatAccountTypeLabel(value: string | undefined): string {
 }
 
 /** Stored values stay uppercase; labels are proper case for UI */
+export const TRAVEL_TRADE_CONTRACTING_OPTIONS = [
+  { value: "INBOUND_PREFERRED", label: "Preferred (Inbound)" },
+  { value: "INBOUND_SPECIAL", label: "Special (Inbound)" },
+  { value: "INBOUND_PARTNER", label: "Partner (Inbound)" },
+  { value: "GLOBAL_RFP", label: "Global RFP" },
+] as const;
+
+export const CORPORATE_CONTRACTING_OPTIONS = [
+  { value: "EMPLOYEE_HOLIDAY_PROGRAMME", label: "Employee Holiday Programme" },
+  { value: "ADHOC_GROUP", label: "ADHOC Group" },
+  { value: "ADHOC_FIT", label: "ADHOC FIT" },
+  { value: "GLOBAL_RFP", label: "Global RFP" },
+] as const;
+
+/** @deprecated Prefer getContractingTypeOptions — kept for legacy label lookups. */
 export const CONTRACTING_TYPE_OPTIONS = [
+  ...TRAVEL_TRADE_CONTRACTING_OPTIONS,
+  ...CORPORATE_CONTRACTING_OPTIONS.filter((o) => o.value !== "GLOBAL_RFP"),
+  // Legacy values retained for historical records
   { value: "LOCAL_CONTRACTING", label: "Local contracting" },
   { value: "LOCAL_RFP", label: "Local RFP" },
-  { value: "GLOBAL_RFP", label: "Global RFP" },
   { value: "ANNUAL_CONTRACT", label: "Annual contract" },
 ] as const;
+
+export function getContractingTypeOptions(organizationType?: string | null) {
+  if (organizationType === "TRAVEL_AGENT") {
+    return [...TRAVEL_TRADE_CONTRACTING_OPTIONS];
+  }
+  return [...CORPORATE_CONTRACTING_OPTIONS];
+}
 
 export function formatContractingTypeLabel(value: string | undefined): string {
   if (!value) return "—";

@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatAccountTypeLabel } from "./accountFormTypes";
 import type { Account } from "@/services/accounts";
-import { ORGANIZATION_TYPES } from "@/constants/accountData";
+import { formatOrganizationTypeLabel } from "@/constants/accountData";
 import { TravelTradeReviewBlock } from "./TravelTradeReview";
 import { getFieldStyle } from "@/utils/fieldStyling";
 import {
@@ -68,22 +68,15 @@ export function ProfileField({
   );
 }
 
-function orgTypeLabel(type?: string) {
-  if (!type) return "—";
-  const match = ORGANIZATION_TYPES.find((o) => o.value === type);
-  if (match) return match.label;
-  return type
-    .split("_")
-    .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
-    .join(" ");
-}
-
 export function AccountProfileCompany({ account }: { account: Account }) {
   return (
     <ProfileSection title="Company">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <ProfileField label="Legal name" value={account.name} />
-        <ProfileField label="Organization type" value={orgTypeLabel(account.organizationType)} />
+        <ProfileField
+          label="Organization type"
+          value={formatOrganizationTypeLabel(account.organizationType)}
+        />
         <ProfileField label="Industry" value={account.industry || "Not specified"} />
         <ProfileField
           label="Industry size"
@@ -102,23 +95,21 @@ export function AccountProfileCompany({ account }: { account: Account }) {
 }
 
 export function AccountProfileLocation({ account }: { account: Account }) {
-  const addressFields = ["addressLine1", "addressLine2", "city", "state", "country", "zip"];
+  const addressFields = ["addressLine1", "city", "country", "zone"];
   const isSynced = addressFields.some((f) => account.systemSyncedFields?.includes(f));
 
   return (
     <ProfileSection title="Location">
-      <ProfileField
-        label="Address"
-        synced={isSynced}
-        value={
-          <span className="leading-relaxed">
-            {account.locality && `${account.locality}, `}
-            {[account.city, account.state].filter(Boolean).join(", ") || "—"}
-            <br />
-            {[account.country, account.zip].filter(Boolean).join(" · ")}
-          </span>
-        }
-      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <ProfileField label="City" value={account.city || "—"} synced={isSynced} />
+        <ProfileField label="Country" value={account.country || "—"} />
+        <ProfileField label="Zone" value={account.zone || "—"} />
+        <ProfileField
+          label="Address"
+          synced={isSynced}
+          value={account.addressLine1 || "—"}
+        />
+      </div>
       {(account.email || account.website) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
           {account.email && <ProfileField label="Email" value={account.email} />}
@@ -135,7 +126,6 @@ export function AccountProfileCommercial({ account }: { account: Account }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <ProfileField label="Account type" value={formatAccountTypeLabel(account.accountType)} />
         <ProfileField label="Account level" value={account.accountLevel?.replace(/_/g, " ") || "—"} />
-        <ProfileField label="Zone" value={account.zone || "—"} />
         <ProfileField
           label="Status"
           value={

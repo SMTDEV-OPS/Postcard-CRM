@@ -6,7 +6,26 @@ export interface IAccount extends Document {
   name: string; // Company Name
 
   // Organization Classification (NEW)
-  organizationType: "CORPORATE" | "TRAVEL_AGENT" | "EVENT_PLANNER" | "WEDDING_PLANNER" | "PCO" | "AIRLINE" | "GOVERNMENT" | "EMBASSY_CONSULATE" | "PSU" | "CUSTOM" | "EVENT_ORGANISER" | "PROFESSIONAL_CONFERENCE_ORGANISER" | "GOVERNMENT_BODIES" | "EMBASSIES_AND_CONSULATES" | "PUBLIC_SECTOR_UNIT";
+  organizationType:
+    | "CORPORATE"
+    | "TRAVEL_AGENT"
+    | "GOVERNMENT_INSTITUTIONS"
+    | "LIFESTYLE_HIGH_NET_WORTH"
+    | "OTHER"
+    // Legacy values retained for historical records and imports
+    | "EVENT_PLANNER"
+    | "WEDDING_PLANNER"
+    | "PCO"
+    | "AIRLINE"
+    | "GOVERNMENT"
+    | "EMBASSY_CONSULATE"
+    | "PSU"
+    | "CUSTOM"
+    | "EVENT_ORGANISER"
+    | "PROFESSIONAL_CONFERENCE_ORGANISER"
+    | "GOVERNMENT_BODIES"
+    | "EMBASSIES_AND_CONSULATES"
+    | "PUBLIC_SECTOR_UNIT";
   customOrganizationType?: string; // When organizationType = "CUSTOM"
   customOrganizationTypes?: string[];
 
@@ -69,7 +88,17 @@ export interface IAccount extends Document {
 
   // Contracting (NEW - Multiple types with timelines)
   contractingTypes?: Array<{
-    type: "LOCAL_CONTRACTING" | "LOCAL_RFP" | "GLOBAL_RFP" | "ANNUAL_CONTRACT";
+    type:
+      | "INBOUND_PREFERRED"
+      | "INBOUND_SPECIAL"
+      | "INBOUND_PARTNER"
+      | "EMPLOYEE_HOLIDAY_PROGRAMME"
+      | "ADHOC_GROUP"
+      | "ADHOC_FIT"
+      | "GLOBAL_RFP"
+      | "LOCAL_CONTRACTING"
+      | "LOCAL_RFP"
+      | "ANNUAL_CONTRACT";
     year?: number;
     fromYear?: number;
     toYear?: number;
@@ -192,6 +221,10 @@ const accountSchema = new Schema<IAccount>(
       enum: [
         "CORPORATE",
         "TRAVEL_AGENT",
+        "GOVERNMENT_INSTITUTIONS",
+        "LIFESTYLE_HIGH_NET_WORTH",
+        "OTHER",
+        // Legacy values retained for historical records and imports
         "EVENT_PLANNER",
         "WEDDING_PLANNER",
         "PCO",
@@ -294,7 +327,19 @@ const accountSchema = new Schema<IAccount>(
       {
         type: {
           type: String,
-          enum: ["LOCAL_CONTRACTING", "LOCAL_RFP", "GLOBAL_RFP", "ANNUAL_CONTRACT"],
+          enum: [
+            "INBOUND_PREFERRED",
+            "INBOUND_SPECIAL",
+            "INBOUND_PARTNER",
+            "EMPLOYEE_HOLIDAY_PROGRAMME",
+            "ADHOC_GROUP",
+            "ADHOC_FIT",
+            "GLOBAL_RFP",
+            // Legacy
+            "LOCAL_CONTRACTING",
+            "LOCAL_RFP",
+            "ANNUAL_CONTRACT",
+          ],
         },
         year: { type: Number },
         fromYear: { type: Number },

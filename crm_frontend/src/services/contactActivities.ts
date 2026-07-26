@@ -1,6 +1,43 @@
 import { API_BASE_URL, withAuthHeaders } from "./api";
 
-export type ContactActivityType = "SALES_CALL" | "TELECALL" | "EMAIL" | "CLIENT_SITE_INSPECTION";
+export const CONTACT_ACTIVITY_TYPE_OPTIONS = [
+  { value: "SALES_CALL", label: "Sales call" },
+  { value: "TELECALL", label: "Tele-call" },
+  { value: "TRAINING", label: "Training" },
+  { value: "NETWORKING", label: "Networking" },
+  { value: "COLD_CALL", label: "Cold Call" },
+  { value: "INTERNAL_MEETING", label: "Internal meeting" },
+  { value: "SITE_INSPECTION", label: "Site inspection" },
+  { value: "OFF_BASE_TRAVEL", label: "Off base travel" },
+  { value: "VIRTUAL_MEETING", label: "Virtual meeting" },
+] as const;
+
+export type SelectableContactActivityType =
+  (typeof CONTACT_ACTIVITY_TYPE_OPTIONS)[number]["value"];
+
+/** Legacy values remain readable but are not offered for new activities. */
+export type ContactActivityType =
+  | SelectableContactActivityType
+  | "EMAIL"
+  | "CLIENT_SITE_INSPECTION";
+
+const LEGACY_ACTIVITY_TYPE_LABELS: Record<string, string> = {
+  EMAIL: "Email",
+  CLIENT_SITE_INSPECTION: "Client site inspection",
+};
+
+export function formatContactActivityType(type?: string): string {
+  if (!type) return "Activity";
+  return (
+    CONTACT_ACTIVITY_TYPE_OPTIONS.find((option) => option.value === type)?.label ??
+    LEGACY_ACTIVITY_TYPE_LABELS[type] ??
+    type
+      .toLowerCase()
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
+  );
+}
 
 export type ContactActivityStatus = "ACTIVE" | "CANCELLED";
 

@@ -5,6 +5,10 @@ export type AccountType = "TRAVEL_AGENT" | "CORPORATE" | "EVENT_PLANNER" | "AIRL
 export type OrganizationType =
   | "CORPORATE"
   | "TRAVEL_AGENT"
+  | "GOVERNMENT_INSTITUTIONS"
+  | "LIFESTYLE_HIGH_NET_WORTH"
+  | "OTHER"
+  // Legacy values retained for historical records and imports
   | "EVENT_PLANNER"
   | "WEDDING_PLANNER"
   | "PCO"
@@ -20,7 +24,18 @@ export type OrganizationType =
   | "PUBLIC_SECTOR_UNIT";
 export type AccountLevel = "MASTER" | "PARENT" | "BRANCH" | "SUBSIDIARY";
 export type IndustrySize = "SMALL" | "MEDIUM" | "LARGE";
-export type ContractingType = "LOCAL_CONTRACTING" | "LOCAL_RFP" | "GLOBAL_RFP" | "ANNUAL_CONTRACT";
+export type ContractingType =
+  | "INBOUND_PREFERRED"
+  | "INBOUND_SPECIAL"
+  | "INBOUND_PARTNER"
+  | "EMPLOYEE_HOLIDAY_PROGRAMME"
+  | "ADHOC_GROUP"
+  | "ADHOC_FIT"
+  | "GLOBAL_RFP"
+  // Legacy
+  | "LOCAL_CONTRACTING"
+  | "LOCAL_RFP"
+  | "ANNUAL_CONTRACT";
 export type AccountClassification = "ACQUISITION" | "DEVELOPMENT" | "RETENTION";
 export type AccountStatus = "LEAD" | "PROSPECT" | "ACTIVE" | "INACTIVE" | "BLACKLISTED" | "NA";
 

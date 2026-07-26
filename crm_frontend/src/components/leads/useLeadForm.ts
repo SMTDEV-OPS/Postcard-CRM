@@ -56,7 +56,8 @@ export const leadFormSchema = z.object({
   hotels: z.array(hotelEntrySchema).min(1),
   bookingSource: z.string().min(1, "Booking source is required"),
   guestContactNumber: z.string().min(10, "Valid contact number is required"),
-  guestEmail: z.string().email("Valid email is required"),
+  guestEmail: z.union([z.string().email("Valid email is required"), z.literal("")]).optional(),
+  vipStatus: z.enum(["NONE", "VIP", "VVIP"]).default("NONE"),
   alternateContact: z.string().optional(),
   occupation: z.string().optional(),
   specialRequests: z.string().optional(),
@@ -85,6 +86,7 @@ export const defaultLeadFormValues: LeadFormData = {
   bookingSource: "",
   guestContactNumber: "",
   guestEmail: "",
+  vipStatus: "NONE" as const,
   alternateContact: "",
   occupation: "",
   specialRequests: "",
@@ -185,6 +187,7 @@ export function buildLeadPayload(
     gstin: data.gstin || undefined,
     hotels: hotels.length > 0 ? hotels : undefined,
     bookingSource: data.bookingSource || undefined,
+    vipStatus: data.vipStatus && data.vipStatus !== "NONE" ? data.vipStatus : undefined,
     customData: Object.keys(customData).length > 0 ? customData : undefined,
   };
 

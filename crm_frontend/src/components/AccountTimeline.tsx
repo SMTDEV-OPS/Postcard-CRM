@@ -49,6 +49,7 @@ import { createAccountNote } from "@/services/accountNotes";
 import {
   listContactActivities,
   cancelContactActivity,
+  formatContactActivityType,
   type ContactActivity,
 } from "@/services/contactActivities";
 
@@ -155,7 +156,7 @@ export function AccountTimeline({ accountId, useUnifiedTimeline = true, canAddNo
           id: a._id || a.id,
           source: "contact_activity",
           date: a.startsAt || a.performedAt,
-          summary: `${a.activityType?.replace(/_/g, " ")}${a.contactId?.name ? ` • ${a.contactId.name}` : ""}${a.category ? ` • ${a.category}` : ""}`,
+          summary: `${formatContactActivityType(a.activityType)}${a.contactId?.name ? ` • ${a.contactId.name}` : ""}${a.category ? ` • ${a.category}` : ""}`,
           detail: a,
         }));
         mapped.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

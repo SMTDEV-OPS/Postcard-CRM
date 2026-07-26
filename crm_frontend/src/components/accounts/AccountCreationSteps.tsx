@@ -8,10 +8,10 @@ import { X } from "lucide-react";
 import {
   ORGANIZATION_TYPES,
   ACCOUNT_LEVELS,
-  INDUSTRY_CATEGORIES,
   MAJOR_INDIAN_CITIES,
   MONTHS,
-  getStatesForCity,
+  getIndustryCategoriesForOrganizationType,
+  formatOrganizationTypeLabel,
 } from "@/constants/accountData";
 import { Account } from "@/services/accounts";
 import { Conglomerate } from "@/services/conglomerates";
@@ -22,7 +22,7 @@ import {
   AccountFormData,
   ACCOUNT_TYPE_OPTIONS,
   buildAccountHierarchyProperties,
-  CONTRACTING_TYPE_OPTIONS,
+  getContractingTypeOptions,
   defaultContractingPeriod,
   formatAccountTypeLabel,
   formatContractingPeriod,
@@ -32,9 +32,6 @@ import { emptyTravelTradeProfile } from "@/types/travelTradeProfile";
 import { isTravelTrade } from "./travelTradeStepPlan";
 import { TravelTradeOrganizationFields } from "./TravelTradeSteps";
 import { TravelTradeReviewBlock } from "./TravelTradeReview";
-
-const TRAVEL_TRADE_INDUSTRY_CATEGORY = "Hospitality, Travel & Leisure";
-const TRAVEL_TRADE_INDUSTRY_SUB_CATEGORY = "Travel & Tourism";
 
 export interface StepContext {
   formData: AccountFormData;
@@ -70,13 +67,23 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
           <Select
             value={formData.organizationType}
             onValueChange={(v) => {
-              const patch: Partial<AccountFormData> = { organizationType: v };
-              if (v === "TRAVEL_AGENT") {
-                if (!formData.travelTradeProfile) {
-                  patch.travelTradeProfile = emptyTravelTradeProfile();
+              const allowed = getIndustryCategoriesForOrganizationType(v);
+              const contractingOptions = getContractingTypeOptions(v).map((o) => o.value);
+              const patch: Partial<AccountFormData> = {
+                organizationType: v,
+                industrySubCategory: "",
+              };
+              if (formData.industryCategory && !allowed.includes(formData.industryCategory)) {
+                patch.industryCategory = "";
+              }
+              if (formData.contractingTypes?.length) {
+                const next = formData.contractingTypes.filter((t) => contractingOptions.includes(t.type));
+                if (next.length !== formData.contractingTypes.length) {
+                  patch.contractingTypes = next;
                 }
-                patch.industryCategory = TRAVEL_TRADE_INDUSTRY_CATEGORY;
-                patch.industrySubCategory = TRAVEL_TRADE_INDUSTRY_SUB_CATEGORY;
+              }
+              if (v === "TRAVEL_AGENT" && !formData.travelTradeProfile) {
+                patch.travelTradeProfile = emptyTravelTradeProfile();
               }
               set(patch);
             }}
@@ -93,16 +100,6 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
             </SelectContent>
           </Select>
         </div>
-        {formData.organizationType === "CUSTOM" && (
-          <div className="space-y-1.5">
-            <FormLabelHelp helpId="accounts.wizard.organization.customOrganizationType">Custom type</FormLabelHelp>
-            <Input
-              value={formData.customOrganizationType}
-              onChange={(e) => set({ customOrganizationType: e.target.value })}
-              placeholder="Specify type"
-            />
-          </div>
-        )}
       </div>
       {isTravelTrade(formData) && (
         <TravelTradeOrganizationFields formData={formData} set={set} />
@@ -131,6 +128,12 @@ export function AccountStepOrganization({ formData, set }: StepContext) {
 }
 
 export function AccountStepClassification({ formData, set }: StepContext) {
+  const industryOptions = getIndustryCategoriesForOrganizationType(formData.organizationType);
+  const industryValue =
+    formData.industryCategory && industryOptions.includes(formData.industryCategory)
+      ? formData.industryCategory
+      : "none";
+
   return (
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
       <div className={formGrid2}>
@@ -168,16 +171,6 @@ export function AccountStepClassification({ formData, set }: StepContext) {
       <div className="flex flex-wrap gap-6">
         <div className="flex items-center gap-2">
           <Checkbox
-            id="accountTypeOverride"
-            checked={formData.accountTypeOverride}
-            onCheckedChange={(v) => set({ accountTypeOverride: !!v })}
-          />
-          <label htmlFor="accountTypeOverride" className="text-sm cursor-pointer">
-            Manual type override
-          </label>
-        </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
             id="isHq"
             checked={formData.isHeadquarter}
             onCheckedChange={(v) => set({ isHeadquarter: !!v })}
@@ -190,28 +183,22 @@ export function AccountStepClassification({ formData, set }: StepContext) {
       <div className={cn(formGrid2, "pt-2 border-t border-border")}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.classification.industryCategory">Industry category</FormLabelHelp>
-          {isTravelTrade(formData) ? (
-            <div className="flex h-10 items-center rounded-md border border-border bg-muted/40 px-3 text-sm text-text">
-              {TRAVEL_TRADE_INDUSTRY_CATEGORY}
-            </div>
-          ) : (
-            <Select
-              value={formData.industryCategory || "none"}
-              onValueChange={(v) => set({ industryCategory: v === "none" ? "" : v, industrySubCategory: "" })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Select —</SelectItem>
-                {Object.keys(INDUSTRY_CATEGORIES).map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <Select
+            value={industryValue}
+            onValueChange={(v) => set({ industryCategory: v === "none" ? "" : v, industrySubCategory: "" })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— Select —</SelectItem>
+              {industryOptions.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.classification.industrySize">Industry size</FormLabelHelp>
@@ -344,23 +331,14 @@ export function AccountStepHierarchy({ formData, set, conglomerates, availableAc
 }
 
 export function AccountStepLocation({ formData, set }: StepContext) {
-  const stateOptions = formData.city ? getStatesForCity(formData.city) : [];
-
   const handleCityChange = (v: string) => {
     const city = v === "none" ? "" : v;
-    const states = city ? getStatesForCity(city) : [];
-    const patch: Partial<AccountFormData> = { city };
-    if (states.length === 1) {
-      patch.state = states[0];
-    } else if (formData.state && states.length > 0 && !states.includes(formData.state)) {
-      patch.state = "";
-    }
-    set(patch);
+    set({ city });
   };
 
   return (
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
-      <div className="grid grid-cols-3 gap-3">
+      <div className={formGrid2}>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.location.city">City</FormLabelHelp>
           <Select value={formData.city || "none"} onValueChange={handleCityChange}>
@@ -378,52 +356,6 @@ export function AccountStepLocation({ formData, set }: StepContext) {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <FormLabelHelp helpId="accounts.wizard.location.state">State</FormLabelHelp>
-          <Select
-            value={formData.state || "none"}
-            onValueChange={(v) => set({ state: v === "none" ? "" : v })}
-            disabled={!formData.city}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={formData.city ? "Select state" : "Select city first"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
-              {stateOptions.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <FormLabelHelp helpId="accounts.wizard.location.zone">Zone</FormLabelHelp>
-          <Select value={formData.zone || "none"} onValueChange={(v) => set({ zone: v === "none" ? "" : v })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Zone" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
-              {["NORTH", "SOUTH", "EAST", "WEST", "CENTRAL"].map((z) => (
-                <SelectItem key={z} value={z}>
-                  {z}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div className={formGrid2}>
-        <div className="space-y-1.5">
-          <FormLabelHelp helpId="accounts.wizard.location.locality">Locality / area</FormLabelHelp>
-          <Input
-            value={formData.locality}
-            onChange={(e) => set({ locality: e.target.value })}
-            placeholder="e.g. Bandra Kurla Complex"
-          />
-        </div>
-        <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.location.country">Country</FormLabelHelp>
           <Select value={formData.country} onValueChange={(v) => set({ country: v })}>
             <SelectTrigger>
@@ -438,19 +370,27 @@ export function AccountStepLocation({ formData, set }: StepContext) {
       </div>
       <div className={formGrid2}>
         <div className="space-y-1.5">
+          <FormLabelHelp helpId="accounts.wizard.location.zone">Zone</FormLabelHelp>
+          <Select value={formData.zone || "none"} onValueChange={(v) => set({ zone: v === "none" ? "" : v })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Zone" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— Select —</SelectItem>
+              {["NORTH", "SOUTH", "EAST", "WEST"].map((z) => (
+                <SelectItem key={z} value={z}>
+                  {z.charAt(0) + z.slice(1).toLowerCase()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.location.addressLine1">Address</FormLabelHelp>
           <Input
             value={formData.addressLine1}
             onChange={(e) => set({ addressLine1: e.target.value })}
             placeholder="Street / building"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <FormLabelHelp helpId="accounts.wizard.location.zip">PIN code</FormLabelHelp>
-          <Input
-            value={formData.zip}
-            onChange={(e) => set({ zip: e.target.value })}
-            placeholder="6-digit PIN"
           />
         </div>
       </div>
@@ -460,6 +400,7 @@ export function AccountStepLocation({ formData, set }: StepContext) {
 
 export function AccountStepCompliance({ ctx }: { ctx: StepContext }) {
   const { formData, set, addSam, removeSam, updateSam, toggleContractingType, updateContractingType } = ctx;
+  const contractingOptions = getContractingTypeOptions(formData.organizationType);
 
   return (
     <div className="space-y-4">
@@ -527,7 +468,7 @@ export function AccountStepCompliance({ ctx }: { ctx: StepContext }) {
 
       <div className="rounded-lg border border-border bg-surface p-4 space-y-3">
         <h4 className="text-sm font-medium text-text">Contracting (optional)</h4>
-        {CONTRACTING_TYPE_OPTIONS.map(({ value: type, label }) => {
+        {contractingOptions.map(({ value: type, label }) => {
           const isChecked = formData.contractingTypes.some((t) => t.type === type);
           const entry = formData.contractingTypes.find((t) => t.type === type);
           return (
@@ -657,8 +598,7 @@ export function AccountReviewSummary({
   availableAccounts: Account[];
 }) {
   const parent = availableAccounts.find((a) => a.id === formData.parentAccountId);
-  const orgLabel =
-    ORGANIZATION_TYPES.find((t) => t.value === formData.organizationType)?.label || formData.organizationType;
+  const orgLabel = formatOrganizationTypeLabel(formData.organizationType);
 
   return (
     <div className="rounded-lg border border-border bg-hover/40 p-4 space-y-3 text-sm">

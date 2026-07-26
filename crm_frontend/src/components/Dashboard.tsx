@@ -33,6 +33,7 @@ import { HelpPageHeader } from "@/components/help/HelpPageHeader";
 import { PageSkeleton } from "@/components/patterns";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { formatContactActivityType } from "@/services/contactActivities";
 
 interface DashboardProps {
   onViewLead?: (leadId: string) => void;
@@ -244,7 +245,7 @@ const Dashboard = ({
                 className="w-full text-left p-4 hover:bg-muted/40 transition-colors"
                 onClick={() => activity.accountId?._id && onViewAccount?.(activity.accountId._id)}
               >
-                <p className="text-sm font-medium">{activity.activityType.replace(/_/g, " ")}</p>
+                <p className="text-sm font-medium">{formatContactActivityType(activity.activityType)}</p>
                 <p className="text-xs text-text-muted">
                   {activity.accountId?.name} · {activity.startsAt ? format(new Date(activity.startsAt), "dd MMM HH:mm") : ""}
                 </p>

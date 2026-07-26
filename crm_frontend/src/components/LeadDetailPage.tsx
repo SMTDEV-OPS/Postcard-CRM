@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { Button, Badge, PageHeader } from "@/components/shared";
 import { PageSkeleton } from "@/components/patterns";
-import { getLeadDetail, LeadDetail, LeadActivity, LeadCommunication, updateLead, addLeadNote, LeadStatus, HeatLevel, getLeadContactInfo, LeadContactDetails } from "@/services/leads";
+import { getLeadDetail, LeadDetail, LeadActivity, LeadCommunication, updateLead, addLeadNote, LeadStatus, HeatLevel, getLeadContactInfo, LeadContactDetails, SELECTABLE_CLOSED_REASONS, formatClosedReasonLabel } from "@/services/leads";
 import { PipelineService, PipelineStage } from "@/services/pipelines";
 import { listEmails, EmailMessage } from "@/services/email";
 import { ScheduleFollowUpDialog } from "@/components/ScheduleFollowUpDialog";
@@ -42,7 +42,9 @@ import { getPaymentLinksForLead, createPaymentLink, type PaymentLink } from "@/s
 import { getCommunicationTimeline, updateCallStatus, type CommunicationTimelineItem } from "@/services/communications";
 import { Textarea } from "@/components/ui/textarea";
 import { API_BASE_URL, withAuthHeaders, getAuthToken } from "@/services/api";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { EditContactDetailsDialog } from "@/components/EditContactDetailsDialog";
 import { EditLeadDetailsDialog, LeadTripDetails } from "@/components/EditLeadDetailsDialog";
 import { CreateBookingDialog } from "@/components/CreateBookingDialog";
@@ -266,6 +268,10 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
   const [isCreateBookingDialogOpen, setIsCreateBookingDialogOpen] = useState(false);
 
   const [stageMoveError, setStageMoveError] = useState<{ stageName: string; missingFields: { id: string; name: string; slug: string }[] } | null>(null);
+  const [lostReasonDialogOpen, setLostReasonDialogOpen] = useState(false);
+  const [pendingLostStageId, setPendingLostStageId] = useState<string | null>(null);
+  const [pendingClosedReason, setPendingClosedReason] = useState<string>("");
+  const [isMovingToLost, setIsMovingToLost] = useState(false);
   const [followUps, setFollowUps] = useState<Task[]>([]);
   const [workflowLogs, setWorkflowLogs] = useState<WorkflowExecutionLog[]>([]);
   const [callQualityScores, setCallQualityScores] = useState<CallQualityScore[]>([]);
@@ -779,6 +785,13 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
 
   const handleStageMoveClick = async (targetStageId: string) => {
     setStageMoveError(null);
+    const targetStage = pipelineStages.find((s) => s._id === targetStageId);
+    if (targetStage?.terminalType === "LOST") {
+      setPendingLostStageId(targetStageId);
+      setPendingClosedReason(localClosedReason || "");
+      setLostReasonDialogOpen(true);
+      return;
+    }
     try {
       const res = await fetch(`${API_BASE_URL}/leads/${leadId}`, {
         method: "PATCH",
@@ -803,6 +816,53 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
         description: err instanceof Error ? err.message : "Failed to move stage",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleConfirmLostStage = async () => {
+    if (!pendingLostStageId || !pendingClosedReason) {
+      toast({
+        title: "Closure reason required",
+        description: "Select a closure reason before marking the lead as Lost.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      setIsMovingToLost(true);
+      const res = await fetch(`${API_BASE_URL}/leads/${leadId}`, {
+        method: "PATCH",
+        headers: withAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          stageId: pendingLostStageId,
+          status: "LOST",
+          closedReason: pendingClosedReason,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 422 && data.missingFields?.length) {
+        const stage = pipelineStages.find((s) => s._id === pendingLostStageId);
+        setStageMoveError({
+          stageName: stage?.name ?? "that stage",
+          missingFields: data.missingFields,
+        });
+        setLostReasonDialogOpen(false);
+        return;
+      }
+      if (!res.ok) throw new Error(data.message || data.error || "Failed to move stage");
+      setLocalClosedReason(pendingClosedReason);
+      setLostReasonDialogOpen(false);
+      setPendingLostStageId(null);
+      await loadLeadDetail();
+      toast({ title: "Lead marked Lost", description: formatClosedReasonLabel(pendingClosedReason) });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to move stage",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMovingToLost(false);
     }
   };
 
@@ -842,6 +902,12 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
     <span className="flex items-center gap-2 flex-wrap">
       {guestPhone && <span>{guestPhone}</span>}
       {lead.source && <Badge label={lead.source} variant={getSourceBadgeVariant(lead.source)} />}
+      {(lead.vipStatus === "VIP" || lead.vipStatus === "VVIP" || lead.tags?.includes("VIP") || lead.tags?.includes("VVIP")) && (
+        <Badge
+          label={lead.vipStatus === "VVIP" || lead.tags?.includes("VVIP") ? "VVIP" : "VIP"}
+          variant="heat_hot"
+        />
+      )}
     </span>
   );
 
@@ -855,7 +921,7 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
       )}
       <PageHeader
         title={guestName || "Lead"}
-        subtitle={guestPhone || lead.source ? subtitleEl : undefined}
+        subtitle={guestPhone || lead.source || lead.vipStatus === "VIP" || lead.vipStatus === "VVIP" || lead.tags?.includes("VIP") || lead.tags?.includes("VVIP") ? subtitleEl : undefined}
         actions={
           <div className={embedded ? "flex flex-wrap gap-2 justify-end max-w-full" : undefined}>
             <Button variant="secondary" icon={Phone} size="sm" aria-label="Call">
@@ -1042,6 +1108,11 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
                     {f.name}
                   </button>
                 ))}
+              </div>
+            )}
+            {lead.closedReason && (
+              <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-muted)" }}>
+                Closure reason: <span style={{ color: "var(--text)", fontWeight: 500 }}>{formatClosedReasonLabel(lead.closedReason)}</span>
               </div>
             )}
           </div>
@@ -1408,6 +1479,54 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
       </div>
 
       {/* Dialogs */}
+      <Dialog
+        open={lostReasonDialogOpen}
+        onOpenChange={(open) => {
+          setLostReasonDialogOpen(open);
+          if (!open) {
+            setPendingLostStageId(null);
+            setPendingClosedReason("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Closure reason</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="closed-reason">Why is this lead Lost?</Label>
+            <Select value={pendingClosedReason || undefined} onValueChange={setPendingClosedReason}>
+              <SelectTrigger id="closed-reason">
+                <SelectValue placeholder="Select closure reason" />
+              </SelectTrigger>
+              <SelectContent>
+                {SELECTABLE_CLOSED_REASONS.map((reason) => (
+                  <SelectItem key={reason.value} value={reason.value}>
+                    {reason.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setLostReasonDialogOpen(false);
+                setPendingLostStageId(null);
+              }}
+              disabled={isMovingToLost}
+            >
+              Cancel
+            </Button>
+            <Button onClick={() => void handleConfirmLostStage()} disabled={isMovingToLost || !pendingClosedReason}>
+              {isMovingToLost ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Mark as Lost
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={isComposeEmailOpen} onOpenChange={setIsComposeEmailOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>

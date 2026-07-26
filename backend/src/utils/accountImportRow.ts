@@ -25,7 +25,7 @@ export function mapImportRowToAccountDoc(row: Record<string, unknown>) {
     contractingType: row["Contracting Type"] || undefined,
     profileStatus: "ACTIVE" as const,
     status: "ACTIVE" as const,
-    organizationType: "CUSTOM" as const,
+    organizationType: "OTHER" as const,
     type: "OTHER" as const,
     accountLevel: "MASTER" as const,
   };

@@ -9,7 +9,17 @@ export const contactActivitiesRouter = Router();
 
 contactActivitiesRouter.use(requireAuth);
 
-const activityTypeEnum = z.enum(["SALES_CALL", "TELECALL", "EMAIL", "CLIENT_SITE_INSPECTION"]);
+const activityTypeEnum = z.enum([
+  "SALES_CALL",
+  "TELECALL",
+  "TRAINING",
+  "NETWORKING",
+  "COLD_CALL",
+  "INTERNAL_MEETING",
+  "SITE_INSPECTION",
+  "OFF_BASE_TRAVEL",
+  "VIRTUAL_MEETING",
+]);
 const activityStatusEnum = z.enum(["ACTIVE", "CANCELLED"]);
 const responseStatusEnum = z.enum(["NEEDS_ACTION", "ACCEPTED", "DECLINED", "TENTATIVE"]);
 const attendeeKindEnum = z.enum(["INTERNAL", "EXTERNAL"]);

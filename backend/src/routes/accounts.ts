@@ -22,12 +22,49 @@ export const accountsRouter = Router();
 
 accountsRouter.use(requireAuth);
 
+/** Map organizationType → legacy Account.type enum (6 values). */
+function mapOrganizationTypeToLegacyType(
+  organizationType: string
+): "TRAVEL_AGENT" | "CORPORATE" | "EVENT_PLANNER" | "AIRLINES" | "GOVERNMENT" | "OTHER" {
+  switch (organizationType) {
+    case "CORPORATE":
+      return "CORPORATE";
+    case "TRAVEL_AGENT":
+      return "TRAVEL_AGENT";
+    case "GOVERNMENT_INSTITUTIONS":
+    case "GOVERNMENT":
+    case "GOVERNMENT_BODIES":
+    case "EMBASSY_CONSULATE":
+    case "EMBASSIES_AND_CONSULATES":
+    case "PSU":
+    case "PUBLIC_SECTOR_UNIT":
+      return "GOVERNMENT";
+    case "EVENT_PLANNER":
+    case "EVENT_ORGANISER":
+    case "PCO":
+    case "PROFESSIONAL_CONFERENCE_ORGANISER":
+    case "WEDDING_PLANNER":
+      return "EVENT_PLANNER";
+    case "AIRLINE":
+      return "AIRLINES";
+    case "LIFESTYLE_HIGH_NET_WORTH":
+    case "OTHER":
+    case "CUSTOM":
+    default:
+      return "OTHER";
+  }
+}
+
 const accountSchema = z.object({
   // Step 1 & 2: Basic & Org Type
   name: z.string().min(1),
   organizationType: z.enum([
     "CORPORATE",
     "TRAVEL_AGENT",
+    "GOVERNMENT_INSTITUTIONS",
+    "LIFESTYLE_HIGH_NET_WORTH",
+    "OTHER",
+    // Legacy values retained for historical records and imports
     "EVENT_PLANNER",
     "WEDDING_PLANNER",
     "PCO",
@@ -69,6 +106,7 @@ const accountSchema = z.object({
   state: z.string().optional(),
   country: z.string().optional(),
   locality: z.string().optional(),
+  zone: z.enum(["NORTH", "SOUTH", "EAST", "WEST", "CENTRAL"]).optional().or(z.string().optional()),
   gstin: z.string().regex(/^[0-9A-Z]{15}$|^[0-9]{13}$/).optional().or(z.literal("")), // Validates 13 digit or standard GSTIN
   panNumber: z.string().optional(),
   pmsProfileId: z.string().optional(),
@@ -96,7 +134,19 @@ const accountSchema = z.object({
 
   // Step 12: Contracting
   contractingTypes: z.array(z.object({
-    type: z.enum(["LOCAL_CONTRACTING", "LOCAL_RFP", "GLOBAL_RFP", "ANNUAL_CONTRACT"]),
+    type: z.enum([
+      "INBOUND_PREFERRED",
+      "INBOUND_SPECIAL",
+      "INBOUND_PARTNER",
+      "EMPLOYEE_HOLIDAY_PROGRAMME",
+      "ADHOC_GROUP",
+      "ADHOC_FIT",
+      "GLOBAL_RFP",
+      // Legacy
+      "LOCAL_CONTRACTING",
+      "LOCAL_RFP",
+      "ANNUAL_CONTRACT",
+    ]),
     year: z.number().optional(),
     fromYear: z.number().optional(),
     toYear: z.number().optional(),
@@ -373,7 +423,7 @@ accountsRouter.post(
         ...data,
         parentAccountId: data.parentAccountId || null,
         hqAccountId: data.hqAccountId || null,
-        type: data.organizationType as any,
+        type: mapOrganizationTypeToLegacyType(data.organizationType),
         profileStatus: normalizedProfileStatus,
         isHeadquarter: data.isHeadquarter ?? false,
         industryCategory: data.industry,
@@ -479,6 +529,9 @@ accountsRouter.patch(
       if (data.isHeadquarter !== undefined) {
         updateData.isHeadquarter = data.isHeadquarter;
       }
+      if (data.organizationType !== undefined) {
+        updateData.type = mapOrganizationTypeToLegacyType(data.organizationType);
+      }
       if (data.industry !== undefined) {
         updateData.industryCategory = data.industry;
       }
@@ -544,18 +597,20 @@ accountsRouter.get("/week-planner", async (req, res, next) => {
     const activities = await ContactActivityModel.find({
       accountId: { $in: accountIds },
       startsAt: { $gte: from, $lte: to },
+      status: "ACTIVE",
     })
       .populate("contactId", "name")
       .populate("accountId", "name")
+      .populate("leadId", "leadNumber status")
       .lean();
 
     const tasks = await TaskModel.find({
       ownerUserId: userId,
       dueAt: { $gte: from, $lte: to },
       status: { $ne: "CANCELLED" },
-      accountId: { $in: accountIds },
     })
       .populate("accountId", "name")
+      .populate("leadId", "leadNumber status accountId")
       .lean();
 
     const followUps = myAccounts.filter((a: any) => {

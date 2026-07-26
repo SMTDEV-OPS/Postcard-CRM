@@ -3,12 +3,17 @@ import { API_BASE_URL, withAuthHeaders } from "./api";
 export interface WeekPlannerActivity {
   _id: string;
   activityType: string;
+  status?: "ACTIVE" | "CANCELLED";
   category?: string;
   startsAt: string;
   endsAt?: string;
   purpose?: string;
-  contactId?: { name: string };
+  discussion?: string;
+  output?: string;
+  followUp?: string;
+  contactId?: { _id?: string; name: string };
   accountId?: { _id: string; name: string };
+  leadId?: { _id: string; leadNumber?: string; status?: string };
 }
 
 export interface WeekPlannerTask {
@@ -18,6 +23,7 @@ export interface WeekPlannerTask {
   type: string;
   status: string;
   accountId?: { _id: string; name: string };
+  leadId?: { _id: string; leadNumber?: string; status?: string; accountId?: string };
 }
 
 export interface WeekPlannerFollowUp {

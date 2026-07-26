@@ -84,6 +84,7 @@ export interface CreateLeadInput {
   bookingWindow?: string;
   customerType?: string;
   roomsRequested?: number;
+  vipStatus?: "NONE" | "VIP" | "VVIP";
   /** Manual follow-up: skips auto follow-up rules when set */
   followUp?: {
     dueAt: Date;
@@ -643,6 +644,9 @@ export async function createLead(input: CreateLeadInput): Promise<ILead> {
     bookingWindow: input.bookingWindow,
   };
   const autoTags = generateTagsForLead(tagInputParams, loadedProperty);
+  if (input.vipStatus === "VIP" || input.vipStatus === "VVIP") {
+    autoTags.push(input.vipStatus);
+  }
 
   // Determine default stageId
   let defaultStageId: Types.ObjectId | undefined;
@@ -688,6 +692,7 @@ export async function createLead(input: CreateLeadInput): Promise<ILead> {
     budget: budgetValue != null ? Number(budgetValue) || 0 : undefined,
     bookingWindow: bookingWindowValue,
     customerType: customerTypeValue,
+    vipStatus: input.vipStatus && input.vipStatus !== "NONE" ? input.vipStatus : "NONE",
     customData: input.customData && Object.keys(input.customData).length > 0 ? customDataMap : undefined,
   });
 

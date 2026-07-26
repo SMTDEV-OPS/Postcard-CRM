@@ -40,6 +40,7 @@ import { EmailHealthDashboard } from "@/components/EmailHealthDashboard";
 import { EmailClient } from "@/components/EmailClient";
 import { EmailProviderSettings } from "@/components/EmailProviderSettings";
 import { TodaysFollowUps } from "@/components/TodaysFollowUps";
+import { UserActivities } from "@/components/UserActivities";
 import { PersonalCalendar } from "@/components/PersonalCalendar";
 import { WeekPlanner } from "@/components/WeekPlanner";
 import { LeadDetailPage } from "@/components/LeadDetailPage";
@@ -202,6 +203,15 @@ export const ProfessionalCRM = ({
             onViewLead={(leadId) => leadId && navigateToLead(leadId, "todays-followups")}
           />
         );
+      case "activities":
+        return (
+          <UserActivities
+            onViewAccount={(accountId) =>
+              navigate(CRM_PATHS.accounts, { state: { accountId } })
+            }
+            onViewLead={(leadId) => navigateToLead(leadId, "activities")}
+          />
+        );
       case 'my-calendar':
         return (
           <PersonalCalendar
@@ -210,6 +220,9 @@ export const ProfessionalCRM = ({
             isAdmin={isAdmin}
             permissions={permissions}
             onViewLead={(leadId) => leadId && navigateToLead(leadId, "my-calendar")}
+            onViewAccount={(accountId) =>
+              navigate(CRM_PATHS.accounts, { state: { accountId } })
+            }
           />
         );
       case "week-planner":
