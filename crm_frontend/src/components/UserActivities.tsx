@@ -3,6 +3,7 @@ import {
   eachDayOfInterval,
   endOfMonth,
   format,
+  getDaysInMonth,
   isSameDay,
   isToday,
   startOfMonth,
@@ -37,12 +38,19 @@ import {
   getWeekPlannerData,
   type WeekPlannerActivity,
   type WeekPlannerData,
+  type WeekPlannerFollowUp,
+  type WeekPlannerTask,
 } from "@/services/weekPlanner";
 
 interface UserActivitiesProps {
   onViewAccount?: (accountId: string) => void;
   onViewLead?: (leadId: string) => void;
 }
+
+type AgendaItem =
+  | { kind: "activity"; date: Date; activity: WeekPlannerActivity }
+  | { kind: "task"; date: Date; task: WeekPlannerTask }
+  | { kind: "account_followup"; date: Date; followUp: WeekPlannerFollowUp };
 
 export function UserActivities({
   onViewAccount,
@@ -55,6 +63,7 @@ export function UserActivities({
   const [activityType, setActivityType] = useState("all");
   const [accountId, setAccountId] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mappedAccounts, setMappedAccounts] = useState<Account[]>([]);
   const [accountPickerOpen, setAccountPickerOpen] = useState(false);
@@ -64,7 +73,9 @@ export function UserActivities({
   const [activityInitialDate, setActivityInitialDate] = useState<Date | undefined>();
 
   const load = async () => {
-    setLoading(true);
+    const soft = data != null;
+    if (soft) setRefreshing(true);
+    else setLoading(true);
     setError(null);
     try {
       setData(
@@ -77,11 +88,13 @@ export function UserActivities({
       setError(err instanceof Error ? err.message : "Failed to load activities");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when month changes
   }, [month]);
 
   useEffect(() => {
@@ -98,6 +111,11 @@ export function UserActivities({
     for (const activity of data?.activities ?? []) {
       if (activity.accountId?._id) {
         accountMap.set(activity.accountId._id, activity.accountId.name);
+      }
+    }
+    for (const task of data?.tasks ?? []) {
+      if (task.accountId?._id) {
+        accountMap.set(task.accountId._id, task.accountId.name);
       }
     }
     return Array.from(accountMap, ([id, name]) => ({ id, name })).sort((a, b) =>
@@ -134,8 +152,8 @@ export function UserActivities({
     setActivityWizardOpen(true);
   };
 
-  const filteredActivities = useMemo(() => {
-    return (data?.activities ?? [])
+  const agendaItems = useMemo<AgendaItem[]>(() => {
+    const activities = (data?.activities ?? [])
       .filter((activity) => activity.status !== "CANCELLED")
       .filter(
         (activity) =>
@@ -145,18 +163,55 @@ export function UserActivities({
         (activity) =>
           accountId === "all" || activity.accountId?._id === accountId
       )
-      .sort(
-        (a, b) =>
-          new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()
-      );
+      .map((activity) => ({
+        kind: "activity" as const,
+        date: new Date(activity.startsAt),
+        activity,
+      }));
+
+    const tasks =
+      activityType === "all"
+        ? (data?.tasks ?? [])
+            .filter((task) => task.status !== "COMPLETED" && task.status !== "CANCELLED")
+            .filter(
+              (task) =>
+                accountId === "all" || task.accountId?._id === accountId
+            )
+            .map((task) => ({
+              kind: "task" as const,
+              date: new Date(task.dueAt),
+              task,
+            }))
+        : [];
+
+    const followUps =
+      activityType === "all" && accountId === "all"
+        ? (data?.followUps ?? [])
+            .filter((followUp) => followUp.followUpDate)
+            .map((followUp) => ({
+              kind: "account_followup" as const,
+              date: new Date(followUp.followUpDate),
+              followUp,
+            }))
+        : activityType === "all"
+          ? (data?.followUps ?? [])
+              .filter((followUp) => followUp.followUpDate)
+              .filter((followUp) => followUp._id === accountId)
+              .map((followUp) => ({
+                kind: "account_followup" as const,
+                date: new Date(followUp.followUpDate),
+                followUp,
+              }))
+          : [];
+
+    return [...activities, ...tasks, ...followUps].sort(
+      (a, b) => a.date.getTime() - b.date.getTime()
+    );
   }, [data, activityType, accountId]);
 
-  const selectedDayActivities = useMemo(
-    () =>
-      filteredActivities.filter((activity) =>
-        isSameDay(new Date(activity.startsAt), selectedDate)
-      ),
-    [filteredActivities, selectedDate]
+  const selectedDayItems = useMemo(
+    () => agendaItems.filter((item) => isSameDay(item.date, selectedDate)),
+    [agendaItems, selectedDate]
   );
 
   const days = useMemo(
@@ -176,7 +231,9 @@ export function UserActivities({
     const next = new Date(month);
     next.setMonth(next.getMonth() + offset);
     setMonth(next);
-    setSelectedDate(startOfMonth(next));
+    const day = selectedDate.getDate();
+    const capped = Math.min(day, getDaysInMonth(next));
+    setSelectedDate(new Date(next.getFullYear(), next.getMonth(), capped));
   };
 
   const activityContext = (activity: WeekPlannerActivity) => {
@@ -196,7 +253,7 @@ export function UserActivities({
         <div>
           <h1 className="text-2xl font-semibold text-text">Activities</h1>
           <p className="mt-1 text-sm text-text-muted">
-            Scheduled activities across your mapped accounts and contacts.
+            Activities, tasks, and account follow-ups across your mapped accounts.
           </p>
         </div>
         <Button size="sm" onClick={() => openAddActivity()}>
@@ -211,7 +268,7 @@ export function UserActivities({
             <SelectValue placeholder="Activity type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All activity types</SelectItem>
+            <SelectItem value="all">All types</SelectItem>
             {CONTACT_ACTIVITY_TYPE_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
@@ -234,11 +291,11 @@ export function UserActivities({
         </Select>
       </div>
 
-      {loading ? (
+      {loading && !data ? (
         <div className="flex min-h-64 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-text-muted" />
         </div>
-      ) : error ? (
+      ) : error && !data ? (
         <Card>
           <CardContent className="py-12 text-center">
             <p className="font-medium text-text">Unable to load activities</p>
@@ -249,27 +306,31 @@ export function UserActivities({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className={`grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px] ${refreshing ? "opacity-70" : ""}`}>
           <div className="min-w-0">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="text-base font-semibold text-text">
                 {format(selectedDate, "EEEE, d MMMM")}
               </h2>
-              <span className="text-sm text-text-muted">
-                {selectedDayActivities.length}{" "}
-                {selectedDayActivities.length === 1 ? "activity" : "activities"}
-              </span>
+              <div className="flex items-center gap-2 text-sm text-text-muted">
+                {refreshing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                <span>
+                  {selectedDayItems.length}{" "}
+                  {selectedDayItems.length === 1 ? "item" : "items"}
+                </span>
+              </div>
             </div>
 
-            {selectedDayActivities.length === 0 ? (
+            {selectedDayItems.length === 0 ? (
               <Card>
                 <CardContent className="py-14 text-center">
                   <CalendarDays className="mx-auto h-9 w-9 text-text-muted" />
                   <p className="mt-3 font-medium text-text">
-                    No activities on this date
+                    Nothing scheduled on this date
                   </p>
                   <p className="mt-1 text-sm text-text-muted">
-                    Add an activity for this day or select another date.
+                    No activities, tasks, or follow-ups for{" "}
+                    {format(selectedDate, "d MMM")}. Try another day or month.
                   </p>
                   <Button className="mt-4" size="sm" onClick={() => openAddActivity(selectedDate)}>
                     <Plus className="h-4 w-4 mr-2" />
@@ -279,60 +340,137 @@ export function UserActivities({
               </Card>
             ) : (
               <div className="divide-y divide-border rounded-md border border-border bg-surface">
-                {selectedDayActivities.map((activity) => (
-                  <div key={activity._id} className="p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-medium text-text">
-                            {formatContactActivityType(activity.activityType)}
-                          </p>
-                          {activity.category && (
-                            <Badge variant="outline">{activity.category}</Badge>
-                          )}
+                {selectedDayItems.map((item) => {
+                  if (item.kind === "activity") {
+                    const activity = item.activity;
+                    return (
+                      <div key={`activity-${activity._id}`} className="p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium text-text">
+                                {formatContactActivityType(activity.activityType)}
+                              </p>
+                              <Badge variant="outline">Activity</Badge>
+                              {activity.category && (
+                                <Badge variant="outline">{activity.category}</Badge>
+                              )}
+                            </div>
+                            <p className="mt-1 text-sm text-text-muted">
+                              {format(new Date(activity.startsAt), "h:mm a")}
+                              {activity.endsAt
+                                ? ` – ${format(new Date(activity.endsAt), "h:mm a")}`
+                                : ""}
+                            </p>
+                            {activityContext(activity) && (
+                              <p className="mt-2 text-sm text-text-muted">
+                                {activityContext(activity)}
+                              </p>
+                            )}
+                            {activity.purpose && (
+                              <p className="mt-2 text-sm text-text">
+                                {activity.purpose}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex shrink-0 gap-2">
+                            {activity.accountId?._id && onViewAccount && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  onViewAccount(activity.accountId!._id)
+                                }
+                              >
+                                Account
+                              </Button>
+                            )}
+                            {activity.leadId?._id && onViewLead && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => onViewLead(activity.leadId!._id)}
+                              >
+                                Lead
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                        <p className="mt-1 text-sm text-text-muted">
-                          {format(new Date(activity.startsAt), "h:mm a")}
-                          {activity.endsAt
-                            ? ` – ${format(new Date(activity.endsAt), "h:mm a")}`
-                            : ""}
-                        </p>
-                        {activityContext(activity) && (
-                          <p className="mt-2 text-sm text-text-muted">
-                            {activityContext(activity)}
-                          </p>
-                        )}
-                        {activity.purpose && (
-                          <p className="mt-2 text-sm text-text">
-                            {activity.purpose}
-                          </p>
-                        )}
                       </div>
-                      <div className="flex shrink-0 gap-2">
-                        {activity.accountId?._id && onViewAccount && (
+                    );
+                  }
+
+                  if (item.kind === "task") {
+                    const task = item.task;
+                    return (
+                      <div key={`task-${task._id}`} className="p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium text-text">{task.title}</p>
+                              <Badge variant="outline">Task</Badge>
+                            </div>
+                            <p className="mt-1 text-sm text-text-muted">
+                              {format(new Date(task.dueAt), "h:mm a")}
+                              {task.accountId?.name ? ` · ${task.accountId.name}` : ""}
+                              {task.leadId?.leadNumber
+                                ? ` · Lead ${task.leadId.leadNumber}`
+                                : ""}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 gap-2">
+                            {task.accountId?._id && onViewAccount && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => onViewAccount(task.accountId!._id)}
+                              >
+                                Account
+                              </Button>
+                            )}
+                            {task.leadId?._id && onViewLead && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => onViewLead(task.leadId!._id)}
+                              >
+                                Lead
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const followUp = item.followUp;
+                  return (
+                    <div key={`followup-${followUp._id}`} className="p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium text-text">
+                              Follow-up: {followUp.name}
+                            </p>
+                            <Badge variant="outline">Follow-up</Badge>
+                          </div>
+                          <p className="mt-1 text-sm text-text-muted">
+                            {followUp.followUpNote || "Account follow-up"}
+                          </p>
+                        </div>
+                        {onViewAccount && (
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() =>
-                              onViewAccount(activity.accountId!._id)
-                            }
+                            onClick={() => onViewAccount(followUp._id)}
                           >
                             Account
                           </Button>
                         )}
-                        {activity.leadId?._id && onViewLead && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => onViewLead(activity.leadId!._id)}
-                          >
-                            Lead
-                          </Button>
-                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -345,17 +483,20 @@ export function UserActivities({
                   size="icon"
                   onClick={() => changeMonth(-1)}
                   aria-label="Previous month"
+                  disabled={refreshing}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-semibold text-text">
+                <span className="flex items-center gap-2 text-sm font-semibold text-text">
                   {format(month, "MMMM yyyy")}
+                  {refreshing && <Loader2 className="h-3.5 w-3.5 animate-spin text-text-muted" />}
                 </span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => changeMonth(1)}
                   aria-label="Next month"
+                  disabled={refreshing}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -375,8 +516,8 @@ export function UserActivities({
                   <div key={`empty-${index}`} className="aspect-square" />
                 ))}
                 {days.map((day) => {
-                  const count = filteredActivities.filter((activity) =>
-                    isSameDay(new Date(activity.startsAt), day)
+                  const count = agendaItems.filter((item) =>
+                    isSameDay(item.date, day)
                   ).length;
                   const selected = isSameDay(day, selectedDate);
                   return (

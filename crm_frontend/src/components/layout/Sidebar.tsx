@@ -191,7 +191,7 @@ export function Sidebar({
 
   const SectionLabel = ({ children }: { children: string }) =>
     collapsed ? null : (
-      <div className="px-5 pt-4 pb-1.5 text-[10px] font-medium uppercase tracking-widest text-white/35">
+      <div className="px-5 pt-4 pb-1.5 text-[10px] font-medium uppercase tracking-widest text-white/55">
         {children}
       </div>
     );
@@ -361,7 +361,7 @@ export function Sidebar({
             <>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[13px] font-medium text-white/90">{userName || "User"}</div>
-                <div className="truncate text-[11px] text-white/40">{roleDisplay}</div>
+                <div className="truncate text-[11px] text-white/70">{roleDisplay}</div>
               </div>
               <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/35" />
             </>

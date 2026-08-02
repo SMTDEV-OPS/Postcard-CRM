@@ -48,7 +48,7 @@ import {
   ExternalLink,
   X,
 } from "lucide-react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDaysInMonth, isSameDay, isToday } from "date-fns";
 import {
   getWeekPlannerData,
   type WeekPlannerAccount,
@@ -86,8 +86,10 @@ export const PersonalCalendar = ({
   const [accountFollowUps, setAccountFollowUps] = useState<WeekPlannerFollowUp[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
@@ -108,8 +110,12 @@ export const PersonalCalendar = ({
 
   useEffect(() => {
     void loadTasks();
-    void loadLeads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when month / user changes
   }, [backendUserId, currentMonth]);
+
+  useEffect(() => {
+    void loadLeads();
+  }, []);
 
   useEffect(() => {
     listAccounts({ myAccounts: true })
@@ -117,9 +123,19 @@ export const PersonalCalendar = ({
       .catch(() => setMappedAccounts([]));
   }, []);
 
+  const changeMonth = (offset: number) => {
+    const next = new Date(currentMonth);
+    next.setMonth(next.getMonth() + offset);
+    setCurrentMonth(next);
+    const day = selectedDate.getDate();
+    const capped = Math.min(day, getDaysInMonth(next));
+    setSelectedDate(new Date(next.getFullYear(), next.getMonth(), capped));
+  };
+
   const loadTasks = async () => {
     try {
-      setIsLoading(true);
+      if (hasLoadedOnce) setIsRefreshing(true);
+      else setIsLoading(true);
       const planner = await getWeekPlannerData(
         startOfMonth(currentMonth),
         endOfMonth(currentMonth)
@@ -148,6 +164,7 @@ export const PersonalCalendar = ({
       setActivities(planner.activities);
       setAccountFollowUps(planner.followUps);
       setPlannerAccounts(planner.accounts ?? []);
+      setHasLoadedOnce(true);
     } catch (err) {
       toast({
         title: "Error",
@@ -156,6 +173,7 @@ export const PersonalCalendar = ({
       });
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -401,25 +419,20 @@ export const PersonalCalendar = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    const prevMonth = new Date(currentMonth);
-                    prevMonth.setMonth(prevMonth.getMonth() - 1);
-                    setCurrentMonth(prevMonth);
-                  }}
+                  onClick={() => changeMonth(-1)}
+                  disabled={isRefreshing}
                 >
                   ‹
                 </Button>
-                <span className="text-sm font-medium text-slate-700 min-w-[100px] text-center">
+                <span className="text-sm font-medium text-slate-700 min-w-[100px] text-center inline-flex items-center justify-center gap-1.5">
                   {format(currentMonth, "MMMM yyyy")}
+                  {isRefreshing && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    const nextMonth = new Date(currentMonth);
-                    nextMonth.setMonth(nextMonth.getMonth() + 1);
-                    setCurrentMonth(nextMonth);
-                  }}
+                  onClick={() => changeMonth(1)}
+                  disabled={isRefreshing}
                 >
                   ›
                 </Button>
@@ -499,7 +512,7 @@ export const PersonalCalendar = ({
               </div>
             </div>
 
-            {isLoading ? (
+            {isLoading && !hasLoadedOnce ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
               </div>

@@ -19,6 +19,7 @@ import { disableCheckInDate, disableCheckoutDate, startOfDay } from "@/lib/leadD
 import type { UseFormReturn } from "react-hook-form";
 import { useActiveProperties } from "@/hooks/useActiveProperties";
 import { formGrid2, formGrid3 } from "@/lib/responsive";
+import { displayLabel } from "@/lib/displayIds";
 
 function LeadMgmtHotelDates({
   index,
@@ -1271,7 +1272,9 @@ const LeadManagement = () => {
                           <h3 className="text-lg font-semibold text-gray-900">
                             {lead.firstName} {lead.lastName}
                           </h3>
-                          <Badge variant="outline" className="font-mono text-xs">{lead.id}</Badge>
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {lead.leadNumber || displayLabel(lead.id, "Lead")}
+                          </Badge>
                           <Badge className={`${getStatusColor(lead.status)}`}>
                             {lead.status}
                           </Badge>

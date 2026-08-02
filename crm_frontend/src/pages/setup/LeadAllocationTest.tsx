@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { testAssignment, type TestAssignmentPayload, type TestAssignmentResult } from "@/services/leads";
+import { listUsers, type User } from "@/services/users";
 import { useToast } from "@/hooks/use-toast";
+import { displayLabel } from "@/lib/displayIds";
 
 const LEAD_SOURCES = [
   { value: "BRAND_WEBSITE", label: "Brand Website" },
@@ -29,6 +31,19 @@ export function LeadAllocationTest() {
   });
   const [result, setResult] = useState<TestAssignmentResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    listUsers()
+      .then(setUsers)
+      .catch(() => setUsers([]));
+  }, []);
+
+  const assigneeLabel = (userId?: string) => {
+    if (!userId) return "—";
+    const u = users.find((x) => x.id === userId);
+    return displayLabel(u?.name || u?.email, "Assigned agent");
+  };
 
   const handleTest = async () => {
     setLoading(true);
@@ -133,7 +148,7 @@ export function LeadAllocationTest() {
             {result.assignment.assignedToUserId && (
               <div className="flex gap-2">
                 <dt className="text-muted-foreground">Assigned to:</dt>
-                <dd>{result.assignment.assignedToUserId}</dd>
+                <dd>{assigneeLabel(result.assignment.assignedToUserId)}</dd>
               </div>
             )}
             {result.assignment.isOverflow && (
