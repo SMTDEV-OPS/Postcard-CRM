@@ -848,6 +848,9 @@ export const UserManagement = () => {
             <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm min-w-[640px]">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/40 text-muted-foreground text-xs uppercase tracking-wide">
+                                <th className="text-left py-3 px-4 font-semibold">User</th>
                                 <th className="text-left py-3 px-4 font-semibold">Role</th>
                                 <th className="text-left py-3 px-4 font-semibold hidden sm:table-cell">Profile</th>
                                 <th className="text-left py-3 px-4 font-semibold hidden md:table-cell">Reports To</th>
