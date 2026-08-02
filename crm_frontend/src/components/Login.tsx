@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { AlertCircle, Lock, Mail, Zap } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const Login = () => {
+const Login = ({ bannerMessage }: { bannerMessage?: string }) => {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,6 +61,13 @@ const Login = () => {
           </div>
 
           <h1 className="font-display text-2xl font-semibold text-text">Sign in</h1>
+
+          {bannerMessage && (
+            <Alert className="mt-4 border-amber-200 bg-amber-50 text-amber-900">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-sm">{bannerMessage}</AlertDescription>
+            </Alert>
+          )}
 
           <form onSubmit={handleLogin} className="mt-8 space-y-5">
             <div className="space-y-2">
