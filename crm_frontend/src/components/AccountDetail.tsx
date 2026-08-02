@@ -58,6 +58,10 @@ interface AccountDetailProps {
     initialTab?: "overview" | "contacts" | "leads" | "contracts" | "potential" | "activities" | "documents";
     /** When true, opens the add-contact dialog in the Contacts tab */
     openAddContactOnMount?: boolean;
+    /** When true with openAddContactOnMount, contact wizard cannot be dismissed until a contact is saved. */
+    requireContactOnAdd?: boolean;
+    /** Called when the required first contact has been saved (or dialog opened without requiring). */
+    onRequireContactSatisfied?: () => void;
     /** Called when the add-contact dialog has been opened (used to clear parent state) */
     onAddContactDialogOpened?: () => void;
     /** Per-contact: when true, user can create a lead (opportunity) from this contact (PAM/SAM: any; others: own only) */
@@ -83,7 +87,7 @@ function getFollowUpDateStatus(date: Date | string | null | undefined): "past" |
     return "today";
 }
 
-export const AccountDetail = ({ account, onBack, onEdit, isAdmin, isSystemAdmin, permissions = [], currentUserId, initialTab = "overview", openAddContactOnMount, onAddContactDialogOpened, canCreateLeadFromContact, onViewLead, onPmsSyncSuccess, onAccountUpdate }: AccountDetailProps) => {
+export const AccountDetail = ({ account, onBack, onEdit, isAdmin, isSystemAdmin, permissions = [], currentUserId, initialTab = "overview", openAddContactOnMount, requireContactOnAdd, onRequireContactSatisfied, onAddContactDialogOpened, canCreateLeadFromContact, onViewLead, onPmsSyncSuccess, onAccountUpdate }: AccountDetailProps) => {
     const { toast } = useToast();
     const [activeTab, setActiveTab] = useState(initialTab);
     const [isSyncingPms, setIsSyncingPms] = useState(false);
@@ -296,6 +300,7 @@ export const AccountDetail = ({ account, onBack, onEdit, isAdmin, isSystemAdmin,
                 accountId={account.id}
                 accountName={account.name}
                 canEdit={canUpdateAccounts}
+                syncAccountFollowUp
                 onAddContact={() => {
                     setFollowUpDialogOpen(false);
                     setActiveTab("contacts");
@@ -460,6 +465,10 @@ export const AccountDetail = ({ account, onBack, onEdit, isAdmin, isSystemAdmin,
                         isSystemAdmin={isSystemAdmin}
                         currentUserId={currentUserId}
                         openAddContactOnMount={openAddContactOnMount || triggerAddContact}
+                        requireContact={!!requireContactOnAdd}
+                        onRequireContactSatisfied={() => {
+                            onRequireContactSatisfied?.();
+                        }}
                         onAddContactDialogOpened={() => {
                             setTriggerAddContact(false);
                             onAddContactDialogOpened?.();
@@ -481,7 +490,11 @@ export const AccountDetail = ({ account, onBack, onEdit, isAdmin, isSystemAdmin,
                 )}
                 {canViewContracts && (
                     <TabsContent value="contracts" className="pt-6">
-                        <AccountContracts accountId={account.id} canManage={!!isAdmin || permissions.includes("accounts.manage")} />
+                        <AccountContracts
+                          accountId={account.id}
+                          accountName={account.name}
+                          canManage={!!isAdmin || permissions.includes("accounts.manage")}
+                        />
                     </TabsContent>
                 )}
                 {canViewPotential && (

@@ -75,8 +75,8 @@ export function SettingsDashboard({
       title: "Security Control",
       icon: Shield,
       items: [
-        { name: "Roles", description: "Define your company hierarchy.", path: "setup/roles", icon: Shield },
-        { name: "Profiles", description: "Control what users can do.", path: "setup/profiles", icon: User },
+        { name: "Roles", description: "Company reporting hierarchy (who reports to whom).", path: "setup/roles", icon: Shield },
+        { name: "Profiles", description: "Module access — choose which screens a user can see and edit.", path: "setup/profiles", icon: User },
         { name: "Groups", description: "Manage collaborative teams.", path: "setup/groups", icon: Users2 },
         {
           name: "Data Sharing",

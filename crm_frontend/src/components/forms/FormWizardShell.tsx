@@ -20,13 +20,13 @@ export interface FormWizardShellProps {
 }
 
 const maxWidthClass: Record<NonNullable<FormWizardShellProps["maxWidth"]>, string> = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
-  "2xl": "max-w-2xl",
-  "3xl": "max-w-3xl",
-  "4xl": "max-w-4xl",
+  sm: "sm:max-w-sm",
+  md: "sm:max-w-md",
+  lg: "sm:max-w-lg",
+  xl: "sm:max-w-xl",
+  "2xl": "sm:max-w-2xl",
+  "3xl": "sm:max-w-3xl",
+  "4xl": "sm:max-w-4xl",
 };
 
 export function FormWizardShell({
@@ -44,19 +44,19 @@ export function FormWizardShell({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
+          "flex flex-col gap-0 p-0 overflow-hidden",
+          "w-[100dvw] max-w-none max-h-[100dvh] h-[100dvh] rounded-none",
+          "sm:w-full sm:rounded-lg sm:h-auto sm:max-h-none",
           maxWidthClass[maxWidth],
-          "flex flex-col gap-0 p-0 overflow-hidden max-w-[calc(100vw-1rem)]",
-          maxWidth === "3xl" && "sm:max-w-3xl",
-          maxWidth === "4xl" && "sm:max-w-4xl",
-          maxHeight === "min(90vh,720px)" && "h-[min(90vh,720px)]",
-          maxHeight === "min(90vh,800px)" && "h-[min(90vh,800px)]",
-          maxHeight === "min(90vh,860px)" && "h-[min(90vh,860px)]"
+          maxHeight === "min(90vh,720px)" && "sm:h-[min(90vh,720px)]",
+          maxHeight === "min(90vh,800px)" && "sm:h-[min(90vh,800px)]",
+          maxHeight === "min(90vh,860px)" && "sm:h-[min(90vh,860px)]"
         )}
       >
         <DialogHeader className="px-4 pt-4 pb-3 border-b border-border shrink-0 sm:px-6 sm:pt-5">
           <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
           {subtitle && <DialogDescription className="text-sm">{subtitle}</DialogDescription>}
-          {stepIndicator && <div className="pt-3">{stepIndicator}</div>}
+          {stepIndicator && <div className="pt-3 overflow-x-auto">{stepIndicator}</div>}
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 min-h-0 sm:px-6">{children}</div>

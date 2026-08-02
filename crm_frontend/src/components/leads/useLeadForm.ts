@@ -5,6 +5,7 @@ import { z } from "zod";
 import { listProperties, type Property } from "@/services/properties";
 import { createLead, type CreateLeadPayload } from "@/services/leads";
 import { API_BASE_URL, withAuthHeaders } from "@/services/api";
+import { startOfDay } from "@/lib/leadDates";
 
 export interface LeadFormData {
   firstName: string;
@@ -37,17 +38,22 @@ export interface LeadFormData {
 }
 
 const roomEntrySchema = z.object({
-  roomCategory: z.string().optional(),
+  roomCategory: z.string().min(1, "Room category is required"),
   roomPreference: z.string().optional(),
-  numberOfGuests: z.string().optional(),
+  numberOfGuests: z.string().min(1, "Number of guests is required"),
 });
 
-const hotelEntrySchema = z.object({
-  hotelName: z.string().optional(),
-  checkInDate: z.date().optional(),
-  checkOutDate: z.date().optional(),
-  rooms: z.array(roomEntrySchema).optional(),
-});
+const hotelEntrySchema = z
+  .object({
+    hotelName: z.string().optional(),
+    checkInDate: z.date({ required_error: "Check-in date is required", invalid_type_error: "Check-in date is required" }),
+    checkOutDate: z.date({ required_error: "Check-out date is required", invalid_type_error: "Check-out date is required" }),
+    rooms: z.array(roomEntrySchema).min(1, "At least one room is required"),
+  })
+  .refine(
+    (hotel) => startOfDay(hotel.checkOutDate).getTime() >= startOfDay(hotel.checkInDate).getTime(),
+    { message: "Check-out must be on or after check-in", path: ["checkOutDate"] }
+  );
 
 export const leadFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),

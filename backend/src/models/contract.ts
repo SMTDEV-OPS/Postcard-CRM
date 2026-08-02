@@ -57,6 +57,8 @@ export interface IContractApproval {
 export interface IContract extends Document {
   accountId: Types.ObjectId;
   propertyIds: Types.ObjectId[];
+  /** Per-property rate category (CAT A / CAT B / CAT C) */
+  propertyCategories?: Record<string, string>;
   companyName: string;
   contactId?: Types.ObjectId;
   contactEmail?: string;
@@ -67,6 +69,7 @@ export interface IContract extends Document {
   rateGrid?: IRateGridValue;
   approvals: IContractApproval[];
   submittedByUserId?: Types.ObjectId;
+  clientEmailSentAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -99,6 +102,7 @@ const contractSchema = new Schema<IContract>(
   {
     accountId: { ...AccountRef, required: true, index: true },
     propertyIds: { type: [PropertyRef], default: [] },
+    propertyCategories: { type: Schema.Types.Mixed, default: {} },
     companyName: { type: String, required: true },
     contactId: { type: Schema.Types.ObjectId, ref: "Contact", index: true },
     contactEmail: String,
@@ -108,6 +112,7 @@ const contractSchema = new Schema<IContract>(
     rateGrid: { type: Schema.Types.Mixed },
     approvals: { type: [approvalSchema], default: [] },
     submittedByUserId: UserRef,
+    clientEmailSentAt: Date,
   },
   { timestamps: true }
 );

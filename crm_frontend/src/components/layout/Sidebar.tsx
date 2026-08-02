@@ -32,13 +32,13 @@ import { HelpInfoButton } from "@/components/help/HelpInfoButton";
 import { NAV_PATH_TO_HELP_ID } from "@/help/helpContent";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useMobileNav } from "./MobileNavContext";
+import { canAccessPath, canAccessSetup } from "@/lib/moduleAccess";
 
 interface NavItem {
   title: string;
   path: string;
   icon: React.ComponentType<{ className?: string; size?: number; strokeWidth?: number }>;
   roles: string[];
-  permissionCheck?: (perms: string[], isAdmin: boolean) => boolean;
 }
 
 interface SidebarProps {
@@ -73,60 +73,25 @@ export function Sidebar({
   const { open: mobileOpen, setOpen: setMobileOpen, close: closeMobileNav } = useMobileNav();
 
   const isAdminLike = !!isAdmin || userRole === "admin";
-  const isBackendSession = permissions.length > 0;
-  const canAssignBuddy = !!isAdmin || permissions.includes("buddies.assign");
-  const canViewBuddyHistory = !!isAdmin || permissions.includes("buddies.view.history");
-  const canViewBuddyReports = !!isAdmin || permissions.includes("buddies.view.reports");
-  const canAccessBuddy = canAssignBuddy || canViewBuddyHistory || canViewBuddyReports;
+  const isBackendSession = permissions.length > 0 || isAdminLike;
 
   const hasKnowledgeAccess =
-    ["callcenter", "ccmanager", "saleshead", "salesexecutive", "management", "propertymanager1", "admin"].includes(
-      userRole
-    ) || isAdminLike;
+    isAdminLike ||
+    canAccessPath(CRM_PATHS.knowledge, permissions, !!isAdmin) ||
+    (!isBackendSession &&
+      [
+        "callcenter",
+        "ccmanager",
+        "saleshead",
+        "salesexecutive",
+        "management",
+        "propertymanager1",
+        "admin",
+      ].includes(userRole));
 
   const filterItem = (item: NavItem) => {
     if (isAdminLike) return true;
-    if (item.permissionCheck) return item.permissionCheck(permissions, !!isAdmin);
-    if (isBackendSession) {
-      if (item.path === CRM_PATHS.calls) return permissions.includes("callcenter.access");
-      if (item.path === CRM_PATHS.leads) {
-        return permissions.some(
-          (p) =>
-            p === "leads.manage" ||
-            p === "leads.view.own" ||
-            p === "leads.view.team" ||
-            p === "leads.view.all"
-        );
-      }
-      if (item.path === CRM_PATHS.accounts || item.path === CRM_PATHS.accountsDashboard) return true;
-      if (item.path === CRM_PATHS.activities) {
-        return permissions.some(
-          (p) =>
-            p === "accounts.manage_activities" ||
-            p === "contacts.read_all" ||
-            p === "contacts.read_own"
-        );
-      }
-      if (item.path === CRM_PATHS.calendar) return true;
-      if (item.path === CRM_PATHS.reports) return permissions.includes("reports.view");
-      if (item.path === CRM_PATHS.buddy) return canAccessBuddy;
-      if (item.path === CRM_PATHS.tickets) {
-        return permissions.some(
-          (p) =>
-            p === "tickets.manage" ||
-            p === "tickets.view.own" ||
-            p === "tickets.view.team" ||
-            p === "tickets.view.all"
-        );
-      }
-      if (
-        item.path === CRM_PATHS.dashboard ||
-        item.path === CRM_PATHS.followUps
-      ) {
-        return true;
-      }
-      return false;
-    }
+    if (isBackendSession) return canAccessPath(item.path, permissions, !!isAdmin);
     return item.roles.includes(userRole);
   };
 
@@ -144,11 +109,20 @@ export function Sidebar({
     { title: "Tickets", path: CRM_PATHS.tickets, icon: Ticket, roles: [] },
   ].filter(filterItem);
 
-  const emailItems = [
-    { title: "Email Client", path: CRM_PATHS.email, icon: Mail },
-    { title: "Email Settings", path: CRM_PATHS.emailSettings, icon: Settings2 },
-    { title: "Email Health", path: CRM_PATHS.emailHealth, icon: Activity },
-  ];
+  const showEmail =
+    isAdminLike ||
+    !isBackendSession ||
+    canAccessPath(CRM_PATHS.email, permissions, !!isAdmin);
+
+  const emailItems = showEmail
+    ? [
+        { title: "Email Client", path: CRM_PATHS.email, icon: Mail },
+        { title: "Email Settings", path: CRM_PATHS.emailSettings, icon: Settings2 },
+        { title: "Email Health", path: CRM_PATHS.emailHealth, icon: Activity },
+      ]
+    : [];
+
+  const showSetup = isAdminLike || canAccessSetup(permissions, !!isAdmin);
 
   useEffect(() => {
     if (mobileOpen) setCollapsed(false);
@@ -273,7 +247,7 @@ export function Sidebar({
           <NavItemLink key={item.path} item={item} />
         ))}
 
-        {(isAdminLike || permissions.includes("settings.manage")) && (
+        {(showSetup) && (
           <>
             <SectionLabel>Admin</SectionLabel>
             <div className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
@@ -323,33 +297,37 @@ export function Sidebar({
           </>
         )}
 
-        <SectionLabel>Email</SectionLabel>
-        {emailItems.map((item) => {
-          const Icon = item.icon;
-          const helpId = navHelpId(item.path);
-          return (
-            <div key={item.path} className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
-              <NavLink
-                to={item.path}
-                onClick={() => closeMobileNav()}
-                className={({ isActive }) =>
-                  cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
-                }
-                title={collapsed ? item.title : undefined}
-              >
-                <Icon className="nav-icon h-4 w-4 shrink-0" strokeWidth={1.5} />
-                {!collapsed && <span>{item.title}</span>}
-              </NavLink>
-              {!collapsed && helpId && (
-                <HelpInfoButton
-                  helpId={helpId}
-                  className="absolute right-2 opacity-0 transition-opacity group-hover/nav:opacity-100 text-white/50 hover:text-white hover:bg-white/10"
-                  side="right"
-                />
-              )}
-            </div>
-          );
-        })}
+        {emailItems.length > 0 && (
+          <>
+            <SectionLabel>Email</SectionLabel>
+            {emailItems.map((item) => {
+              const Icon = item.icon;
+              const helpId = navHelpId(item.path);
+              return (
+                <div key={item.path} className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
+                  <NavLink
+                    to={item.path}
+                    onClick={() => closeMobileNav()}
+                    className={({ isActive }) =>
+                      cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
+                    }
+                    title={collapsed ? item.title : undefined}
+                  >
+                    <Icon className="nav-icon h-4 w-4 shrink-0" strokeWidth={1.5} />
+                    {!collapsed && <span>{item.title}</span>}
+                  </NavLink>
+                  {!collapsed && helpId && (
+                    <HelpInfoButton
+                      helpId={helpId}
+                      className="absolute right-2 opacity-0 transition-opacity group-hover/nav:opacity-100 text-white/50 hover:text-white hover:bg-white/10"
+                      side="right"
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
 
         <SectionLabel>Help</SectionLabel>
         <div className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>

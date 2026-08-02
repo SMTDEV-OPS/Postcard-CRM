@@ -225,6 +225,7 @@ export const AccountManagement = ({ permissions = [], isAdmin, isSystemAdmin }: 
   const [childrenCache, setChildrenCache] = useState<Record<string, Account[]>>({});
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [addContactForAccount, setAddContactForAccount] = useState<Account | null>(null);
+  const [requireContactAfterCreate, setRequireContactAfterCreate] = useState(false);
   const [hierarchyViewRoot, setHierarchyViewRoot] = useState<Account | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [includeNa, setIncludeNa] = useState(false);
@@ -648,14 +649,27 @@ export const AccountManagement = ({ permissions = [], isAdmin, isSystemAdmin }: 
       <>
         <AccountDetail
           account={selectedAccount}
-          onBack={() => { setSelectedAccount(null); setAddContactForAccount(null); }}
+          onBack={() => {
+            if (requireContactAfterCreate) {
+              toast({
+                title: "Contact required",
+                description: "Add at least one contact before leaving this account.",
+                variant: "destructive",
+              });
+              return;
+            }
+            setSelectedAccount(null);
+            setAddContactForAccount(null);
+          }}
           onEdit={() => handleOpenWizard(selectedAccount)}
           isAdmin={isAdmin}
           isSystemAdmin={isSystemAdmin}
           permissions={permissions}
           currentUserId={currentUserId ?? undefined}
-          initialTab={openAddContact ? "contacts" : undefined}
+          initialTab={openAddContact || requireContactAfterCreate ? "contacts" : undefined}
           openAddContactOnMount={openAddContact}
+          requireContactOnAdd={requireContactAfterCreate}
+          onRequireContactSatisfied={() => setRequireContactAfterCreate(false)}
           onAddContactDialogOpened={() => setAddContactForAccount(null)}
           canCreateLeadFromContact={(contact) => isPrimaryManager(selectedAccount) || isSecondaryManager(selectedAccount) || (contact.createdByUserId === currentUserId)}
           onPmsSyncSuccess={(updated) => setSelectedAccount(updated)}
@@ -689,6 +703,7 @@ export const AccountManagement = ({ permissions = [], isAdmin, isSystemAdmin }: 
     const fresh = list.find((a) => a.id === account.id) || account;
     setSelectedAccount(fresh);
     if (openContacts) {
+      setRequireContactAfterCreate(true);
       setAddContactForAccount(fresh);
     }
   };

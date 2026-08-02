@@ -250,18 +250,18 @@ export function WeekPlanner() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 max-w-full overflow-x-hidden">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">Week Planner</h1>
           <p className="text-sm text-muted-foreground">Your account activities, follow-ups and tasks for the week</p>
         </div>
-        <Button onClick={() => { setSelectedSlot(null); setAddTaskOpen(true); }}>
+        <Button onClick={() => { setSelectedSlot(null); setAddTaskOpen(true); }} className="self-start">
           <Plus className="h-4 w-4 mr-2" /> Add Task
         </Button>
       </div>
 
-      <div className="flex items-center gap-4 text-xs">
+      <div className="flex flex-wrap items-center gap-4 text-xs">
         <div className="flex items-center gap-1.5"><div className="h-3 w-3 rounded-sm bg-blue-400" /><span>Activity</span></div>
         <div className="flex items-center gap-1.5"><div className="h-3 w-3 rounded-sm bg-amber-400" /><span>Follow-up</span></div>
         <div className="flex items-center gap-1.5"><div className="h-3 w-3 rounded-sm bg-violet-400" /><span>Task</span></div>

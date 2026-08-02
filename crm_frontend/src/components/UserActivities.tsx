@@ -7,10 +7,18 @@ import {
   isToday,
   startOfMonth,
 } from "date-fns";
-import { CalendarDays, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Loader2, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -18,10 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { ActivityWizard } from "@/components/activities/ActivityWizard";
 import {
   CONTACT_ACTIVITY_TYPE_OPTIONS,
   formatContactActivityType,
 } from "@/services/contactActivities";
+import { listAccounts, type Account } from "@/services/accounts";
 import {
   getWeekPlannerData,
   type WeekPlannerActivity,
@@ -37,6 +48,7 @@ export function UserActivities({
   onViewAccount,
   onViewLead,
 }: UserActivitiesProps) {
+  const { toast } = useToast();
   const [month, setMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [data, setData] = useState<WeekPlannerData | null>(null);
@@ -44,6 +56,12 @@ export function UserActivities({
   const [accountId, setAccountId] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mappedAccounts, setMappedAccounts] = useState<Account[]>([]);
+  const [accountPickerOpen, setAccountPickerOpen] = useState(false);
+  const [pickerAccountId, setPickerAccountId] = useState("");
+  const [activityAccountId, setActivityAccountId] = useState<string | null>(null);
+  const [activityWizardOpen, setActivityWizardOpen] = useState(false);
+  const [activityInitialDate, setActivityInitialDate] = useState<Date | undefined>();
 
   const load = async () => {
     setLoading(true);
@@ -66,8 +84,17 @@ export function UserActivities({
     void load();
   }, [month]);
 
+  useEffect(() => {
+    listAccounts({ myAccounts: true })
+      .then(setMappedAccounts)
+      .catch(() => setMappedAccounts([]));
+  }, []);
+
   const accounts = useMemo(() => {
     const accountMap = new Map<string, string>();
+    for (const a of mappedAccounts) {
+      accountMap.set(a.id, a.name);
+    }
     for (const activity of data?.activities ?? []) {
       if (activity.accountId?._id) {
         accountMap.set(activity.accountId._id, activity.accountId.name);
@@ -76,7 +103,36 @@ export function UserActivities({
     return Array.from(accountMap, ([id, name]) => ({ id, name })).sort((a, b) =>
       a.name.localeCompare(b.name)
     );
-  }, [data]);
+  }, [data, mappedAccounts]);
+
+  const openAddActivity = (date?: Date) => {
+    setActivityInitialDate(date ?? selectedDate);
+    if (accounts.length === 0) {
+      toast({
+        title: "No accounts",
+        description: "Map yourself to an account before adding activities.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (accounts.length === 1) {
+      setActivityAccountId(accounts[0].id);
+      setActivityWizardOpen(true);
+      return;
+    }
+    setPickerAccountId("");
+    setAccountPickerOpen(true);
+  };
+
+  const confirmAccountPicker = () => {
+    if (!pickerAccountId) {
+      toast({ title: "Required", description: "Select an account", variant: "destructive" });
+      return;
+    }
+    setActivityAccountId(pickerAccountId);
+    setAccountPickerOpen(false);
+    setActivityWizardOpen(true);
+  };
 
   const filteredActivities = useMemo(() => {
     return (data?.activities ?? [])
@@ -136,11 +192,17 @@ export function UserActivities({
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">Activities</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          Scheduled activities across your mapped accounts and contacts.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-text">Activities</h1>
+          <p className="mt-1 text-sm text-text-muted">
+            Scheduled activities across your mapped accounts and contacts.
+          </p>
+        </div>
+        <Button size="sm" onClick={() => openAddActivity()}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add activity
+        </Button>
       </div>
 
       <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row">
@@ -207,8 +269,12 @@ export function UserActivities({
                     No activities on this date
                   </p>
                   <p className="mt-1 text-sm text-text-muted">
-                    Select another date from the calendar.
+                    Add an activity for this day or select another date.
                   </p>
+                  <Button className="mt-4" size="sm" onClick={() => openAddActivity(selectedDate)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add activity
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
@@ -341,6 +407,52 @@ export function UserActivities({
             </CardContent>
           </Card>
         </div>
+      )}
+
+      <Dialog open={accountPickerOpen} onOpenChange={setAccountPickerOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select account</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Activity for account</Label>
+            <Select value={pickerAccountId} onValueChange={setPickerAccountId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose account" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAccountPickerOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmAccountPicker}>Continue</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {activityAccountId && (
+        <ActivityWizard
+          open={activityWizardOpen}
+          onOpenChange={(open) => {
+            setActivityWizardOpen(open);
+            if (!open) setActivityAccountId(null);
+          }}
+          accountId={activityAccountId}
+          initialDate={activityInitialDate}
+          onSuccess={() => {
+            setActivityWizardOpen(false);
+            setActivityAccountId(null);
+            void load();
+          }}
+        />
       )}
     </div>
   );

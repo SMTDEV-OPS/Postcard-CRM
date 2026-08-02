@@ -38,6 +38,7 @@ import {
   getTaskSummary,
 } from "@/services/tasks";
 import { listLeads, Lead, getLeadContactInfo } from "@/services/leads";
+import { listAccounts, type Account } from "@/services/accounts";
 import {
   Plus,
   Clock,
@@ -45,23 +46,34 @@ import {
   XCircle,
   Loader2,
   ExternalLink,
+  Building2,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfDay, isBefore, isEqual } from "date-fns";
 
 interface TodaysFollowUpsProps {
   userName?: string;
   backendUserId?: string;
   onViewLead?: (leadId: string) => void;
+  onViewAccount?: (accountId: string) => void;
 }
+
+type AccountFollowUpRow = {
+  id: string;
+  name: string;
+  followUpDate: string;
+  followUpNote?: string;
+};
 
 export const TodaysFollowUps = ({
   userName,
   backendUserId,
   onViewLead,
+  onViewAccount,
 }: TodaysFollowUpsProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [accountFollowUps, setAccountFollowUps] = useState<AccountFollowUpRow[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [summary, setSummary] = useState({
     overdue: 0,
@@ -85,8 +97,46 @@ export const TodaysFollowUps = ({
   useEffect(() => {
     void loadTasks();
     void loadLeads();
+    void loadAccountFollowUps();
     void loadSummary();
   }, [backendUserId]);
+
+  const classifyAccountFollowUps = (accounts: Account[]) => {
+    const today = startOfDay(new Date());
+    let overdue = 0;
+    let dueToday = 0;
+    let upcoming = 0;
+    const rows: AccountFollowUpRow[] = [];
+    for (const a of accounts) {
+      if (!a.followUpDate) continue;
+      const d = startOfDay(new Date(a.followUpDate));
+      if (Number.isNaN(d.getTime())) continue;
+      rows.push({
+        id: a.id,
+        name: a.name,
+        followUpDate: a.followUpDate,
+        followUpNote: a.followUpNote,
+      });
+      if (isBefore(d, today)) overdue += 1;
+      else if (isEqual(d, today)) dueToday += 1;
+      else upcoming += 1;
+    }
+    rows.sort(
+      (x, y) =>
+        new Date(x.followUpDate).getTime() - new Date(y.followUpDate).getTime()
+    );
+    return { rows, overdue, dueToday, upcoming };
+  };
+
+  const loadAccountFollowUps = async () => {
+    try {
+      const accounts = await listAccounts({ myAccounts: true });
+      const { rows } = classifyAccountFollowUps(accounts);
+      setAccountFollowUps(rows);
+    } catch (err) {
+      console.error("Failed to load account follow-ups:", err);
+    }
+  };
 
   const loadTasks = async () => {
     try {
@@ -116,7 +166,20 @@ export const TodaysFollowUps = ({
   const loadSummary = async () => {
     try {
       const data = await getTaskSummary();
-      setSummary(data);
+      let accounts: Account[] = [];
+      try {
+        accounts = await listAccounts({ myAccounts: true });
+      } catch {
+        accounts = [];
+      }
+      const acct = classifyAccountFollowUps(accounts);
+      setAccountFollowUps(acct.rows);
+      setSummary({
+        overdue: data.overdue + acct.overdue,
+        dueToday: data.dueToday + acct.dueToday,
+        upcoming: data.upcoming + acct.upcoming,
+        completedToday: data.completedToday,
+      });
     } catch (err) {
       console.error("Failed to load task summary:", err);
     }
@@ -370,13 +433,48 @@ export const TodaysFollowUps = ({
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
             </div>
-          ) : tasks.length === 0 ? (
+          ) : tasks.length === 0 && accountFollowUps.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Clock className="h-12 w-12 text-slate-300 mb-4" />
               <p className="text-slate-500">No follow-ups found</p>
             </div>
           ) : (
             <>
+            {accountFollowUps.length > 0 && (
+              <div className="border-b border-slate-200 px-4 py-3 bg-slate-50/80">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                  Account follow-ups
+                </p>
+                <div className="space-y-2">
+                  {accountFollowUps.map((row) => {
+                    const dueDate = new Date(row.followUpDate);
+                    const today = startOfDay(new Date());
+                    const d = startOfDay(dueDate);
+                    const isOverdue = isBefore(d, today);
+                    return (
+                      <button
+                        key={`acct-${row.id}`}
+                        type="button"
+                        className={`w-full text-left rounded-md border border-border bg-surface px-3 py-2 ${
+                          onViewAccount ? "hover:bg-hover cursor-pointer" : ""
+                        } ${isOverdue ? "border-l-2 border-l-red-400" : ""}`}
+                        onClick={() => onViewAccount?.(row.id)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                          <span className="font-medium text-sm text-slate-900">{row.name}</span>
+                          <Badge variant="outline" className="text-[10px]">Account</Badge>
+                        </div>
+                        <p className={`text-xs mt-1 ${isOverdue ? "text-red-600" : "text-slate-500"}`}>
+                          {format(dueDate, "MMM d, yyyy")}
+                          {row.followUpNote ? ` · ${row.followUpNote}` : ""}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {/* Mobile card list */}
             <div className="md:hidden divide-y divide-slate-200">
               {tasks.map((task) => {

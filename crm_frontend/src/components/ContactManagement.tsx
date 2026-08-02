@@ -24,6 +24,10 @@ interface ContactManagementProps {
     currentUserId?: string;
     openAddContactOnMount?: boolean;
     onAddContactDialogOpened?: () => void;
+    /** When true, user cannot dismiss the add-contact wizard until at least one contact exists. */
+    requireContact?: boolean;
+    /** Called after a contact is saved while requireContact was active. */
+    onRequireContactSatisfied?: () => void;
     canCreateLeadFromContact?: (contact: Contact) => boolean;
     accountName?: string;
     onViewLead?: (leadId: string) => void;
@@ -34,6 +38,8 @@ export const ContactManagement = ({
     accountName,
     openAddContactOnMount,
     onAddContactDialogOpened,
+    requireContact = false,
+    onRequireContactSatisfied,
 }: ContactManagementProps) => {
     const { toast } = useToast();
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -41,6 +47,7 @@ export const ContactManagement = ({
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingContact, setEditingContact] = useState<Contact | null>(null);
     const [followUpContactId, setFollowUpContactId] = useState<string | null>(null);
+    const [mustAddContact, setMustAddContact] = useState(false);
 
     useEffect(() => {
         loadContacts();
@@ -48,16 +55,30 @@ export const ContactManagement = ({
 
     useEffect(() => {
         if (openAddContactOnMount) {
+            setMustAddContact(!!requireContact);
             handleOpenDialog();
             onAddContactDialogOpened?.();
+        } else if (requireContact) {
+            setMustAddContact(true);
         }
-    }, [openAddContactOnMount]);
+    }, [openAddContactOnMount, requireContact]);
+
+    useEffect(() => {
+        if (requireContact && !isLoading && contacts.length === 0 && !isDialogOpen) {
+            setMustAddContact(true);
+            handleOpenDialog();
+        }
+    }, [requireContact, isLoading, contacts.length]);
 
     const loadContacts = async () => {
         try {
             setIsLoading(true);
             const data = await getAccountContacts(accountId);
             setContacts(data);
+            if (data.length > 0) {
+                setMustAddContact(false);
+                onRequireContactSatisfied?.();
+            }
         } catch {
             toast({
                 title: "Error",
@@ -72,6 +93,19 @@ export const ContactManagement = ({
     const handleOpenDialog = (contact?: Contact) => {
         setEditingContact(contact ?? null);
         setIsDialogOpen(true);
+    };
+
+    const handleDialogOpenChange = (open: boolean) => {
+        if (!open && mustAddContact && contacts.length === 0 && !editingContact) {
+            toast({
+                title: "Contact required",
+                description: "Add at least one contact before continuing.",
+                variant: "destructive",
+            });
+            setIsDialogOpen(true);
+            return;
+        }
+        setIsDialogOpen(open);
     };
 
     const handleDelete = async (contactId: string) => {
@@ -202,10 +236,13 @@ export const ContactManagement = ({
 
             <ContactWizard
                 open={isDialogOpen}
-                onOpenChange={setIsDialogOpen}
+                onOpenChange={handleDialogOpenChange}
                 accountId={accountId}
                 editingContact={editingContact}
-                onSuccess={loadContacts}
+                onSuccess={() => {
+                    void loadContacts().then(() => setMustAddContact(false));
+                }}
+                requireSave={mustAddContact && contacts.length === 0}
             />
 
             <SetFollowUpDialog

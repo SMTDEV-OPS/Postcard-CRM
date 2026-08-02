@@ -51,6 +51,7 @@ export interface Contract {
   _id?: string;
   accountId: string;
   propertyIds: string[];
+  propertyCategories?: Record<string, string>;
   companyName: string;
   contactId?: string;
   contactEmail?: string;
@@ -59,6 +60,7 @@ export interface Contract {
   pricingGrid: ContractPricingRow[];
   rateGrid?: ContractRateGridValue;
   submittedByUserId?: string;
+  clientEmailSentAt?: string;
   approvals?: Array<{
     step: number;
     approverUserId: string;
@@ -85,6 +87,7 @@ export const listContracts = async (accountId: string): Promise<Contract[]> => {
 export const createContract = async (payload: {
   accountId: string;
   propertyIds: string[];
+  propertyCategories?: Record<string, string>;
   companyName: string;
   contactId?: string;
   contactEmail?: string;
@@ -97,6 +100,19 @@ export const createContract = async (payload: {
     body: JSON.stringify(payload),
   });
   if (!response.ok) throw new Error("Failed to create contract");
+  const raw = await response.json();
+  return { id: raw._id || raw.id, ...raw };
+};
+
+export const sendContractToClient = async (id: string): Promise<Contract> => {
+  const response = await fetch(`${API_BASE_URL}/contracts/${id}/send-to-client`, {
+    method: "POST",
+    headers: withAuthHeaders({ "Content-Type": "application/json" }),
+  });
+  if (!response.ok) {
+    const msg = await response.json().catch(() => null);
+    throw new Error(msg?.error || msg?.message || "Failed to send contract to client");
+  }
   const raw = await response.json();
   return { id: raw._id || raw.id, ...raw };
 };

@@ -1,15 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { FormWizardShell } from "@/components/forms/FormWizardShell";
 import { listConglomerates, Conglomerate } from "@/services/conglomerates";
 import { Account, createAccount, updateAccount, listAccounts } from "@/services/accounts";
+import { seedInboundMarketPotentials } from "@/utils/seedInboundPotentials";
+import { normalizeTravelTradeProfile } from "@/types/travelTradeProfile";
 import { listProperties, Property } from "@/services/properties";
 import { AddAccountStepIndicator } from "@/components/accounts/AddAccountStepIndicator";
 import { emptyAccountForm, AccountFormData, defaultContractingPeriod } from "@/components/accounts/accountFormTypes";
@@ -35,7 +31,6 @@ import {
   TravelTradeDomesticStep,
   TravelTradeGroupsStep,
 } from "@/components/accounts/TravelTradeSteps";
-import { normalizeTravelTradeProfile } from "@/types/travelTradeProfile";
 import { toCanonicalOrganizationType } from "@/constants/accountData";
 
 /** Map wizard organizationType → legacy Account.type enum. */
@@ -355,11 +350,23 @@ export const AccountCreationWizard = ({
       const sanitized = buildPayload();
       if (editingAccount) {
         await updateAccount(editingAccount.id, sanitized);
+        if (isTravelTrade(formData)) {
+          await seedInboundMarketPotentials(
+            editingAccount.id,
+            normalizeTravelTradeProfile(formData.travelTradeProfile)
+          );
+        }
         toast({ title: "Success", description: "Account updated" });
         await onSuccess();
         onClose();
       } else {
         const created = await createAccount(sanitized as Parameters<typeof createAccount>[0]);
+        if (isTravelTrade(formData) && created?.id) {
+          await seedInboundMarketPotentials(
+            created.id,
+            normalizeTravelTradeProfile(formData.travelTradeProfile)
+          );
+        }
         toast({ title: "Success", description: "Account created" });
         await onSuccess();
         if (onCreated) {
@@ -387,7 +394,7 @@ export const AccountCreationWizard = ({
       case "classification":
         return <AccountStepClassification {...stepCtx} />;
       case "travel_inbound":
-        return <TravelTradeInboundStep formData={formData} set={set} />;
+        return <TravelTradeInboundStep formData={formData} set={set} properties={properties} />;
       case "travel_luxury":
         return <TravelTradeLuxuryStep formData={formData} set={set} />;
       case "travel_series":
@@ -414,72 +421,66 @@ export const AccountCreationWizard = ({
 
   const isLastStep = stepIndex >= steps.length - 1;
 
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl h-[min(90vh,720px)] flex flex-col gap-0 p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-5 pb-3 border-b border-border shrink-0">
-          <DialogTitle className="text-base font-semibold">
-            {isEdit ? "Edit account" : "New account"}
-          </DialogTitle>
-          <DialogDescription className="text-sm">
-            {currentStep?.subtitle ?? ""}
-          </DialogDescription>
-          {!isEdit && (
-            <div className="pt-3">
-              <AddAccountStepIndicator steps={steps} currentStepIndex={stepIndex} />
-            </div>
-          )}
-        </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          {isEdit ? (
-            <div className="space-y-4">
-              <AccountStepOrganization {...stepCtx} />
-              <AccountStepClassification {...stepCtx} />
-              {isTravelTrade(formData) && (
-                <>
-                  {steps
-                    .filter((s) => s.id.startsWith("travel_"))
-                    .map((s) => (
-                      <div key={s.id}>{renderStepBody(s.id)}</div>
-                    ))}
-                </>
-              )}
-              <AccountStepHierarchy {...stepCtx} />
-              <AccountStepLocation {...stepCtx} />
-              <AccountStepCompliance ctx={stepCtx} />
-            </div>
-          ) : (
-            currentStep && renderStepBody(currentStep.id)
-          )}
-        </div>
-
-        <div className="shrink-0 flex justify-between gap-2 px-6 py-4 border-t border-border bg-surface">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+  const footer = (
+    <>
+      <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting} className="w-full sm:w-auto">
+        Cancel
+      </Button>
+      <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+        {!isEdit && stepIndex > 0 && (
+          <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} className="flex-1 sm:flex-none">
+            Back
           </Button>
-          <div className="flex gap-2">
-            {!isEdit && stepIndex > 0 && (
-              <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting}>
-                Back
-              </Button>
-            )}
-            {isEdit ? (
-              <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? "Saving…" : "Save changes"}
-              </Button>
-            ) : !isLastStep ? (
-              <Button type="button" onClick={handleContinue} disabled={isSubmitting}>
-                Continue
-              </Button>
-            ) : (
-              <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? "Creating…" : "Create account"}
-              </Button>
-            )}
-          </div>
+        )}
+        {isEdit ? (
+          <Button type="button" onClick={handleSubmit} disabled={isSubmitting} className="flex-1 sm:flex-none">
+            {isSubmitting ? "Saving…" : "Save changes"}
+          </Button>
+        ) : !isLastStep ? (
+          <Button type="button" onClick={handleContinue} disabled={isSubmitting} className="flex-1 sm:flex-none">
+            Continue
+          </Button>
+        ) : (
+          <Button type="button" onClick={handleSubmit} disabled={isSubmitting} className="flex-1 sm:flex-none">
+            {isSubmitting ? "Creating…" : "Create account"}
+          </Button>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <FormWizardShell
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      title={isEdit ? "Edit account" : "New account"}
+      subtitle={currentStep?.subtitle ?? (isEdit ? "Update account details" : undefined)}
+      stepIndicator={
+        !isEdit ? <AddAccountStepIndicator steps={steps} currentStepIndex={stepIndex} /> : undefined
+      }
+      footer={footer}
+      maxWidth="2xl"
+    >
+      {isEdit ? (
+        <div className="space-y-4">
+          <AccountStepOrganization {...stepCtx} />
+          <AccountStepClassification {...stepCtx} />
+          {isTravelTrade(formData) && (
+            <>
+              {steps
+                .filter((s) => s.id.startsWith("travel_"))
+                .map((s) => (
+                  <div key={s.id}>{renderStepBody(s.id)}</div>
+                ))}
+            </>
+          )}
+          <AccountStepHierarchy {...stepCtx} />
+          <AccountStepLocation {...stepCtx} />
+          <AccountStepCompliance ctx={stepCtx} />
         </div>
-      </DialogContent>
-    </Dialog>
+      ) : (
+        currentStep && renderStepBody(currentStep.id)
+      )}
+    </FormWizardShell>
   );
 };

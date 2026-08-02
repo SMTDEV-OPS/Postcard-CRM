@@ -17,9 +17,9 @@ export const LEADS_ADD_STEP2_FIELDS = [
   field(`${T}.hotelName`, "Hotel", "Postcard property for the proposed stay.", "Select from the master hotel list. Add another hotel block for multi-property itineraries.", { example: "The Postcard Saligao" }),
   field(`${T}.checkInDate`, "Check-in date", "Arrival date for this hotel stay.", "Must be today or future. Check-out must be after check-in.", { required: true }),
   field(`${T}.checkOutDate`, "Check-out date", "Departure date for this hotel stay.", "Drives night count and rate calculations.", { required: true }),
-  field(`${T}.roomCategory`, "Room category", "Room type requested (e.g. Deluxe, Suite).", "Match hotel inventory categories when known.", { example: "Garden Villa" }),
+  field(`${T}.roomCategory`, "Room category", "Room type requested (e.g. Deluxe, Suite).", "Required before continuing from Stay. Match hotel inventory categories when known.", { required: true, example: "Garden Villa" }),
   field(`${T}.roomPreference`, "Room preference", "Bed type, floor, or view preferences.", "Free text for ops to note on booking.", { example: "King bed, ground floor" }),
-  field(`${T}.numberOfGuests`, "Guests per room", "Number of guests in this room.", "Used for occupancy and meal planning.", { example: "2" }),
+  field(`${T}.numberOfGuests`, "Guests per room", "Number of guests in this room.", "Required. Used for occupancy and meal planning.", { required: true, example: "2" }),
 ];
 
 export const LEADS_ADD_STEP3_FIELDS = [

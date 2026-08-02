@@ -42,17 +42,34 @@ function renderInbound(profile: TravelTradeProfile) {
         label="Segments"
         value={inbound.segments.map((s) => labelForInboundSegment(s)).join(", ")}
       />
-      {inbound.segments.map((seg) => (
-        <Field
-          key={seg}
-          label={`${labelForInboundSegment(seg)} market`}
-          value={inbound.segmentMarkets[seg]}
-        />
-      ))}
+      {inbound.segments.map((seg) => {
+        const markets = inbound.segmentMarkets?.[seg];
+        const marketLabel = Array.isArray(markets)
+          ? markets.join(", ")
+          : typeof markets === "string"
+            ? markets
+            : "";
+        const rn = inbound.segmentRoomNights?.[seg];
+        return (
+          <Field
+            key={seg}
+            label={`${labelForInboundSegment(seg)}`}
+            value={`${marketLabel || "—"}${rn != null ? ` · ${rn} RN` : ""}`}
+          />
+        );
+      })}
       <Field
         label="Hotel segments"
         value={inbound.hotelSegments.map((h) => labelForHotelSegment(h)).join(", ")}
       />
+      {inbound.hotelMappings?.length ? (
+        <Field
+          label="Hotels / cities"
+          value={inbound.hotelMappings
+            .map((m) => `${m.propertyName || m.propertyId}${m.city ? ` (${m.city})` : ""}`)
+            .join("; ")}
+        />
+      ) : null}
     </div>
   );
 }

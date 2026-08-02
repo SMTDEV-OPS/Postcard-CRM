@@ -243,19 +243,37 @@ export const listAccounts = async (
     throw new Error(message);
   }
 
-  const raw = (await response.json()) as any[];
-  // Ensure we always return an array
-  if (!Array.isArray(raw)) {
-    console.warn("Accounts API returned non-array response:", raw);
+  const raw = await response.json();
+  // Paginated shape { data, page, limit, total } or legacy array
+  const list = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : null;
+  if (!list) {
+    console.warn("Accounts API returned unexpected response:", raw);
     return [];
   }
-  return raw.map((a) => {
+  return list.map((a: any) => {
     const { _id, id, ...rest } = a;
     return {
       id: id ?? _id,
       ...rest,
     } as Account;
   });
+};
+
+export const getAccountFollowUpSummary = async (): Promise<{
+  overdue: number;
+  dueToday: number;
+  upcoming: number;
+  total: number;
+  badgeCount: number;
+  hasOverdue: boolean;
+}> => {
+  const response = await fetch(`${API_BASE_URL}/accounts/followup-summary`, {
+    headers: withAuthHeaders(),
+  });
+  if (!response.ok) {
+    return { overdue: 0, dueToday: 0, upcoming: 0, total: 0, badgeCount: 0, hasOverdue: false };
+  }
+  return response.json();
 };
 
 export const createAccount = async (

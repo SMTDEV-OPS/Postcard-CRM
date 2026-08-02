@@ -377,25 +377,25 @@ export function ProfilesManager() {
                 </div>
             )}
 
-            <div className="flex justify-between items-end">
-                <div className="flex gap-3 items-start">
-                    <Button variant="ghost" size="icon" className="mt-1" onClick={() => {
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end">
+                <div className="flex gap-3 items-start min-w-0">
+                    <Button variant="ghost" size="icon" className="mt-1 shrink-0" onClick={() => {
                         if (hasUnsavedChanges && !confirm("Discard unsaved changes?")) return;
                         setSelectedProfile(null);
                         setHasUnsavedChanges(false);
                     }}>
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    <div>
-                        <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
                             {isEditing && !selectedProfile.isSystemProfile ? (
                                 <Input
                                     value={formData.name || ""}
                                     onChange={(e) => { setFormData({ ...formData, name: e.target.value }); setHasUnsavedChanges(true); }}
-                                    className="font-bold text-2xl h-10 w-64"
+                                    className="font-bold text-2xl h-10 w-full max-w-xs sm:w-64"
                                 />
                             ) : (
-                                <h1 className="text-3xl font-bold tracking-tight">{selectedProfile.name}</h1>
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">{selectedProfile.name}</h1>
                             )}
                             {selectedProfile.isSystemProfile && <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100">System Profile</Badge>}
                         </div>
@@ -404,7 +404,7 @@ export function ProfilesManager() {
                             <Input
                                 value={formData.description || ""}
                                 onChange={(e) => { setFormData({ ...formData, description: e.target.value }); setHasUnsavedChanges(true); }}
-                                className="text-muted-foreground mt-2 w-96 max-w-full"
+                                className="text-muted-foreground mt-2 w-full max-w-md"
                                 placeholder="Profile description"
                             />
                         ) : (
@@ -413,7 +413,7 @@ export function ProfilesManager() {
                     </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 shrink-0">
                     <Button variant="outline" onClick={() => handleStartClone(selectedProfile)} className="gap-2">
                         <Copy className="h-4 w-4" /> Clone
                     </Button>
@@ -465,7 +465,7 @@ export function ProfilesManager() {
                             <h3 className="text-lg font-medium mb-4">Admin & Setup Permissions</h3>
                             <p className="text-sm text-muted-foreground mb-6">Control access to system configuration and administration features.</p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12 max-w-4xl">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-12 max-w-4xl">
                                 {(formData.setupPermissions || []).map(perm => (
                                     <div key={perm.key} className="flex items-center justify-between py-3 border-b">
                                         <div>

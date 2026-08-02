@@ -8,6 +8,8 @@ import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { formGrid2 } from "@/lib/responsive";
+import { cn } from "@/lib/utils";
 import {
     Search,
     UserPlus,
@@ -402,46 +404,48 @@ function UserDrawer({ open, onClose, onSaveSuccess, editingUser, users, roles, p
 
 
 
-                        <div className="space-y-1.5">
-                            <FormLabelHelp helpId="setup.users.role" className="text-sm font-medium" required>Role</FormLabelHelp>
-                            <Select
-                                value={form.roleId || "none"}
-                                onValueChange={(v) => set("roleId", v === "none" ? "" : v)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="No role assigned" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">No role</SelectItem>
-                                    {roles.map((r) => (
-                                        <SelectItem key={r._id} value={r._id}>
-                                            {r.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <p className="text-xs text-muted-foreground">Defines this user's position in the org hierarchy.</p>
-                        </div>
+                        <div className={cn(formGrid2, "gap-4")}>
+                            <div className="space-y-1.5">
+                                <FormLabelHelp helpId="setup.users.role" className="text-sm font-medium" required>Role</FormLabelHelp>
+                                <Select
+                                    value={form.roleId || "none"}
+                                    onValueChange={(v) => set("roleId", v === "none" ? "" : v)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="No role assigned" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No role</SelectItem>
+                                        {roles.map((r) => (
+                                            <SelectItem key={r._id} value={r._id}>
+                                                {r.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">Defines this user's position in the org hierarchy.</p>
+                            </div>
 
-                        <div className="space-y-1.5">
-                            <FormLabelHelp helpId="setup.users.profile" className="text-sm font-medium" required>Profile</FormLabelHelp>
-                            <Select
-                                value={form.profileId || "none"}
-                                onValueChange={(v) => set("profileId", v === "none" ? "" : v)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="No profile assigned" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">No profile</SelectItem>
-                                    {profiles.map((p) => (
-                                        <SelectItem key={p._id} value={p._id}>
-                                            {p.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="space-y-1.5">
+                                <FormLabelHelp helpId="setup.users.profile" className="text-sm font-medium" required>Profile</FormLabelHelp>
+                                <Select
+                                    value={form.profileId || "none"}
+                                    onValueChange={(v) => set("profileId", v === "none" ? "" : v)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="No profile assigned" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No profile</SelectItem>
+                                        {profiles.map((p) => (
+                                            <SelectItem key={p._id} value={p._id}>
+                                                {p.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             <p className="text-xs text-muted-foreground">Controls feature permissions (e.g. create leads, manage users).</p>
+                        </div>
                         </div>
 
                         <div className="space-y-1.5">
@@ -843,10 +847,7 @@ export const UserManagement = () => {
             {/* ── Table ──────────────────────────────────────────────────────── */}
             <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-border bg-muted/40 text-muted-foreground text-xs uppercase tracking-wide">
-                                <th className="text-left py-3 px-4 font-semibold">User</th>
+                    <table className="w-full text-sm min-w-[640px]">
                                 <th className="text-left py-3 px-4 font-semibold">Role</th>
                                 <th className="text-left py-3 px-4 font-semibold hidden sm:table-cell">Profile</th>
                                 <th className="text-left py-3 px-4 font-semibold hidden md:table-cell">Reports To</th>

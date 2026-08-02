@@ -449,6 +449,8 @@ accountSchema.index({ status: 1 });
 accountSchema.index({ tags: 1 });
 accountSchema.index({ accountType: 1 }); // NEW
 accountSchema.index({ 'primaryAccountManager.userId': 1 }); // NEW
+accountSchema.index({ 'secondaryAccountManagers.userId': 1 });
+accountSchema.index({ followUpDate: 1, 'primaryAccountManager.userId': 1 });
 accountSchema.index({ city: 1, organizationType: 1 }); // Compound index for filtering
 accountSchema.index({ name: 'text' }); // Text search index
 

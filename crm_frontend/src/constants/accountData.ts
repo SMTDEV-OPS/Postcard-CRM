@@ -182,9 +182,12 @@ export const MAJOR_INDIAN_CITIES = [
     "Jalandhar", "Tiruchirappalli", "Bhubaneswar", "Salem", "Mira-Bhayandar", "Warangal", "Thiruvananthapuram",
     "Bhiwandi", "Saharanpur", "Guntur", "Amravati", "Bikaner", "Noida", "Jamshedpur", "Bhilai", "Cuttack",
     "Firozabad", "Kochi", "Nellore", "Bhavnagar", "Dehradun", "Durgapur", "Asansol", "Rourkela", "Nanded",
+    "Firozabad", "Kochi", "Nellore", "Bhavnagar", "Dehradun", "Durgapur", "Asansol", "Rourkela", "Nanded",
     "Kolhapur", "Ajmer", "Gulbarga", "Jamnagar", "Ujjain", "Loni", "Siliguri", "Jhansi", "Ulhasnagar",
     "Jammu", "Sangli-Miraj & Kupwad", "Belgaum", "Mangalore", "Ambattur", "Tirunelveli", "Malegaon",
-    "Gaya", "Jalgaon", "Udaipur", "Maheshtala"
+    "Gaya", "Jalgaon", "Udaipur", "Maheshtala",
+    "Panaji", "Margao", "Vasco da Gama", "Mapusa", "Ponda", "Calangute",
+    "Shimla", "Dharamshala", "Manali", "Puducherry"
 ].sort();
 
 /** State -> cities mapping for filtering city dropdown when state is selected */
@@ -211,9 +214,20 @@ export const CITIES_BY_STATE: Record<string, string[]> = {
     "Uttarakhand": ["Dehradun"],
     "Jammu and Kashmir": ["Srinagar", "Jammu"],
     "Chandigarh": ["Chandigarh"],
-    "Goa": [],
-    "Himachal Pradesh": [],
-    "Puducherry": [],
+    "Goa": ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Ponda", "Calangute", "Candolim", "Anjuna", "Baga", "Canacona"],
+    "Himachal Pradesh": ["Shimla", "Dharamshala", "Manali", "Kullu", "Solan", "Mandi", "Hamirpur"],
+    "Puducherry": ["Puducherry", "Karaikal", "Mahe", "Yanam"],
+    "Arunachal Pradesh": ["Itanagar", "Tawang", "Pasighat"],
+    "Manipur": ["Imphal"],
+    "Meghalaya": ["Shillong"],
+    "Mizoram": ["Aizawl"],
+    "Nagaland": ["Kohima", "Dimapur"],
+    "Sikkim": ["Gangtok"],
+    "Tripura": ["Agartala"],
+    "Andaman and Nicobar Islands": ["Port Blair"],
+    "Dadra and Nagar Haveli and Daman and Diu": ["Daman", "Diu", "Silvassa"],
+    "Ladakh": ["Leh", "Kargil"],
+    "Lakshadweep": ["Kavaratti"],
 };
 
 /** City -> state(s) for Location step (inverse of CITIES_BY_STATE) */

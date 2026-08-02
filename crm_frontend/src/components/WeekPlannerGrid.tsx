@@ -7,7 +7,6 @@ import {
   startOfWeek,
   endOfWeek,
   addWeeks,
-  startOfDay,
 } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Phone, Calendar, CheckSquare } from "lucide-react";
@@ -94,8 +93,8 @@ export function WeekPlannerGrid({
   const slotRows = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3 max-w-full overflow-x-hidden">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm font-semibold">
           {format(normalizedWeekStart, "MMM d")} - {format(endOfWeek(normalizedWeekStart, { weekStartsOn: 1 }), "MMM d, yyyy")}
         </div>
@@ -112,7 +111,68 @@ export function WeekPlannerGrid({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-border bg-background">
+      {/* Mobile day-list fallback — avoids page-level horizontal scroll */}
+      <div className="space-y-3 md:hidden">
+        {days.map((day) => {
+          const dayKey = format(day, "yyyy-MM-dd");
+          const dayEvents = eventsByDay.get(dayKey) || [];
+          return (
+            <div key={dayKey} className="rounded-lg border border-border bg-background overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/30">
+                <span
+                  className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold ${
+                    isToday(day) ? "bg-primary text-primary-foreground" : "text-foreground"
+                  }`}
+                >
+                  {format(day, "d")}
+                </span>
+                <div>
+                  <div className="text-sm font-medium">{format(day, "EEEE")}</div>
+                  <div className="text-xs text-muted-foreground">{format(day, "MMM d")}</div>
+                </div>
+              </div>
+              {dayEvents.length === 0 ? (
+                <button
+                  type="button"
+                  className="w-full px-3 py-3 text-left text-xs text-muted-foreground hover:bg-muted/30"
+                  onClick={() => onSlotClick?.(day, 9)}
+                >
+                  No events — tap to add
+                </button>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {dayEvents.map((event) => (
+                    <li key={event.id}>
+                      <button
+                        type="button"
+                        className={`w-full px-3 py-2 text-left text-xs border-l-2 ${event.color ?? TYPE_COLORS[event.type]}`}
+                        onClick={() => {
+                          event.onClick?.();
+                          onEventClick?.(event);
+                        }}
+                      >
+                        <div className="flex items-center gap-1.5 font-medium">
+                          {eventIcon(event.type)}
+                          <span className="truncate">{event.title}</span>
+                          <span className="ml-auto shrink-0 text-muted-foreground tabular-nums">
+                            {format(event.startTime, "h:mm a")}
+                          </span>
+                        </div>
+                        {event.subtitle && (
+                          <div className="mt-0.5 truncate opacity-80 pl-4">{event.subtitle}</div>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop / tablet week grid */}
+      <div className="hidden md:block overflow-x-auto max-w-full rounded-lg border border-border bg-background">
         <div className="grid min-w-[640px]" style={{ gridTemplateColumns: `80px repeat(${days.length}, minmax(0, 1fr))` }}>
           <div className="border-b px-2 py-3 text-xs text-muted-foreground">Time</div>
           {days.map((day) => (

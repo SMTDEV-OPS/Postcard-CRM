@@ -348,12 +348,72 @@ accountsRouter.get(
       ];
     }
 
-    const accounts = await AccountModel.find(filter).sort({ name: 1 }).lean();
+    const page = Math.max(1, parseInt(String(req.query.page || "1"), 10) || 1);
+    const limitRaw = parseInt(String(req.query.limit || "0"), 10) || 0;
+    const limit = limitRaw > 0 ? Math.min(limitRaw, 500) : 0;
+    const leanSelect =
+      "name organizationType type status city state accountType accountLevel followUpDate followUpNote primaryAccountManager secondaryAccountManagers tags propertyIds parentAccountId conglomerateId createdAt updatedAt";
+
+    let query = AccountModel.find(filter).select(leanSelect).sort({ name: 1 });
+    if (limit > 0) {
+      query = query.skip((page - 1) * limit).limit(limit);
+    }
+    const accounts = await query.lean();
+    if (limit > 0) {
+      const total = await AccountModel.countDocuments(filter);
+      res.json({ data: accounts, page, limit, total });
+      return;
+    }
     res.json(accounts);
   } catch (err) {
     next(err);
   }
 });
+
+accountsRouter.get(
+  "/followup-summary",
+  requireAnyPermission(["accounts.read", "accounts.access"]),
+  async (req, res, next) => {
+    try {
+      if (!req.user) throw forbidden("Authentication required");
+      const filter: Record<string, unknown> = {
+        status: { $ne: "NA" },
+        followUpDate: { $exists: true, $ne: null },
+        $or: [
+          { "primaryAccountManager.userId": req.user.id },
+          { "secondaryAccountManagers.userId": req.user.id },
+        ],
+      };
+      const rows = await AccountModel.find(filter)
+        .select("followUpDate")
+        .lean();
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+      let overdue = 0;
+      let dueToday = 0;
+      let upcoming = 0;
+      for (const row of rows) {
+        const d = row.followUpDate ? new Date(row.followUpDate as Date) : null;
+        if (!d || Number.isNaN(d.getTime())) continue;
+        if (d < start) overdue += 1;
+        else if (d < end) dueToday += 1;
+        else upcoming += 1;
+      }
+      res.json({
+        overdue,
+        dueToday,
+        upcoming,
+        total: overdue + dueToday + upcoming,
+        badgeCount: overdue + dueToday,
+        hasOverdue: overdue > 0,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 accountsRouter.post(
   "/",

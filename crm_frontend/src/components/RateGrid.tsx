@@ -167,7 +167,7 @@ function CatRateSection({
   );
 
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
+    <div className="rounded-lg border border-border overflow-hidden max-w-full">
       <div
         className={cn(
           "px-3 py-2 border-b border-border bg-muted/40 font-semibold text-foreground",
@@ -176,16 +176,16 @@ function CatRateSection({
       >
         {slab}
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-sm min-w-[520px]">
+      <div className="overflow-x-auto max-w-full">
+        <table className="w-full border-collapse text-sm min-w-[420px]">
           <thead>
             <tr className="border-b border-border bg-muted/20">
-              <th className={cn(thClass, "text-left min-w-[120px]")}>Room type</th>
-              <th className={cn(thClass, "text-center min-w-[68px]")}>Single (₹)</th>
-              <th className={cn(thClass, "text-center min-w-[68px]")}>Double (₹)</th>
-              <th className={cn(thClass, "text-center min-w-[68px]")}>Triple (₹)</th>
-              <th className={cn(thClass, "text-center min-w-[56px]")}>RN</th>
-              <th className={cn(thClass, "text-center min-w-[76px]")}>Revenue</th>
+              <th className={cn(thClass, "text-left min-w-[100px]")}>Room type</th>
+              <th className={cn(thClass, "text-center min-w-[60px]")}>Single (₹)</th>
+              <th className={cn(thClass, "text-center min-w-[60px]")}>Double (₹)</th>
+              <th className={cn(thClass, "text-center min-w-[60px]")}>Triple (₹)</th>
+              <th className={cn(thClass, "text-center min-w-[48px]")}>RN</th>
+              <th className={cn(thClass, "text-center min-w-[68px]")}>Revenue</th>
             </tr>
           </thead>
           <tbody>
@@ -289,8 +289,8 @@ function RoomInclusionsMatrix({
   return (
     <div className="space-y-2">
       <Label className={embedded ? "text-xs" : undefined}>Room inclusions (by category)</Label>
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full border-collapse text-sm min-w-[400px]">
+      <div className="overflow-x-auto max-w-full rounded-lg border border-border">
+        <table className="w-full border-collapse text-sm min-w-[360px]">
           <thead>
             <tr className="border-b border-border bg-muted/20">
               <th className="text-left p-2 text-xs font-medium text-muted-foreground">Room</th>
@@ -526,47 +526,49 @@ function InclusionNomenclatureTable({
           <Plus className="h-4 w-4 mr-1" /> Add
         </Button>
       </div>
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b">
-            <th className="text-left font-medium p-2">Code</th>
-            <th className="text-left font-medium p-2">Full name</th>
-            <th className="w-10" />
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item, idx) => (
-            <tr key={idx} className="border-b">
-              <td className="p-1">
-                <Input
-                  value={item.code}
-                  onChange={(e) => update(idx, { code: e.target.value })}
-                  placeholder="BF"
-                  className="h-9 w-24"
-                />
-              </td>
-              <td className="p-1">
-                <Input
-                  value={item.fullName}
-                  onChange={(e) => update(idx, { fullName: e.target.value })}
-                  placeholder="Inclusive of Breakfast"
-                  className="h-9"
-                />
-              </td>
-              <td className="p-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
-                  onClick={() => remove(idx)}
-                >
-                  ×
-                </Button>
-              </td>
+      <div className="overflow-x-auto max-w-full rounded-md border border-border">
+        <table className="w-full border-collapse text-sm min-w-[320px]">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left font-medium p-2">Code</th>
+              <th className="text-left font-medium p-2">Full name</th>
+              <th className="w-10" />
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {items.map((item, idx) => (
+              <tr key={idx} className="border-b">
+                <td className="p-1">
+                  <Input
+                    value={item.code}
+                    onChange={(e) => update(idx, { code: e.target.value })}
+                    placeholder="BF"
+                    className="h-9 w-24"
+                  />
+                </td>
+                <td className="p-1">
+                  <Input
+                    value={item.fullName}
+                    onChange={(e) => update(idx, { fullName: e.target.value })}
+                    placeholder="Inclusive of Breakfast"
+                    className="h-9"
+                  />
+                </td>
+                <td className="p-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => remove(idx)}
+                  >
+                    ×
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -702,7 +704,7 @@ export function RateGrid({
   const channelToggle = (
     <div
       className={cn(
-        "flex items-center gap-1 p-1 rounded-lg bg-muted/50 border border-border w-fit",
+        "flex items-center gap-1 p-1 rounded-lg bg-muted/50 border border-border w-full sm:w-fit",
         readOnly && "pointer-events-none opacity-90"
       )}
     >
@@ -712,7 +714,7 @@ export function RateGrid({
           type="button"
           onClick={() => setActiveTab(tab)}
           className={cn(
-            "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+            "flex-1 sm:flex-none px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
             activeTab === tab
               ? "bg-background text-foreground shadow-sm"
               : "text-text-muted hover:text-foreground"
@@ -776,7 +778,7 @@ export function RateGrid({
   );
 
   return (
-    <div className={cn(embedded ? "space-y-4 p-3" : "space-y-6")}>
+    <div className={cn(embedded ? "space-y-4 p-3" : "space-y-6", "max-w-full overflow-x-hidden")}>
       {!readOnly && (
         <input
           ref={uploadRef}
@@ -794,14 +796,14 @@ export function RateGrid({
         </div>
       ) : (
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "b2b" | "b2c")}>
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto">
             <TabsTrigger value="b2b">B2B Rates</TabsTrigger>
             <TabsTrigger value="b2c">B2C Rates</TabsTrigger>
           </TabsList>
-          <TabsContent value="b2b" className="mt-4 space-y-4">
+          <TabsContent value="b2b" className="mt-4 space-y-4 max-w-full overflow-x-hidden">
             {renderChannel("b2b")}
           </TabsContent>
-          <TabsContent value="b2c" className="mt-4 space-y-4">
+          <TabsContent value="b2c" className="mt-4 space-y-4 max-w-full overflow-x-hidden">
             {renderChannel("b2c")}
           </TabsContent>
         </Tabs>
@@ -812,7 +814,7 @@ export function RateGrid({
 
       {!readOnly && (
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+          <DialogContent className="w-[100dvw] max-w-none sm:max-w-3xl max-h-[100dvh] sm:max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <FileSpreadsheet className="h-5 w-5" />
@@ -820,8 +822,8 @@ export function RateGrid({
               </DialogTitle>
             </DialogHeader>
             {previewData && previewData.length > 0 ? (
-              <div className="overflow-auto max-h-[400px]">
-                <table className="w-full border-collapse text-sm">
+              <div className="overflow-x-auto max-h-[400px]">
+                <table className="w-full border-collapse text-sm min-w-[360px]">
                   <thead>
                     <tr className="border-b">
                       <th className="text-left p-2">Room</th>

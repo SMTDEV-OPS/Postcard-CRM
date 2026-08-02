@@ -5,13 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Clock, Download, Eye, Loader2, Pencil, Plus, Upload, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, Download, Eye, Loader2, Mail, Pencil, Plus, Upload, XCircle } from "lucide-react";
 import { downloadContractRateTemplate } from "@/utils/contractRateTemplate";
 import { ContractViewDialog } from "@/components/contracts/ContractViewDialog";
 import {
   approveContract,
   listContracts,
   rejectContract,
+  sendContractToClient,
   type Contract,
   uploadContractPricingExcel,
 } from "@/services/contracts";
@@ -23,6 +24,7 @@ import { ContractWizard } from "@/components/contracts/ContractWizard";
 
 interface AccountContractsProps {
   accountId: string;
+  accountName?: string;
   canManage?: boolean;
 }
 
@@ -45,7 +47,7 @@ function stepBadgeClass(status: "PENDING" | "APPROVED" | "REJECTED") {
   return "bg-amber-50 border-amber-200 text-amber-700";
 }
 
-export function AccountContracts({ accountId, canManage }: AccountContractsProps) {
+export function AccountContracts({ accountId, accountName, canManage }: AccountContractsProps) {
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -101,6 +103,20 @@ export function AccountContracts({ accountId, canManage }: AccountContractsProps
     for (const c of contacts) m.set(c.id, c.name);
     return m;
   }, [contacts]);
+
+  const handleSendToClient = async (contract: Contract) => {
+    try {
+      await sendContractToClient(contract.id);
+      toast({ title: "Sent", description: "Contract emailed to the client" });
+      void load();
+    } catch (err: unknown) {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to send contract",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleApprove = async (contract: Contract) => {
     try {
@@ -270,6 +286,19 @@ export function AccountContracts({ accountId, canManage }: AccountContractsProps
                           </Button>
                         </>
                       )}
+                      {canManage &&
+                        contract.status === "APPROVED" &&
+                        contract.contactEmail &&
+                        !contract.clientEmailSentAt && (
+                          <Button size="sm" onClick={() => handleSendToClient(contract)}>
+                            <Mail className="h-4 w-4 mr-2" /> Send to client
+                          </Button>
+                        )}
+                      {canManage && contract.clientEmailSentAt && (
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200">
+                          Sent to client
+                        </Badge>
+                      )}
                       {canActOnContract && (
                         <>
                           <Button size="sm" onClick={() => handleApprove(contract)}>
@@ -310,6 +339,7 @@ export function AccountContracts({ accountId, canManage }: AccountContractsProps
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
         accountId={accountId}
+        accountName={accountName}
         contacts={contacts}
         apiProperties={properties}
         mode="create"
@@ -320,6 +350,7 @@ export function AccountContracts({ accountId, canManage }: AccountContractsProps
         open={!!editingContract}
         onOpenChange={(open) => !open && setEditingContract(null)}
         accountId={accountId}
+        accountName={accountName}
         contacts={contacts}
         apiProperties={properties}
         mode="edit"

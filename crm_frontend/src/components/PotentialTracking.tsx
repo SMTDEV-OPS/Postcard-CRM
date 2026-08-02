@@ -444,13 +444,13 @@ export const PotentialTracking = ({ accountId, renderOnlyAddDialog, onSuccess, o
 
             {/* Actual drill-down dialog */}
             <Dialog open={actualDrillDownOpen} onOpenChange={setActualDrillDownOpen}>
-                <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+                <DialogContent className="w-[100dvw] max-w-none sm:max-w-2xl max-h-[100dvh] sm:max-h-[80vh] flex flex-col">
                     <DialogHeader>
                         <DialogTitle>Actual by property (city / segment)</DialogTitle>
                         <CardDescription>Revenue actuals by market for {selectedYear}</CardDescription>
                     </DialogHeader>
-                    <div className="overflow-y-auto flex-1 min-h-0">
-                        <table className="w-full text-sm">
+                    <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0">
+                        <table className="w-full text-sm min-w-[420px]">
                             <thead>
                                 <tr className="border-b border-border">
                                     <th className="text-left py-2 font-medium">City</th>

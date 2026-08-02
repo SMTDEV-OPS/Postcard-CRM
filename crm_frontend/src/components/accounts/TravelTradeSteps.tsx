@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 import {
   AGENT_TYPES,
   DOMESTIC_SEGMENTS,
@@ -24,14 +28,78 @@ import {
   labelForInboundSegment,
 } from "@/constants/travelTradeAccountData";
 import type { AccountFormData } from "./accountFormTypes";
-import type { TravelOperatorType } from "@/types/travelTradeProfile";
+import type { InboundHotelMapping, TravelOperatorType } from "@/types/travelTradeProfile";
 import { MONTHS } from "@/constants/accountData";
+import type { Property } from "@/services/properties";
+import { buildPostcardPropertyOptions } from "@/constants/postcardProperties";
 
 type SetForm = (patch: Partial<AccountFormData>) => void;
 
 function toggleInArray<T extends string>(arr: T[], value: T, checked: boolean): T[] {
   if (checked) return arr.includes(value) ? arr : [...arr, value];
   return arr.filter((v) => v !== value);
+}
+
+function MarketChips({
+  markets,
+  onChange,
+  placeholder,
+}: {
+  markets: string[];
+  onChange: (next: string[]) => void;
+  placeholder?: string;
+}) {
+  const [draft, setDraft] = useState("");
+
+  const addMarket = (raw: string) => {
+    const parts = raw
+      .split(/[,;/|]/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (!parts.length) return;
+    const next = [...markets];
+    for (const p of parts) {
+      if (!next.some((m) => m.toLowerCase() === p.toLowerCase())) next.push(p);
+    }
+    onChange(next);
+    setDraft("");
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1.5">
+        {markets.map((m) => (
+          <Badge key={m} variant="secondary" className="gap-1 font-normal">
+            {m}
+            <button
+              type="button"
+              className="rounded-sm hover:bg-muted"
+              onClick={() => onChange(markets.filter((x) => x !== m))}
+              aria-label={`Remove ${m}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={placeholder ?? "Add market / country"}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              addMarket(draft);
+            }
+          }}
+        />
+        <Button type="button" variant="outline" size="sm" onClick={() => addMarket(draft)}>
+          Add
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export function TravelTradeOrganizationFields({
@@ -92,12 +160,27 @@ export function TravelTradeOrganizationFields({
   );
 }
 
-export function TravelTradeInboundStep({ formData, set }: { formData: AccountFormData; set: SetForm }) {
+export function TravelTradeInboundStep({
+  formData,
+  set,
+  properties = [],
+}: {
+  formData: AccountFormData;
+  set: SetForm;
+  properties?: Property[];
+}) {
   const inbound = formData.travelTradeProfile?.inbound ?? {
     segments: [],
     segmentMarkets: {},
+    segmentRoomNights: {},
     hotelSegments: [],
+    hotelMappings: [],
   };
+
+  const propertyOptions = buildPostcardPropertyOptions(
+    properties.map((p) => ({ _id: p._id, name: p.name, status: p.status }))
+  );
+  const propertyById = new Map(properties.map((p) => [p._id, p]));
 
   const updateInbound = (patch: Partial<typeof inbound>) => {
     set({
@@ -111,8 +194,49 @@ export function TravelTradeInboundStep({ formData, set }: { formData: AccountFor
   const toggleSegment = (value: (typeof INBOUND_SEGMENTS)[number]["value"], checked: boolean) => {
     const segments = toggleInArray(inbound.segments, value, checked);
     const segmentMarkets = { ...inbound.segmentMarkets };
-    if (!checked) delete segmentMarkets[value];
-    updateInbound({ segments, segmentMarkets });
+    const segmentRoomNights = { ...inbound.segmentRoomNights };
+    if (!checked) {
+      delete segmentMarkets[value];
+      delete segmentRoomNights[value];
+    } else if (!segmentMarkets[value]) {
+      segmentMarkets[value] = [];
+    }
+    updateInbound({ segments, segmentMarkets, segmentRoomNights });
+  };
+
+  const toggleHotelMapping = (propertyId: string, checked: boolean) => {
+    let hotelMappings: InboundHotelMapping[] = [...(inbound.hotelMappings ?? [])];
+    if (checked) {
+      if (!hotelMappings.some((m) => m.propertyId === propertyId)) {
+        const prop = propertyById.get(propertyId);
+        const opt = propertyOptions.find((p) => p.id === propertyId);
+        hotelMappings.push({
+          propertyId,
+          propertyName: opt?.name || prop?.name,
+          city: prop?.location?.city?.trim() || "",
+        });
+      }
+    } else {
+      hotelMappings = hotelMappings.filter((m) => m.propertyId !== propertyId);
+    }
+    const nextPropertyIds = checked
+      ? Array.from(new Set([...(formData.propertyIds || []), propertyId]))
+      : (formData.propertyIds || []).filter((id) => id !== propertyId);
+    set({
+      propertyIds: nextPropertyIds,
+      travelTradeProfile: {
+        ...formData.travelTradeProfile!,
+        inbound: { ...inbound, hotelMappings },
+      },
+    });
+  };
+
+  const updateMappingCity = (propertyId: string, city: string) => {
+    updateInbound({
+      hotelMappings: (inbound.hotelMappings ?? []).map((m) =>
+        m.propertyId === propertyId ? { ...m, city } : m
+      ),
+    });
   };
 
   return (
@@ -133,20 +257,38 @@ export function TravelTradeInboundStep({ formData, set }: { formData: AccountFor
         </div>
       </div>
       {inbound.segments.length > 0 && (
-        <div className="space-y-3">
-          <FormLabelHelp helpId="accounts.wizard.travel.inbound.segmentMarkets">Market / country per segment</FormLabelHelp>
+        <div className="space-y-4">
+          <FormLabelHelp helpId="accounts.wizard.travel.inbound.segmentMarkets">
+            Markets / countries and room nights per segment
+          </FormLabelHelp>
           {inbound.segments.map((seg) => (
-            <div key={seg} className="space-y-1">
-              <Label className="text-xs text-text-muted">{labelForInboundSegment(seg)}</Label>
-              <Input
-                value={inbound.segmentMarkets[seg] ?? ""}
-                onChange={(e) =>
+            <div key={seg} className="space-y-2 rounded-md border border-border p-3">
+              <Label className="text-xs font-medium text-text">{labelForInboundSegment(seg)}</Label>
+              <MarketChips
+                markets={inbound.segmentMarkets[seg] ?? []}
+                onChange={(next) =>
                   updateInbound({
-                    segmentMarkets: { ...inbound.segmentMarkets, [seg]: e.target.value },
+                    segmentMarkets: { ...inbound.segmentMarkets, [seg]: next },
                   })
                 }
-                placeholder="Market or country"
+                placeholder="e.g. UK, Germany, France"
               />
+              <div className="space-y-1">
+                <Label className="text-xs text-text-muted">Potential room nights (annual)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={inbound.segmentRoomNights?.[seg] ?? ""}
+                  onChange={(e) => {
+                    const n = e.target.value === "" ? undefined : Number(e.target.value);
+                    const segmentRoomNights = { ...(inbound.segmentRoomNights ?? {}) };
+                    if (n == null || !Number.isFinite(n)) delete segmentRoomNights[seg];
+                    else segmentRoomNights[seg] = Math.max(0, n);
+                    updateInbound({ segmentRoomNights });
+                  }}
+                  placeholder="0"
+                />
+              </div>
             </div>
           ))}
         </div>
@@ -167,6 +309,42 @@ export function TravelTradeInboundStep({ formData, set }: { formData: AccountFor
               {opt.label}
             </label>
           ))}
+        </div>
+      </div>
+      <div className="space-y-2">
+        <FormLabelHelp helpId="accounts.wizard.travel.inbound.hotelMappings">
+          Hotels / cities this agent feeds
+        </FormLabelHelp>
+        <p className="text-xs text-text-muted">
+          Select Postcard properties and confirm the city for each. These also update account property mapping.
+        </p>
+        <div className="space-y-2 max-h-64 overflow-y-auto rounded-md border border-border p-2">
+          {propertyOptions.filter((p) => p.selectable).map((opt) => {
+            const mapping = (inbound.hotelMappings ?? []).find((m) => m.propertyId === opt.id);
+            const checked = !!mapping;
+            return (
+              <div key={opt.id} className="space-y-1.5 rounded-md border border-border/60 p-2">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(v) => toggleHotelMapping(opt.id, !!v)}
+                  />
+                  {opt.name}
+                </label>
+                {checked && (
+                  <Input
+                    value={mapping?.city ?? ""}
+                    onChange={(e) => updateMappingCity(opt.id, e.target.value)}
+                    placeholder="City"
+                    className="ml-6 max-w-xs"
+                  />
+                )}
+              </div>
+            );
+          })}
+          {propertyOptions.filter((p) => p.selectable).length === 0 && (
+            <p className="text-sm text-text-muted p-2">No properties available yet.</p>
+          )}
         </div>
       </div>
     </div>

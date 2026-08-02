@@ -7,10 +7,57 @@ import { logger } from "../../config/logger";
 import { AuthUser } from "../../middleware/auth";
 import { ObjectId } from "mongoose";
 
-// Permission format: resource:action:scope
-// Example: leads:read:region
+const PERMS_TTL_MS = 3 * 60 * 1000;
+const DESC_TTL_MS = 5 * 60 * 1000;
+
+type PermsCacheEntry = { permissions: string[]; isAdmin: boolean; expiresAt: number };
+type DescCacheEntry = { ids: string[]; expiresAt: number };
+
+const permsCache = new Map<string, PermsCacheEntry>();
+const descendantsCache = new Map<string, DescCacheEntry>();
+
+function addLegacyModuleAliases(permsSet: Set<string>, module: string, mp: {
+  view?: boolean;
+  create?: boolean;
+  edit?: boolean;
+  delete?: boolean;
+}) {
+  if (mp.view) {
+    if (module === "leads") {
+      permsSet.add("leads.view.own");
+      permsSet.add("leads.view.team");
+    }
+    if (module === "tickets") {
+      permsSet.add("tickets.view.own");
+      permsSet.add("tickets.view.team");
+    }
+    if (module === "reports") permsSet.add("reports.view");
+    if (module === "buddies") {
+      permsSet.add("buddies.view.history");
+      permsSet.add("buddies.view.reports");
+    }
+    if (module === "communications") permsSet.add("callcenter.access");
+    if (module === "accounts") permsSet.add("accounts.access");
+  }
+  if (mp.view && mp.create && mp.edit && mp.delete) {
+    if (module === "leads") permsSet.add("leads.view.all");
+    if (module === "tickets") permsSet.add("tickets.view.all");
+    if (module === "buddies") permsSet.add("buddies.assign");
+  }
+}
 
 export class AccessControlService {
+    static invalidateUserCache(userId: string) {
+        const id = String(userId);
+        permsCache.delete(id);
+        descendantsCache.delete(id);
+    }
+
+    static invalidateAllCaches() {
+        permsCache.clear();
+        descendantsCache.clear();
+    }
+
     /**
      * Parse a permission string into its components (Zoho dot notation)
      */
@@ -120,20 +167,37 @@ export class AccessControlService {
      * Returns array of User IDs.
      */
     static async getDescendants(managerId: string): Promise<string[]> {
-        // We look for direct reports, then recursively find their reports
-        const subordinates = await UserModel.find({ reportsTo: managerId }).select("_id").lean();
-
-        const descendantIds: string[] = [];
-
-        for (const subordinate of subordinates) {
-            const subordinateId = subordinate._id.toString();
-            descendantIds.push(subordinateId);
-
-            // Recursively find descendants of this subordinate
-            const subDescendants = await this.getDescendants(subordinateId);
-            descendantIds.push(...subDescendants);
+        const cached = descendantsCache.get(managerId);
+        if (cached && cached.expiresAt > Date.now()) {
+            return cached.ids;
         }
 
+        // Single query for all users with hierarchyPath containing this manager (preferred)
+        // Fallback: recursive for DBs without hierarchyPath populated
+        const withPath = await UserModel.find({
+            hierarchyPath: new RegExp(`/${managerId}/`),
+        })
+            .select("_id")
+            .lean();
+
+        let descendantIds: string[];
+        if (withPath.length > 0) {
+            descendantIds = withPath.map((u) => u._id.toString());
+        } else {
+            const subordinates = await UserModel.find({ reportsTo: managerId }).select("_id").lean();
+            descendantIds = [];
+            for (const subordinate of subordinates) {
+                const subordinateId = subordinate._id.toString();
+                descendantIds.push(subordinateId);
+                const subDescendants = await this.getDescendants(subordinateId);
+                descendantIds.push(...subDescendants);
+            }
+        }
+
+        descendantsCache.set(managerId, {
+            ids: descendantIds,
+            expiresAt: Date.now() + DESC_TTL_MS,
+        });
         return descendantIds;
     }
 
@@ -171,6 +235,12 @@ export class AccessControlService {
      * In the Zoho model, Profiles define feature access (what you can do).
      */
     static async getUserPermissions(userId: string | ObjectId): Promise<{ permissions: string[], isAdmin: boolean }> {
+        const id = String(userId);
+        const cached = permsCache.get(id);
+        if (cached && cached.expiresAt > Date.now()) {
+            return { permissions: cached.permissions, isAdmin: cached.isAdmin };
+        }
+
         const user = await UserModel.findById(userId).populate<{ profileId: IProfile }>("profileId");
 
         if (!user || user.status !== "ACTIVE") {
@@ -183,8 +253,6 @@ export class AccessControlService {
         // New system: Check Profile
         if (user.profileId) {
             const profile = user.profileId;
-
-            console.log("DEBUG AccessControlService user profile:", profile.name);
 
             // Handle legacy flat permissions array if it still exists before migration
             if ((profile as any).permissions && Array.isArray((profile as any).permissions)) {
@@ -207,6 +275,8 @@ export class AccessControlService {
                     if (mp.view && mp.create && mp.edit && mp.delete) {
                         permsSet.add(`${mp.module}.manage`);
                     }
+
+                    addLegacyModuleAliases(permsSet, mp.module, mp);
                 }
             }
 
@@ -225,14 +295,13 @@ export class AccessControlService {
                 permsSet.add("settings.manage");
                 permsSet.add("users.manage");
             }
-        } else {
-            console.log("DEBUG AccessControlService user has no profileId", userId);
         }
 
-        console.log("DEBUG AccessControlService returning:", { isAdmin, permsCount: permsSet.size });
-        return {
+        const result = {
             permissions: Array.from(permsSet),
             isAdmin
         };
+        permsCache.set(id, { ...result, expiresAt: Date.now() + PERMS_TTL_MS });
+        return result;
     }
 }

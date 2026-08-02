@@ -13,7 +13,14 @@ import { FieldBuilder } from "@/pages/setup/FieldBuilder";
 import PropertyGuidePublic from "@/pages/PropertyGuidePublic";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 45_000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <ErrorBoundary>

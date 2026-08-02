@@ -11,7 +11,7 @@ import {
   startOfMonth,
   subMonths,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, CalendarDays, TrendingUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, TrendingUp, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChartTooltip } from "@/components/ui/chart";
@@ -30,6 +30,24 @@ import {
   type HolidayEntry,
   type TargetsSummary,
 } from "@/services/accountsDashboard";
+import { listAccounts, type Account } from "@/services/accounts";
+import { ActivityWizard } from "@/components/activities/ActivityWizard";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 const PIE_COLORS = { achieved: "#10b981", remaining: "#e2e8f0" };
 
@@ -113,6 +131,7 @@ function TargetsPieCard({
 
 export function AccountsDashboard() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [holidays, setHolidays] = useState<HolidayEntry[]>([]);
@@ -121,6 +140,47 @@ export function AccountsDashboard() {
   const [conversion, setConversion] = useState<ConversionFy | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [mappedAccounts, setMappedAccounts] = useState<Account[]>([]);
+  const [accountPickerOpen, setAccountPickerOpen] = useState(false);
+  const [pickerAccountId, setPickerAccountId] = useState("");
+  const [activityAccountId, setActivityAccountId] = useState<string | null>(null);
+  const [activityWizardOpen, setActivityWizardOpen] = useState(false);
+  const [activityInitialDate, setActivityInitialDate] = useState<Date | undefined>();
+
+  useEffect(() => {
+    listAccounts({ myAccounts: true })
+      .then(setMappedAccounts)
+      .catch(() => setMappedAccounts([]));
+  }, []);
+
+  const openAddActivity = (date: Date) => {
+    setActivityInitialDate(date);
+    if (mappedAccounts.length === 0) {
+      toast({
+        title: "No accounts",
+        description: "Map yourself to an account before adding activities.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (mappedAccounts.length === 1) {
+      setActivityAccountId(mappedAccounts[0].id);
+      setActivityWizardOpen(true);
+      return;
+    }
+    setPickerAccountId("");
+    setAccountPickerOpen(true);
+  };
+
+  const confirmAccountPicker = () => {
+    if (!pickerAccountId) {
+      toast({ title: "Required", description: "Select an account", variant: "destructive" });
+      return;
+    }
+    setActivityAccountId(pickerAccountId);
+    setAccountPickerOpen(false);
+    setActivityWizardOpen(true);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -221,17 +281,17 @@ export function AccountsDashboard() {
       </div>
 
       <Card className="border-border shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between border-b border-border pb-3">
-          <div>
+        <CardHeader className="flex flex-col gap-3 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <CalendarDays className="h-4 w-4" />
+              <CalendarDays className="h-4 w-4 shrink-0" />
               Calendar
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
               Account-linked check-ins and holidays
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <Button
               variant="outline"
               size="icon"
@@ -240,7 +300,7 @@ export function AccountsDashboard() {
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="min-w-[120px] text-center text-sm font-medium">
+            <span className="min-w-[100px] sm:min-w-[120px] text-center text-sm font-medium">
               {format(month, "MMMM yyyy")}
             </span>
             <Button
@@ -253,66 +313,92 @@ export function AccountsDashboard() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-muted-foreground mb-2">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div key={d}>{d}</div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: startPad }).map((_, i) => (
-              <div key={`pad-${i}`} />
-            ))}
-            {days.map((day) => {
-              const key = format(day, "yyyy-MM-dd");
-              const dayEv = eventsByDate.get(key) || [];
-              const hol = holidayForDay(day);
-              const isSelected = selectedDay && isSameDay(day, selectedDay);
-              const isToday = isSameDay(day, new Date());
+        <CardContent className="p-4 overflow-x-hidden max-w-full">
+          <div className="overflow-x-auto max-w-full">
+            <div className="min-w-0">
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1 text-center text-[10px] sm:text-xs font-medium text-muted-foreground mb-2">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                  <div key={d}>
+                    <span className="sm:hidden">{d.slice(0, 1)}</span>
+                    <span className="hidden sm:inline">{d}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+                {Array.from({ length: startPad }).map((_, i) => (
+                  <div key={`pad-${i}`} />
+                ))}
+                {days.map((day) => {
+                  const key = format(day, "yyyy-MM-dd");
+                  const dayEv = eventsByDate.get(key) || [];
+                  const hol = holidayForDay(day);
+                  const isSelected = selectedDay && isSameDay(day, selectedDay);
+                  const isToday = isSameDay(day, new Date());
 
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setSelectedDay(day)}
-                  className={cn(
-                    "relative min-h-[72px] rounded-md border p-1 text-left text-xs transition-colors",
-                    hol?.type === "season" && "bg-amber-50/80 border-amber-100",
-                    hol?.type === "public_holiday" && "bg-rose-50/60 border-rose-100",
-                    !hol && "border-border hover:bg-muted/50",
-                    isSelected && "ring-2 ring-primary",
-                    isToday && "font-semibold"
-                  )}
-                >
-                  <span className={cn(!isSameMonth(day, month) && "text-muted-foreground")}>
-                    {format(day, "d")}
-                  </span>
-                  {hol && (
-                    <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
-                      {hol.name}
-                    </span>
-                  )}
-                  {dayEv.length > 0 && (
-                    <span className="absolute bottom-1 left-1 right-1 flex gap-0.5 justify-center">
-                      {dayEv.slice(0, 3).map((e) => (
-                        <span
-                          key={e.id}
-                          className="h-1.5 w-1.5 rounded-full bg-primary"
-                          title={e.title}
-                        />
-                      ))}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setSelectedDay(day)}
+                      className={cn(
+                        "relative min-h-[52px] sm:min-h-[72px] rounded-md border p-0.5 sm:p-1 text-left text-[10px] sm:text-xs transition-colors",
+                        hol?.type === "season" && "bg-amber-50/80 border-amber-100",
+                        hol?.type === "public_holiday" && "bg-rose-50/60 border-rose-100",
+                        !hol && "border-border hover:bg-muted/50",
+                        isSelected && "ring-2 ring-primary",
+                        isToday && "font-semibold"
+                      )}
+                    >
+                      <span className={cn(!isSameMonth(day, month) && "text-muted-foreground")}>
+                        {format(day, "d")}
+                      </span>
+                      {hol && (
+                        <span className="block truncate text-[9px] sm:text-[10px] text-muted-foreground mt-0.5">
+                          {hol.name}
+                        </span>
+                      )}
+                      {dayEv.length > 0 && (
+                        <span className="absolute bottom-0.5 left-0.5 right-0.5 sm:bottom-1 sm:left-1 sm:right-1 flex gap-0.5 justify-center">
+                          {dayEv.slice(0, 3).map((e) => (
+                            <span
+                              key={e.id}
+                              className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-primary"
+                              title={e.title}
+                            />
+                          ))}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {selectedDay && (
             <div className="mt-4 rounded-md border border-border p-3">
-              <p className="text-sm font-medium mb-2">
-                {format(selectedDay, "EEEE, d MMMM yyyy")}
-              </p>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-medium">
+                  {format(selectedDay, "EEEE, d MMMM yyyy")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openAddActivity(selectedDay)}
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    Add activity
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => navigate(CRM_PATHS.calendar)}
+                  >
+                    Open calendar
+                  </Button>
+                </div>
+              </div>
               {dayEvents.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No check-ins scheduled</p>
               ) : (
@@ -350,6 +436,52 @@ export function AccountsDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={accountPickerOpen} onOpenChange={setAccountPickerOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select account</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Activity for account</Label>
+            <Select value={pickerAccountId} onValueChange={setPickerAccountId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose account" />
+              </SelectTrigger>
+              <SelectContent>
+                {mappedAccounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAccountPickerOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmAccountPicker}>Continue</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {activityAccountId && (
+        <ActivityWizard
+          open={activityWizardOpen}
+          onOpenChange={(open) => {
+            setActivityWizardOpen(open);
+            if (!open) setActivityAccountId(null);
+          }}
+          accountId={activityAccountId}
+          initialDate={activityInitialDate}
+          onSuccess={() => {
+            setActivityWizardOpen(false);
+            setActivityAccountId(null);
+            toast({ title: "Activity scheduled" });
+          }}
+        />
+      )}
     </div>
   );
 }

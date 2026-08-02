@@ -141,15 +141,39 @@ export function validateWizardStep(
         return { valid: false, message: "Select at least one inbound segment" };
       }
       for (const seg of inbound.segments) {
-        if (!inbound.segmentMarkets?.[seg]?.trim()) {
+        const markets = inbound.segmentMarkets?.[seg];
+        const marketList = Array.isArray(markets)
+          ? markets
+          : typeof markets === "string" && (markets as string).trim()
+            ? [(markets as string).trim()]
+            : [];
+        if (!marketList.length) {
           return {
             valid: false,
-            message: `Market / country is required for ${labelForInboundSegment(seg as InboundSegment)}`,
+            message: `At least one market / country is required for ${labelForInboundSegment(seg as InboundSegment)}`,
+          };
+        }
+        const rn = inbound.segmentRoomNights?.[seg];
+        if (rn == null || !Number.isFinite(Number(rn)) || Number(rn) < 0) {
+          return {
+            valid: false,
+            message: `Potential room nights are required for ${labelForInboundSegment(seg as InboundSegment)}`,
           };
         }
       }
       if (!inbound.hotelSegments?.length) {
         return { valid: false, message: "Select at least one hotel segment" };
+      }
+      if (!inbound.hotelMappings?.length) {
+        return { valid: false, message: "Map at least one hotel / city" };
+      }
+      for (const mapping of inbound.hotelMappings) {
+        if (!mapping.city?.trim()) {
+          return {
+            valid: false,
+            message: `City is required for ${mapping.propertyName || "selected hotel"}`,
+          };
+        }
       }
       return { valid: true };
     }

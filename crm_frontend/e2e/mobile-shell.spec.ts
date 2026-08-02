@@ -14,7 +14,17 @@ test.describe("Mobile shell", () => {
       test.skip(!loggedIn, "Set PLAYWRIGHT_TEST_EMAIL and PLAYWRIGHT_TEST_PASSWORD to run authenticated mobile smoke tests");
     });
 
-    for (const path of ["/leads", "/calls", "/accounts", "/settings"]) {
+    for (const path of [
+      "/dashboard",
+      "/leads",
+      "/calls",
+      "/accounts",
+      "/follow-ups",
+      "/calendar",
+      "/reports",
+      "/settings",
+      "/setup/profiles",
+    ]) {
       test(`${path} shows mobile nav and has no horizontal scroll`, async ({ page }) => {
         await page.goto(path);
         await page.waitForLoadState("networkidle");

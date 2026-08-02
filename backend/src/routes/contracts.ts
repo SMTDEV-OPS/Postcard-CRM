@@ -32,6 +32,7 @@ const pricingRowSchema = z.object({
 const contractCreateSchema = z.object({
   accountId: z.string().min(1),
   propertyIds: z.array(z.string()).default([]),
+  propertyCategories: z.record(z.string(), z.string()).optional(),
   companyName: z.string().min(1),
   contactId: z.string().optional(),
   contactEmail: z.string().email().optional(),
@@ -110,24 +111,46 @@ contractsRouter.post("/", async (req, res, next) => {
       });
     }
 
-    // Send contract email to selected contact if email service is configured
-    if (contactEmail && req.user?.id) {
-      try {
-        const primary = await getPrimaryEmailAccount(req.user.id);
-        if (primary) {
-          await sendEmail(primary._id.toString(), {
-            to: [{ email: contactEmail }],
-            subject: `Contract for ${parsed.data.companyName} (${parsed.data.channel})`,
-            bodyText: `Dear Partner,\n\nPlease find your contract details in the CRM.\n\nCompany: ${parsed.data.companyName}\nChannel: ${parsed.data.channel}\n\nRegards,\nThe Sales Team`,
-          });
-        }
-      } catch (emailErr) {
-        // Email failure should not block contract creation
-        console.warn("Contract email notification failed", emailErr);
-      }
+    // Client email is sent only after approval via POST /:id/send-to-client
+    res.status(201).json(contract);
+  } catch (err) {
+    next(err);
+  }
+});
+
+contractsRouter.post("/:id/send-to-client", async (req, res, next) => {
+  try {
+    if (!hasPermission(req.user, "accounts.manage")) {
+      throw forbidden("Insufficient permissions to send contracts");
+    }
+    const contract = await ContractModel.findById(req.params.id);
+    if (!contract) throw notFound("Contract not found");
+    if (contract.status !== "APPROVED") {
+      throw badRequest("Contract must be approved before sending to client");
+    }
+    const contactEmail = (contract as any).contactEmail as string | undefined;
+    if (!contactEmail) {
+      throw badRequest("No client email on this contract");
+    }
+    if ((contract as any).clientEmailSentAt) {
+      throw badRequest("Contract already sent to client");
+    }
+    if (!req.user?.id) throw forbidden("Authentication required");
+
+    const primary = await getPrimaryEmailAccount(req.user.id);
+    if (!primary) {
+      throw badRequest("Configure a primary email account before sending contracts");
     }
 
-    res.status(201).json(contract);
+    await sendEmail(primary._id.toString(), {
+      to: [{ email: contactEmail }],
+      subject: `Contract for ${contract.companyName} (${contract.channel})`,
+      bodyText: `Dear Partner,\n\nPlease find your contract details in the CRM.\n\nCompany: ${contract.companyName}\nChannel: ${contract.channel}\n\nRegards,\nThe Sales Team`,
+    });
+
+    (contract as any).clientEmailSentAt = new Date();
+    await contract.save();
+    res.json(contract);
   } catch (err) {
     next(err);
   }

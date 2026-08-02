@@ -335,7 +335,7 @@ const Reports = ({ userName }: ReportsProps) => {
 
       {/* Reports Tabs */}
       <Tabs defaultValue="property" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3">
           <TabsTrigger value="property">Property Reports</TabsTrigger>
           <TabsTrigger value="sales">Sales Performance</TabsTrigger>
           <TabsTrigger value="callcenter">Call Center Performance</TabsTrigger>
@@ -394,7 +394,7 @@ const Reports = ({ userName }: ReportsProps) => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                         <div className="text-center">
                           <p className="text-sm text-muted-foreground">Cancellation Rate</p>
                           <p className="font-semibold">{property.cancellationRate}</p>
@@ -472,7 +472,7 @@ const Reports = ({ userName }: ReportsProps) => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                         <div className="text-center">
                           <p className="text-sm text-muted-foreground">Calls Made</p>
                           <p className="font-semibold">{agent.callsMade}</p>
@@ -553,7 +553,7 @@ const Reports = ({ userName }: ReportsProps) => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                         <div className="text-center">
                           <p className="text-sm text-muted-foreground">Tickets Created</p>
                           <p className="font-semibold">{agent.ticketsCreated}</p>

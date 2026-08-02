@@ -9,6 +9,7 @@ import {
   createEmptyRateGridValue,
   normalizeRateGridValue,
   type RateGridValue,
+  DEFAULT_RATE_SLABS,
 } from "@/models/contract";
 import {
   createContract,
@@ -38,9 +39,9 @@ const CREATE_STEPS = [
 
 const CREATE_SUBTITLES: Record<number, string> = {
   1: "Company name and sales channel",
-  2: "Contact, email, and Postcard properties",
-  3: "Configure B2B and B2C rate grid",
-  4: "Review and create contract",
+  2: "Contact, properties, and rate category per hotel",
+  3: "Room categories and rates for selected Cat slabs",
+  4: "Review and submit for approval",
 };
 
 const EDIT_STEPS = [
@@ -59,14 +60,27 @@ const emptyForm: ContractCreateForm = {
   companyName: "",
   channel: "B2B",
   propertyIds: [],
+  propertyCategories: {},
   contactId: "",
   contactEmail: "",
 };
+
+function slabsFromCategories(categories: Record<string, string>, propertyIds: string[]): string[] {
+  const slabs = propertyIds
+    .map((id) => categories[id])
+    .filter(Boolean);
+  const unique = [...new Set(slabs)];
+  if (unique.length === 0) return ["CAT A"];
+  return DEFAULT_RATE_SLABS.filter((s) => unique.includes(s)).concat(
+    unique.filter((s) => !(DEFAULT_RATE_SLABS as readonly string[]).includes(s))
+  );
+}
 
 interface ContractWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accountId: string;
+  accountName?: string;
   contacts: Contact[];
   apiProperties: Property[];
   mode?: "create" | "edit";
@@ -79,6 +93,7 @@ export function ContractWizard({
   open,
   onOpenChange,
   accountId,
+  accountName,
   contacts,
   apiProperties,
   mode = "create",
@@ -93,7 +108,9 @@ export function ContractWizard({
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<ContractCreateForm>({ ...emptyForm });
-  const [rateGridValue, setRateGridValue] = useState<RateGridValue>(() => createEmptyRateGridValue());
+  const [rateGridValue, setRateGridValue] = useState<RateGridValue>(() =>
+    createEmptyRateGridValue(undefined, ["CAT A"])
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const propertyOptions = useMemo(
@@ -111,8 +128,11 @@ export function ContractWizard({
     if (!open) {
       setStep(1);
       if (!isEdit) {
-        setForm({ ...emptyForm });
-        setRateGridValue(createEmptyRateGridValue());
+        setForm({
+          ...emptyForm,
+          companyName: accountName?.trim() || "",
+        });
+        setRateGridValue(createEmptyRateGridValue(undefined, ["CAT A"]));
       }
       return;
     }
@@ -121,6 +141,7 @@ export function ContractWizard({
         companyName: contract.companyName,
         channel: contract.channel,
         propertyIds: contract.propertyIds ?? [],
+        propertyCategories: contract.propertyCategories ?? {},
         contactId: contract.contactId ?? "",
         contactEmail: contract.contactEmail ?? "",
       });
@@ -129,13 +150,61 @@ export function ContractWizard({
           ? normalizeRateGridValue(contract.rateGrid as RateGridValue)
           : createEmptyRateGridValue()
       );
+    } else if (!isEdit) {
+      setForm({
+        ...emptyForm,
+        companyName: accountName?.trim() || "",
+      });
+      setRateGridValue(createEmptyRateGridValue(undefined, ["CAT A"]));
     }
-  }, [open, isEdit, contract?.id]);
+  }, [open, isEdit, contract?.id, accountName]);
+
+  // Rebuild rate grid room/cat structure when property categories change (create mode)
+  useEffect(() => {
+    if (!open || isEdit) return;
+    const slabs = slabsFromCategories(form.propertyCategories, form.propertyIds);
+    setRateGridValue((prev) => {
+      const next = createEmptyRateGridValue(undefined, slabs);
+      // Preserve rates for matching roomType+rateSlab cells
+      const preserve = (fromRows: typeof prev.b2b.rows, toRows: typeof next.b2b.rows) =>
+        toRows.map((row) => {
+          const match = fromRows.find(
+            (r) => r.roomType === row.roomType && r.rateSlab === row.rateSlab
+          );
+          return match ? { ...row, ...match, id: row.id } : row;
+        });
+      return {
+        ...next,
+        b2b: { ...next.b2b, rows: preserve(prev.b2b.rows, next.b2b.rows) },
+        b2c: { ...next.b2c, rows: preserve(prev.b2c.rows, next.b2c.rows) },
+      };
+    });
+  }, [open, isEdit, form.propertyIds.join("|"), JSON.stringify(form.propertyCategories)]);
 
   const validateStep = (s: number): boolean => {
     if (!isEdit && s === 1 && !form.companyName.trim()) {
       toast({ title: "Required", description: "Company name is required", variant: "destructive" });
       return false;
+    }
+    if (!isEdit && s === 2) {
+      if (form.propertyIds.length === 0) {
+        toast({
+          title: "Required",
+          description: "Select at least one property",
+          variant: "destructive",
+        });
+        return false;
+      }
+      for (const id of form.propertyIds) {
+        if (!form.propertyCategories[id]) {
+          toast({
+            title: "Required",
+            description: "Choose Cat A, B, or C for each property",
+            variant: "destructive",
+          });
+          return false;
+        }
+      }
     }
     return true;
   };
@@ -150,6 +219,10 @@ export function ContractWizard({
       setStep(1);
       return;
     }
+    if (!isEdit && !validateStep(2)) {
+      setStep(2);
+      return;
+    }
     setIsSubmitting(true);
     try {
       if (isEdit && contract) {
@@ -161,11 +234,15 @@ export function ContractWizard({
           companyName: form.companyName.trim(),
           channel: form.channel,
           propertyIds: form.propertyIds,
+          propertyCategories: form.propertyCategories,
           contactId: form.contactId || undefined,
           contactEmail: form.contactEmail || undefined,
         });
         await updateContractRateGrid(created.id, rateGridValue);
-        toast({ title: "Success", description: "Contract created with rates" });
+        toast({
+          title: "Submitted",
+          description: "Contract submitted for approval. Send to client after approval.",
+        });
       }
       onOpenChange(false);
       onComplete();
@@ -181,6 +258,7 @@ export function ContractWizard({
   };
 
   const subtitle = isEdit ? EDIT_SUBTITLES[step] : CREATE_SUBTITLES[step];
+  const selectedSlabs = slabsFromCategories(form.propertyCategories, form.propertyIds);
 
   const footer = (
     <>
@@ -207,7 +285,7 @@ export function ContractWizard({
             ) : isEdit ? (
               "Save contract"
             ) : (
-              "Create contract"
+              "Submit for approval"
             )}
           </Button>
         )}
@@ -216,8 +294,17 @@ export function ContractWizard({
   );
 
   const ratesStep = (
-    <div className="rounded-lg border border-border bg-surface overflow-hidden">
-      <RateGrid value={rateGridValue} onChange={setRateGridValue} embedded />
+    <div className="space-y-3">
+      {!isEdit && (
+        <p className="text-sm text-text-muted px-1">
+          Room categories and rate columns are populated for{" "}
+          <span className="font-medium text-text">{selectedSlabs.join(", ")}</span> based on the
+          category chosen per hotel.
+        </p>
+      )}
+      <div className="rounded-lg border border-border bg-surface overflow-hidden">
+        <RateGrid value={rateGridValue} onChange={setRateGridValue} embedded rateSlabs={selectedSlabs} />
+      </div>
     </div>
   );
 
@@ -232,7 +319,9 @@ export function ContractWizard({
       maxWidth="3xl"
       maxHeight="min(90vh,800px)"
     >
-      {!isEdit && step === 1 && <ContractStepBasics form={form} set={set} />}
+      {!isEdit && step === 1 && (
+        <ContractStepBasics form={form} set={set} accountNameLocked={Boolean(accountName?.trim())} />
+      )}
       {!isEdit && step === 2 && (
         <ContractStepParties
           form={form}
@@ -253,7 +342,8 @@ export function ContractWizard({
         <div className="space-y-4">
           <ContractCreateReview form={form} propertyMap={propertyMap} contacts={contacts} />
           <p className="text-sm text-text-muted px-1">
-            Rates are configured for both B2B and B2C. Submitting will create the contract and save the rate grid.
+            Submitting sends this contract for leader approval. Client email is available only after
+            approval.
           </p>
         </div>
       )}

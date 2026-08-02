@@ -51,11 +51,14 @@ import {
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from "date-fns";
 import {
   getWeekPlannerData,
+  type WeekPlannerAccount,
   type WeekPlannerActivity,
   type WeekPlannerFollowUp,
   type WeekPlannerTask,
 } from "@/services/weekPlanner";
 import { formatContactActivityType } from "@/services/contactActivities";
+import { ActivityWizard } from "@/components/activities/ActivityWizard";
+import { listAccounts, type Account } from "@/services/accounts";
 
 interface PersonalCalendarProps {
   userName?: string;
@@ -88,6 +91,13 @@ export const PersonalCalendar = ({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
+  const [plannerAccounts, setPlannerAccounts] = useState<WeekPlannerAccount[]>([]);
+  const [mappedAccounts, setMappedAccounts] = useState<Account[]>([]);
+  const [accountPickerOpen, setAccountPickerOpen] = useState(false);
+  const [pickerAccountId, setPickerAccountId] = useState("");
+  const [activityAccountId, setActivityAccountId] = useState<string | null>(null);
+  const [activityWizardOpen, setActivityWizardOpen] = useState(false);
+  const [activityInitialDate, setActivityInitialDate] = useState<Date | undefined>();
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -100,6 +110,12 @@ export const PersonalCalendar = ({
     void loadTasks();
     void loadLeads();
   }, [backendUserId, currentMonth]);
+
+  useEffect(() => {
+    listAccounts({ myAccounts: true })
+      .then(setMappedAccounts)
+      .catch(() => setMappedAccounts([]));
+  }, []);
 
   const loadTasks = async () => {
     try {
@@ -131,6 +147,7 @@ export const PersonalCalendar = ({
       );
       setActivities(planner.activities);
       setAccountFollowUps(planner.followUps);
+      setPlannerAccounts(planner.accounts ?? []);
     } catch (err) {
       toast({
         title: "Error",
@@ -149,6 +166,54 @@ export const PersonalCalendar = ({
     } catch (err) {
       console.error("Failed to load leads:", err);
     }
+  };
+
+  const activityAccounts = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const a of mappedAccounts) map.set(a.id, a.name);
+    for (const a of plannerAccounts) map.set(a._id, a.name);
+    return Array.from(map, ([id, name]) => ({ id, name })).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+  }, [mappedAccounts, plannerAccounts]);
+
+  const openAddActivity = (date?: Date) => {
+    setActivityInitialDate(date ?? selectedDate);
+    if (activityAccounts.length === 0) {
+      toast({
+        title: "No accounts",
+        description: "Map yourself to an account before adding activities.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (activityAccounts.length === 1) {
+      setActivityAccountId(activityAccounts[0].id);
+      setActivityWizardOpen(true);
+      return;
+    }
+    setPickerAccountId("");
+    setAccountPickerOpen(true);
+  };
+
+  const confirmAccountPicker = () => {
+    if (!pickerAccountId) {
+      toast({ title: "Required", description: "Select an account", variant: "destructive" });
+      return;
+    }
+    setActivityAccountId(pickerAccountId);
+    setAccountPickerOpen(false);
+    setActivityWizardOpen(true);
+  };
+
+  const openNewReminder = (date?: Date) => {
+    const d = date ?? selectedDate;
+    setNewTask((prev) => ({
+      ...prev,
+      dueAt: format(d, "yyyy-MM-dd"),
+      dueTime: prev.dueTime || "09:00",
+    }));
+    setIsCreateOpen(true);
   };
 
   const handleCreate = async () => {
@@ -310,13 +375,19 @@ export const PersonalCalendar = ({
             Activities, follow-ups, and reminders across your accounts and leads
           </p>
         </div>
-          <Button
-          onClick={() => setIsCreateOpen(true)}
-          className="bg-slate-900 hover:bg-slate-800 text-white"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          New Reminder
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => openAddActivity()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add activity
           </Button>
+          <Button
+            onClick={() => openNewReminder()}
+            className="bg-slate-900 hover:bg-slate-800 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Reminder
+          </Button>
+        </div>
       </div>
 
       {/* Calendar and Tasks */}
@@ -356,50 +427,55 @@ export const PersonalCalendar = ({
             </div>
 
             {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-1 mb-2">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="text-xs font-semibold text-slate-500 text-center py-2">
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-7 gap-1">
-              {daysBeforeMonth.map((_, idx) => (
-                <div key={`empty-${idx}`} className="aspect-square" />
-              ))}
-              {calendarDays.map((day) => {
-                const dayItems = getItemsForDay(day);
-                const isSelected = isSameDay(day, selectedDate);
-                const isTodayDate = isToday(day);
-
-                return (
-                  <button
-                    key={day.toISOString()}
-                    onClick={() => setSelectedDate(day)}
-                    className={`aspect-square rounded-sm text-sm transition-colors ${
-                      isSelected
-                        ? "bg-slate-900 text-white"
-                        : isTodayDate
-                        ? "bg-emerald-50 text-emerald-600 font-semibold"
-                        : "hover:bg-slate-50 text-slate-700"
-                    }`}
-                  >
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <span>{format(day, "d")}</span>
-                      {dayItems.length > 0 && (
-                        <span
-                          className={`text-[10px] mt-0.5 ${
-                            isSelected ? "text-white" : "text-emerald-600"
-                          }`}
-                        >
-                          ●
-                        </span>
-                      )}
+            <div className="overflow-x-auto max-w-full -mx-1 px-1">
+              <div className="min-w-0">
+                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                    <div key={day} className="text-[10px] sm:text-xs font-semibold text-slate-500 text-center py-1 sm:py-2">
+                      {day.slice(0, 1)}
+                      <span className="hidden sm:inline">{day.slice(1)}</span>
                     </div>
-                  </button>
-                );
-              })}
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+                  {daysBeforeMonth.map((_, idx) => (
+                    <div key={`empty-${idx}`} className="aspect-square" />
+                  ))}
+                  {calendarDays.map((day) => {
+                    const dayItems = getItemsForDay(day);
+                    const isSelected = isSameDay(day, selectedDate);
+                    const isTodayDate = isToday(day);
+
+                    return (
+                      <button
+                        key={day.toISOString()}
+                        onClick={() => setSelectedDate(day)}
+                        className={`aspect-square rounded-sm text-xs sm:text-sm transition-colors ${
+                          isSelected
+                            ? "bg-slate-900 text-white"
+                            : isTodayDate
+                            ? "bg-emerald-50 text-emerald-600 font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center justify-center h-full">
+                          <span>{format(day, "d")}</span>
+                          {dayItems.length > 0 && (
+                            <span
+                              className={`text-[10px] mt-0.5 ${
+                                isSelected ? "text-white" : "text-emerald-600"
+                              }`}
+                            >
+                              ●
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -407,10 +483,20 @@ export const PersonalCalendar = ({
         {/* Calendar items for selected date */}
         <Card className="lg:col-span-2 border-slate-200 shadow-sm">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 gap-2">
               <h3 className="font-semibold text-slate-900">
                 {format(selectedDate, "EEEE, MMMM d, yyyy")}
               </h3>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => openAddActivity(selectedDate)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Activity
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => openNewReminder(selectedDate)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Reminder
+                </Button>
+              </div>
             </div>
 
             {isLoading ? (
@@ -421,6 +507,14 @@ export const PersonalCalendar = ({
               <div className="flex flex-col items-center justify-center py-12">
                 <CalendarIcon className="h-12 w-12 text-slate-300 mb-4" />
                 <p className="text-slate-500">No calendar items for this date</p>
+                <div className="mt-4 flex gap-2">
+                  <Button size="sm" onClick={() => openAddActivity(selectedDate)}>
+                    Add activity
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => openNewReminder(selectedDate)}>
+                    New reminder
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="divide-y divide-border rounded-md border border-border">
@@ -698,6 +792,52 @@ export const PersonalCalendar = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={accountPickerOpen} onOpenChange={setAccountPickerOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select account</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Activity for account</Label>
+            <Select value={pickerAccountId} onValueChange={setPickerAccountId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose account" />
+              </SelectTrigger>
+              <SelectContent>
+                {activityAccounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAccountPickerOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmAccountPicker}>Continue</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {activityAccountId && (
+        <ActivityWizard
+          open={activityWizardOpen}
+          onOpenChange={(open) => {
+            setActivityWizardOpen(open);
+            if (!open) setActivityAccountId(null);
+          }}
+          accountId={activityAccountId}
+          initialDate={activityInitialDate}
+          onSuccess={() => {
+            setActivityWizardOpen(false);
+            setActivityAccountId(null);
+            void loadTasks();
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -161,6 +161,17 @@ export function PotentialWizard({
       toast({ title: "Required", description: "Select a city", variant: "destructive" });
       return false;
     }
+    if (s === 1 && dialogStateFilter) {
+      const allowed = CITIES_BY_STATE[dialogStateFilter] ?? [];
+      if (allowed.length > 0 && !allowed.includes(city)) {
+        toast({
+          title: "Required",
+          description: `Select a city in ${dialogStateFilter}`,
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
     if (s === 2 && comboRows.length === 0) {
       toast({ title: "Required", description: "Add at least one location/segment", variant: "destructive" });
       return false;
@@ -341,10 +352,21 @@ export function PotentialWizard({
   );
 
   const cityList = useMemo(() => {
-    const base = dialogStateFilter ? CITIES_BY_STATE[dialogStateFilter] || MAJOR_INDIAN_CITIES : MAJOR_INDIAN_CITIES;
+    const base = dialogStateFilter
+      ? (CITIES_BY_STATE[dialogStateFilter] ?? [])
+      : MAJOR_INDIAN_CITIES;
     if (city && !base.includes(city)) return [...base, city].sort();
-    return base;
+    return [...base].sort();
   }, [dialogStateFilter, city]);
+
+  const handleStateFilterChange = (v: string) => {
+    const next = v === "__all__" ? "" : v;
+    setDialogStateFilter(next);
+    if (next) {
+      const allowed = CITIES_BY_STATE[next] ?? [];
+      if (city && !allowed.includes(city)) setCity("");
+    }
+  };
 
   return (
     <FormWizardShell
@@ -362,7 +384,7 @@ export function PotentialWizard({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label>State (filter)</Label>
-              <Select value={dialogStateFilter || "__all__"} onValueChange={(v) => setDialogStateFilter(v === "__all__" ? "" : v)}>
+              <Select value={dialogStateFilter || "__all__"} onValueChange={handleStateFilterChange}>
                 <SelectTrigger><SelectValue placeholder="All states" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__all__">All states</SelectItem>
@@ -376,8 +398,20 @@ export function PotentialWizard({
               <Label>
                 City <span className="text-destructive">*</span>
               </Label>
-              <Select value={city} onValueChange={setCity}>
-                <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+              <Select
+                value={city || undefined}
+                onValueChange={setCity}
+                disabled={dialogStateFilter !== "" && cityList.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      dialogStateFilter && cityList.length === 0
+                        ? "No cities for this state"
+                        : "Select city"
+                    }
+                  />
+                </SelectTrigger>
                 <SelectContent>
                   {cityList.map((c) => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>

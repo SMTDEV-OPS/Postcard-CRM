@@ -486,15 +486,21 @@ leadsRouter.get("/", async (req, res, next) => {
       .lean();
 
     const { LeadItineraryModel } = await import("../models/leadItinerary");
-    const leadsWithCustomData = await Promise.all(
-      leads.map(async (l) => {
-        const obj = spreadCustomDataToLead(l);
-        const itineraries = await LeadItineraryModel.find({ leadId: l._id })
-          .select("checkInDate checkOutDate hotelName")
-          .lean();
-        return { ...obj, itineraries };
-      })
-    );
+    const leadIds = leads.map((l) => l._id);
+    const allItineraries = await LeadItineraryModel.find({ leadId: { $in: leadIds } })
+      .select("leadId checkInDate checkOutDate hotelName")
+      .lean();
+    const itinerariesByLead = new Map<string, typeof allItineraries>();
+    for (const it of allItineraries) {
+      const key = String(it.leadId);
+      const list = itinerariesByLead.get(key) || [];
+      list.push(it);
+      itinerariesByLead.set(key, list);
+    }
+    const leadsWithCustomData = leads.map((l) => {
+      const obj = spreadCustomDataToLead(l);
+      return { ...obj, itineraries: itinerariesByLead.get(String(l._id)) || [] };
+    });
     res.json(leadsWithCustomData);
   } catch (err) {
     next(err);

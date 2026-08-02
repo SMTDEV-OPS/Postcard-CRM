@@ -38,6 +38,8 @@ interface ContactWizardProps {
   accountId: string;
   editingContact?: Contact | null;
   onSuccess: () => void;
+  /** When true, Cancel / dismiss is blocked until the contact is saved. */
+  requireSave?: boolean;
 }
 
 export function ContactWizard({
@@ -46,6 +48,7 @@ export function ContactWizard({
   accountId,
   editingContact,
   onSuccess,
+  requireSave = false,
 }: ContactWizardProps) {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
@@ -127,11 +130,28 @@ export function ContactWizard({
     }
   };
 
+  const handleDismissAttempt = (nextOpen: boolean) => {
+    if (!nextOpen && requireSave) {
+      toast({
+        title: "Contact required",
+        description: "Add at least one contact for this account before continuing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    onOpenChange(nextOpen);
+  };
+
   const stepCtx = { formData, set, errors, clearError };
 
   const footer = (
     <>
-      <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => handleDismissAttempt(false)}
+        disabled={isSubmitting || requireSave}
+      >
         Cancel
       </Button>
       <div className="flex gap-2">
@@ -156,7 +176,7 @@ export function ContactWizard({
   return (
     <FormWizardShell
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleDismissAttempt}
       title={editingContact ? "Edit contact" : "Add new contact"}
       subtitle={STEP_SUBTITLES[step]}
       stepIndicator={<WizardStepIndicator steps={STEPS} currentStep={step} />}

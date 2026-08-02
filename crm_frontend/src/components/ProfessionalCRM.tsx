@@ -1,69 +1,160 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getUnreadCount } from "@/services/notifications";
 import { getTaskSummary } from "@/services/tasks";
+import { getAccountFollowUpSummary } from "@/services/accounts";
 import { AppShell, Sidebar, CommandPalette, SetupLayout } from "@/components/layout";
 import { MobileNavProvider } from "@/components/layout/MobileNavContext";
 import { pathnameToView, viewToPath, CRM_PATHS } from "@/navigation/crmPaths";
-import { CallCenterScreen } from "@/components/CallCenterScreen";
-import { AgentDashboard } from "@/components/AgentDashboard";
-import { EnhancedCallInterface } from "@/components/EnhancedCallInterface";
-import ProfessionalLeadManagement from "@/components/ProfessionalLeadManagement";
-import { ProfessionalTicketManagement } from "@/components/ProfessionalTicketManagement";
-import { KnowledgeBaseMain } from "@/components/knowledge/KnowledgeBaseMain";
-import Dashboard from "@/components/Dashboard";
-import SalesExecutiveDashboard from "@/components/SalesExecutiveDashboard";
-import Reports from "@/components/Reports";
-import { ProfileBuilder } from "@/pages/admin/ProfileBuilder";
-import { RoleBuilder } from "@/pages/admin/RoleBuilder";
-import { UserManagement as UserRoleManagement } from "@/pages/admin/UserManagement";
-import { RolesManager } from "./settings/security/RolesManager";
-import { ProfilesManager } from "./settings/security/ProfilesManager";
-import { GroupsManager } from "./settings/security/GroupsManager";
-import { DataSharingManager } from "./settings/security/DataSharingManager";
-import { EmployeeGroupsManagement } from "@/components/EmployeeGroupsManagement";
-import { AccountManagement } from "@/components/AccountManagement";
-import { AccountsDashboard } from "@/components/accounts/AccountsDashboard";
-import { SalesTargetsSetup } from "@/pages/setup/SalesTargetsSetup";
-import { HolidaysSetup } from "@/pages/setup/HolidaysSetup";
-import { HotelsSetup } from "@/pages/setup/HotelsSetup";
-import { SalesSettingsSetup } from "@/pages/setup/SalesSettingsSetup";
-import { PropertyGuideEditorSetup } from "@/pages/setup/PropertyGuideEditorSetup";
-import HelpCenter from "@/pages/HelpCenter";
-import { AdminApiConsole } from "@/components/AdminApiConsole";
-import { AdminLeads } from "@/components/AdminLeads";
-import { WorkflowManagement } from "@/components/WorkflowManagement";
-import { MessageTemplates } from "@/components/MessageTemplates";
-import { EmailSettings } from "@/components/EmailSettings";
-import { EmailHealthDashboard } from "@/components/EmailHealthDashboard";
-import { EmailClient } from "@/components/EmailClient";
-import { EmailProviderSettings } from "@/components/EmailProviderSettings";
-import { TodaysFollowUps } from "@/components/TodaysFollowUps";
-import { UserActivities } from "@/components/UserActivities";
-import { PersonalCalendar } from "@/components/PersonalCalendar";
-import { WeekPlanner } from "@/components/WeekPlanner";
-import { LeadDetailPage } from "@/components/LeadDetailPage";
-import NotificationsPage from "@/components/NotificationsPage";
-import { BuddyManagement } from "@/components/BuddyManagement";
-import { TicketManagement } from "@/components/TicketManagement";
-import { IntegrationSettings } from "@/components/IntegrationSettings";
-import { SettingsDashboard } from "@/components/SettingsDashboard";
-import { PipelineManagement } from "@/components/PipelineManagement";
-import { ModuleBuilder } from "@/pages/settings/ModuleBuilder";
-import { ScoringRuleManagement } from "@/components/ScoringRuleManagement";
-import { FieldBuilder } from "@/pages/setup/FieldBuilder";
-import { PipelineBuilder } from "@/pages/setup/PipelineBuilder";
-import { ScoringEngine } from "@/pages/setup/ScoringEngine";
-import { FollowupRules } from "@/pages/setup/FollowupRules";
-import { WorkflowBuilder } from "@/pages/setup/WorkflowBuilder";
-import { LeadAllocationPage } from "@/pages/setup/LeadAllocationPage";
-import { IntegrationHub } from "@/pages/setup/IntegrationHub";
-import { AuditLog } from "@/pages/setup/AuditLog";
-import { ContractApprovalRules } from "@/pages/setup/ContractApprovalRules";
-import { ArrowLeft } from "lucide-react";
+import { canAccessView, firstAllowedPath } from "@/lib/moduleAccess";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FollowUpReminder from "@/components/FollowUpReminder";
+
+const CallCenterScreen = lazy(() =>
+  import("@/components/CallCenterScreen").then((m) => ({ default: m.CallCenterScreen }))
+);
+const ProfessionalLeadManagement = lazy(() => import("@/components/ProfessionalLeadManagement"));
+const ProfessionalTicketManagement = lazy(() =>
+  import("@/components/ProfessionalTicketManagement").then((m) => ({
+    default: m.ProfessionalTicketManagement,
+  }))
+);
+const KnowledgeBaseMain = lazy(() =>
+  import("@/components/knowledge/KnowledgeBaseMain").then((m) => ({ default: m.KnowledgeBaseMain }))
+);
+const Dashboard = lazy(() => import("@/components/Dashboard"));
+const SalesExecutiveDashboard = lazy(() => import("@/components/SalesExecutiveDashboard"));
+const Reports = lazy(() => import("@/components/Reports"));
+const UserRoleManagement = lazy(() =>
+  import("@/pages/admin/UserManagement").then((m) => ({ default: m.UserManagement }))
+);
+const RolesManager = lazy(() =>
+  import("./settings/security/RolesManager").then((m) => ({ default: m.RolesManager }))
+);
+const ProfilesManager = lazy(() =>
+  import("./settings/security/ProfilesManager").then((m) => ({ default: m.ProfilesManager }))
+);
+const GroupsManager = lazy(() =>
+  import("./settings/security/GroupsManager").then((m) => ({ default: m.GroupsManager }))
+);
+const DataSharingManager = lazy(() =>
+  import("./settings/security/DataSharingManager").then((m) => ({ default: m.DataSharingManager }))
+);
+const AccountManagement = lazy(() =>
+  import("@/components/AccountManagement").then((m) => ({ default: m.AccountManagement }))
+);
+const AccountsDashboard = lazy(() =>
+  import("@/components/accounts/AccountsDashboard").then((m) => ({ default: m.AccountsDashboard }))
+);
+const SalesTargetsSetup = lazy(() =>
+  import("@/pages/setup/SalesTargetsSetup").then((m) => ({ default: m.SalesTargetsSetup }))
+);
+const HolidaysSetup = lazy(() =>
+  import("@/pages/setup/HolidaysSetup").then((m) => ({ default: m.HolidaysSetup }))
+);
+const HotelsSetup = lazy(() =>
+  import("@/pages/setup/HotelsSetup").then((m) => ({ default: m.HotelsSetup }))
+);
+const SalesSettingsSetup = lazy(() =>
+  import("@/pages/setup/SalesSettingsSetup").then((m) => ({ default: m.SalesSettingsSetup }))
+);
+const PropertyGuideEditorSetup = lazy(() =>
+  import("@/pages/setup/PropertyGuideEditorSetup").then((m) => ({
+    default: m.PropertyGuideEditorSetup,
+  }))
+);
+const HelpCenter = lazy(() => import("@/pages/HelpCenter"));
+const AdminApiConsole = lazy(() =>
+  import("@/components/AdminApiConsole").then((m) => ({ default: m.AdminApiConsole }))
+);
+const AdminLeads = lazy(() =>
+  import("@/components/AdminLeads").then((m) => ({ default: m.AdminLeads }))
+);
+const WorkflowManagement = lazy(() =>
+  import("@/components/WorkflowManagement").then((m) => ({ default: m.WorkflowManagement }))
+);
+const MessageTemplates = lazy(() =>
+  import("@/components/MessageTemplates").then((m) => ({ default: m.MessageTemplates }))
+);
+const EmailSettings = lazy(() =>
+  import("@/components/EmailSettings").then((m) => ({ default: m.EmailSettings }))
+);
+const EmailHealthDashboard = lazy(() =>
+  import("@/components/EmailHealthDashboard").then((m) => ({ default: m.EmailHealthDashboard }))
+);
+const EmailClient = lazy(() =>
+  import("@/components/EmailClient").then((m) => ({ default: m.EmailClient }))
+);
+const EmailProviderSettings = lazy(() =>
+  import("@/components/EmailProviderSettings").then((m) => ({ default: m.EmailProviderSettings }))
+);
+const TodaysFollowUps = lazy(() =>
+  import("@/components/TodaysFollowUps").then((m) => ({ default: m.TodaysFollowUps }))
+);
+const UserActivities = lazy(() =>
+  import("@/components/UserActivities").then((m) => ({ default: m.UserActivities }))
+);
+const PersonalCalendar = lazy(() =>
+  import("@/components/PersonalCalendar").then((m) => ({ default: m.PersonalCalendar }))
+);
+const WeekPlanner = lazy(() =>
+  import("@/components/WeekPlanner").then((m) => ({ default: m.WeekPlanner }))
+);
+const LeadDetailPage = lazy(() =>
+  import("@/components/LeadDetailPage").then((m) => ({ default: m.LeadDetailPage }))
+);
+const NotificationsPage = lazy(() => import("@/components/NotificationsPage"));
+const BuddyManagement = lazy(() =>
+  import("@/components/BuddyManagement").then((m) => ({ default: m.BuddyManagement }))
+);
+const TicketManagement = lazy(() =>
+  import("@/components/TicketManagement").then((m) => ({ default: m.TicketManagement }))
+);
+const IntegrationSettings = lazy(() =>
+  import("@/components/IntegrationSettings").then((m) => ({ default: m.IntegrationSettings }))
+);
+const SettingsDashboard = lazy(() =>
+  import("@/components/SettingsDashboard").then((m) => ({ default: m.SettingsDashboard }))
+);
+const PipelineManagement = lazy(() =>
+  import("@/components/PipelineManagement").then((m) => ({ default: m.PipelineManagement }))
+);
+const ModuleBuilder = lazy(() =>
+  import("@/pages/settings/ModuleBuilder").then((m) => ({ default: m.ModuleBuilder }))
+);
+const ScoringRuleManagement = lazy(() =>
+  import("@/components/ScoringRuleManagement").then((m) => ({ default: m.ScoringRuleManagement }))
+);
+const FieldBuilder = lazy(() =>
+  import("@/pages/setup/FieldBuilder").then((m) => ({ default: m.FieldBuilder }))
+);
+const PipelineBuilder = lazy(() =>
+  import("@/pages/setup/PipelineBuilder").then((m) => ({ default: m.PipelineBuilder }))
+);
+const ScoringEngine = lazy(() =>
+  import("@/pages/setup/ScoringEngine").then((m) => ({ default: m.ScoringEngine }))
+);
+const FollowupRules = lazy(() =>
+  import("@/pages/setup/FollowupRules").then((m) => ({ default: m.FollowupRules }))
+);
+const WorkflowBuilder = lazy(() =>
+  import("@/pages/setup/WorkflowBuilder").then((m) => ({ default: m.WorkflowBuilder }))
+);
+const LeadAllocationPage = lazy(() =>
+  import("@/pages/setup/LeadAllocationPage").then((m) => ({ default: m.LeadAllocationPage }))
+);
+const IntegrationHub = lazy(() =>
+  import("@/pages/setup/IntegrationHub").then((m) => ({ default: m.IntegrationHub }))
+);
+const AuditLog = lazy(() =>
+  import("@/pages/setup/AuditLog").then((m) => ({ default: m.AuditLog }))
+);
+const ContractApprovalRules = lazy(() =>
+  import("@/pages/setup/ContractApprovalRules").then((m) => ({ default: m.ContractApprovalRules }))
+);
 
 interface ProfessionalCRMProps {
   userRole: string;
@@ -73,6 +164,13 @@ interface ProfessionalCRMProps {
   permissions?: string[];
   backendUserId?: string;
 }
+
+const viewFallback = (
+  <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
+    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+    Loading...
+  </div>
+);
 
 export const ProfessionalCRM = ({
   userRole,
@@ -84,6 +182,7 @@ export const ProfessionalCRM = ({
 }: ProfessionalCRMProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { view: activeView, leadId: selectedLeadId } = pathnameToView(location.pathname);
   const previousView =
     (location.state as { from?: string } | null)?.from ?? "admin-leads";
@@ -110,8 +209,19 @@ export const ProfessionalCRM = ({
     refetchInterval: 60_000,
     staleTime: 30_000,
   });
+  const { data: accountFollowUpSummary } = useQuery({
+    queryKey: ["accounts-followup-badge"],
+    queryFn: getAccountFollowUpSummary,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
   const followupsBadgeCount =
-    (taskSummary?.overdue ?? 0) + (taskSummary?.dueToday ?? 0);
+    (taskSummary?.overdue ?? 0) +
+    (taskSummary?.dueToday ?? 0) +
+    (accountFollowUpSummary?.overdue ?? 0) +
+    (accountFollowUpSummary?.dueToday ?? 0);
+  const hasOverdueFollowups =
+    (taskSummary?.overdue ?? 0) + (accountFollowUpSummary?.overdue ?? 0) > 0;
 
   useEffect(() => {
     const loadUnreadCount = async () => {
@@ -135,9 +245,27 @@ export const ProfessionalCRM = ({
     return () => window.removeEventListener("crm:navigate-account", handleNavigateAccount);
   }, [navigate]);
 
+  useEffect(() => {
+    // Only enforce when Profile permissions were loaded (non-empty).
+    if (!permissions?.length) return;
+    if (isAdmin) return;
+    if (canAccessView(activeView, permissions, isAdmin)) return;
+    navigate(firstAllowedPath(permissions, isAdmin), { replace: true });
+    toast({
+      title: "You do not have access to that module",
+      variant: "destructive",
+    });
+  }, [permissions, isAdmin, activeView, navigate, toast]);
+
   const canManageUsers = !!isAdmin || permissions?.includes("users.manage");
-  const canManageAccounts = true;
-  const canViewReports = !!isAdmin || permissions?.includes("reports.view");
+  const canManageAccounts =
+    !!isAdmin ||
+    permissions?.includes("accounts.read") ||
+    permissions?.includes("accounts.manage");
+  const canViewReports =
+    !!isAdmin ||
+    permissions?.includes("reports.view") ||
+    permissions?.includes("reports.read");
   const canManageLeads =
     !!isAdmin ||
     permissions?.includes("leads.manage") ||
@@ -147,7 +275,12 @@ export const ProfessionalCRM = ({
   const canAssignBuddy = !!isAdmin || permissions?.includes("buddies.assign");
   const canViewBuddyHistory = !!isAdmin || permissions?.includes("buddies.view.history");
   const canViewBuddyReports = !!isAdmin || permissions?.includes("buddies.view.reports");
-  const canAccessBuddy = canAssignBuddy || canViewBuddyHistory || canViewBuddyReports;
+  const canAccessBuddy =
+    canAssignBuddy ||
+    canViewBuddyHistory ||
+    canViewBuddyReports ||
+    !!permissions?.includes("buddies.read") ||
+    !!permissions?.includes("buddies.manage");
   const openSharedAddLeadForm = () => {
     sessionStorage.setItem("crm:pending-add-lead", "1");
     navigate(CRM_PATHS.leads);
@@ -201,6 +334,9 @@ export const ProfessionalCRM = ({
             userName={userName}
             backendUserId={backendUserId}
             onViewLead={(leadId) => leadId && navigateToLead(leadId, "todays-followups")}
+            onViewAccount={(accountId) =>
+              navigate(CRM_PATHS.accounts, { state: { accountId } })
+            }
           />
         );
       case "activities":
@@ -739,7 +875,7 @@ export const ProfessionalCRM = ({
             isAdmin={!!isAdmin}
             permissions={permissions || []}
             followupsBadgeCount={followupsBadgeCount}
-            hasOverdueFollowups={(taskSummary?.overdue ?? 0) > 0}
+            hasOverdueFollowups={hasOverdueFollowups}
           />
         }
       >
@@ -763,9 +899,11 @@ export const ProfessionalCRM = ({
           </div>
         )}
         {isSetupRoute ? (
-          <SetupLayout>{renderContent()}</SetupLayout>
+          <SetupLayout>
+            <Suspense fallback={viewFallback}>{renderContent()}</Suspense>
+          </SetupLayout>
         ) : (
-          renderContent()
+          <Suspense fallback={viewFallback}>{renderContent()}</Suspense>
         )}
       </AppShell>
       </MobileNavProvider>

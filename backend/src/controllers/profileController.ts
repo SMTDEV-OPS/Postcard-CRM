@@ -83,6 +83,10 @@ export const updateProfile = async (req: Request, res: Response) => {
 
         await profile.save();
 
+        // Profile permissions cached on users — clear so next request reloads
+        const { AccessControlService } = await import("../services/auth/AccessControlService");
+        AccessControlService.invalidateAllCaches();
+
         res.json(profile);
     } catch (error) {
         logger.error(`Error updating profile ${req.params.id}:`, { error });

@@ -9,11 +9,14 @@ import type { Contact } from "@/services/contacts";
 import type { PostcardPropertyOption } from "@/constants/postcardProperties";
 import { cn } from "@/lib/utils";
 import { formGrid2 } from "@/lib/responsive";
+import { DEFAULT_RATE_SLABS } from "@/models/contract";
 
 export interface ContractCreateForm {
   companyName: string;
   channel: ContractChannel;
   propertyIds: string[];
+  /** One Cat A/B/C per selected property */
+  propertyCategories: Record<string, string>;
   contactId: string;
   contactEmail: string;
 }
@@ -21,9 +24,11 @@ export interface ContractCreateForm {
 export function ContractStepBasics({
   form,
   set,
+  accountNameLocked,
 }: {
   form: ContractCreateForm;
   set: (patch: Partial<ContractCreateForm>) => void;
+  accountNameLocked?: boolean;
 }) {
   return (
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
@@ -33,7 +38,12 @@ export function ContractStepBasics({
           value={form.companyName}
           onChange={(e) => set({ companyName: e.target.value })}
           placeholder="Legal entity name on contract"
+          readOnly={accountNameLocked}
+          className={accountNameLocked ? "bg-muted/40" : undefined}
         />
+        {accountNameLocked && (
+          <p className="text-xs text-text-muted">Autofilled from the account name.</p>
+        )}
       </div>
       <div className="space-y-1.5">
         <FormLabelHelp helpId="contracts.wizard.channel">Channel</FormLabelHelp>
@@ -66,11 +76,16 @@ export function ContractStepParties({
 
   const toggleProperty = (id: string, checked: boolean) => {
     if (!id) return;
-    set({
-      propertyIds: checked
-        ? [...form.propertyIds, id]
-        : form.propertyIds.filter((x) => x !== id),
-    });
+    const propertyIds = checked
+      ? [...form.propertyIds, id]
+      : form.propertyIds.filter((x) => x !== id);
+    const propertyCategories = { ...form.propertyCategories };
+    if (checked) {
+      if (!propertyCategories[id]) propertyCategories[id] = "CAT A";
+    } else {
+      delete propertyCategories[id];
+    }
+    set({ propertyIds, propertyCategories });
   };
 
   const allSelected =
@@ -98,7 +113,7 @@ export function ContractStepParties({
             </SelectContent>
           </Select>
           <p className="text-xs text-text-muted">
-            If the contact has email, the system can send the contract automatically.
+            Client email is sent only after the contract is approved.
           </p>
         </div>
         <div className="space-y-1.5">
@@ -119,33 +134,75 @@ export function ContractStepParties({
               <Checkbox
                 checked={allSelected}
                 onCheckedChange={(v) => {
-                  set({
-                    propertyIds: v ? selectableIds : [],
-                  });
+                  if (v) {
+                    const propertyCategories = { ...form.propertyCategories };
+                    for (const id of selectableIds) {
+                      if (!propertyCategories[id]) propertyCategories[id] = "CAT A";
+                    }
+                    set({ propertyIds: selectableIds, propertyCategories });
+                  } else {
+                    set({ propertyIds: [], propertyCategories: {} });
+                  }
                 }}
               />
               Select all
             </label>
           )}
         </div>
-        <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
-          {propertyOptions.map((p) => (
-            <label
-              key={p.name}
-              className={cn(
-                "flex items-start gap-2 text-sm py-1",
-                p.selectable ? "cursor-pointer" : "cursor-not-allowed opacity-60"
-              )}
-            >
-              <Checkbox
-                checked={p.selectable && form.propertyIds.includes(p.id)}
-                disabled={!p.selectable}
-                onCheckedChange={(v) => toggleProperty(p.id, !!v)}
-                className="mt-0.5"
-              />
-              <span className="leading-snug">{p.name}</span>
-            </label>
-          ))}
+        <div className="max-h-72 overflow-y-auto space-y-3 pr-1">
+          {propertyOptions.map((p) => {
+            const checked = p.selectable && form.propertyIds.includes(p.id);
+            return (
+              <div
+                key={p.name}
+                className={cn(
+                  "rounded-md border border-border/70 p-2 space-y-2",
+                  !p.selectable && "opacity-60"
+                )}
+              >
+                <label
+                  className={cn(
+                    "flex items-start gap-2 text-sm",
+                    p.selectable ? "cursor-pointer" : "cursor-not-allowed"
+                  )}
+                >
+                  <Checkbox
+                    checked={checked}
+                    disabled={!p.selectable}
+                    onCheckedChange={(v) => toggleProperty(p.id, !!v)}
+                    className="mt-0.5"
+                  />
+                  <span className="leading-snug">{p.name}</span>
+                </label>
+                {checked && (
+                  <div className="ml-6 max-w-xs space-y-1">
+                    <FormLabelHelp helpId="contracts.wizard.propertyCategory">
+                      Rate category
+                    </FormLabelHelp>
+                    <Select
+                      value={form.propertyCategories[p.id] || "CAT A"}
+                      onValueChange={(v) =>
+                        set({
+                          propertyCategories: { ...form.propertyCategories, [p.id]: v },
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DEFAULT_RATE_SLABS.map((slab) => (
+                          <SelectItem key={slab} value={slab}>
+                            {slab}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
         {selectableIds.length === 0 && (
           <p className="text-xs text-text-muted">
@@ -167,7 +224,11 @@ export function ContractCreateReview({
   contacts: Contact[];
 }) {
   const contactName = contacts.find((c) => c.id === form.contactId)?.name;
-  const propertyNames = form.propertyIds.map((id) => propertyMap.get(id) ?? id);
+  const propertyNames = form.propertyIds.map((id) => {
+    const cat = form.propertyCategories[id];
+    const name = propertyMap.get(id) ?? id;
+    return cat ? `${name} (${cat})` : name;
+  });
 
   return (
     <div className="rounded-lg border border-border bg-hover/40 p-4 space-y-3 text-sm">
@@ -187,7 +248,7 @@ export function ContractCreateReview({
         <div>
           <span className="text-text-muted">Properties</span>
           <p className="font-medium text-text">
-            {propertyNames.length > 0 ? `${propertyNames.length} selected` : "None"}
+            {propertyNames.length > 0 ? propertyNames.join(", ") : "None"}
           </p>
         </div>
       </div>
