@@ -1,586 +1,435 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import * as XLSX from 'xlsx';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  BarChart3,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import {
-  Building2, TrendingUp, Phone, DollarSign, Users, CalendarIcon,
-  Download, RefreshCw, BarChart3, PieChart, LineChart,
-  MapPin, Star, Clock, AlertTriangle
-} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { useToast } from "@/hooks/use-toast";
+import {
+  exportReportCsv,
+  exportReportExcel,
+  exportReportPdf,
+  type ExportColumn,
+} from "@/lib/reportExport";
+import {
+  REPORT_CATALOG,
+  fetchEnterpriseReport,
+  type ReportId,
+  type ReportMeta,
+  type ReportPreset,
+  type ReportQuery,
+  type ReportResponse,
+} from "@/services/reports";
 
 interface ReportsProps {
   userName: string;
 }
 
+const PRESETS: { id: ReportPreset; label: string }[] = [
+  { id: "day", label: "Today" },
+  { id: "yesterday", label: "Yesterday" },
+  { id: "mtd", label: "MTD" },
+  { id: "ytd", label: "YTD (FY)" },
+  { id: "month", label: "Month" },
+  { id: "custom", label: "Custom" },
+];
+
+function qualityBadge(q: ReportMeta["dataQuality"]) {
+  if (q === "live") {
+    return <Badge className="bg-emerald-600 hover:bg-emerald-600">Live data</Badge>;
+  }
+  if (q === "proxy") {
+    return (
+      <Badge variant="outline" className="border-amber-500 text-amber-700 dark:text-amber-400">
+        Proxy data
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="border-rose-400 text-rose-700 dark:text-rose-400">
+      Unavailable
+    </Badge>
+  );
+}
+
+function inferColumns(rows: Record<string, unknown>[]): ExportColumn[] {
+  if (rows.length === 0) return [];
+  const keys = Object.keys(rows[0]).filter(
+    (k) => !k.toLowerCase().endsWith("userid") && k !== "periodKey"
+  );
+  return keys.map((key) => ({
+    key,
+    label: key
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (c) => c.toUpperCase())
+      .trim(),
+  }));
+}
+
+function formatCell(value: unknown): string {
+  if (value == null) return "—";
+  if (typeof value === "number") {
+    if (Number.isInteger(value)) return value.toLocaleString();
+    return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+  return String(value);
+}
+
 const Reports = ({ userName }: ReportsProps) => {
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date>(new Date());
+  const { toast } = useToast();
+  const [activeId, setActiveId] = useState<ReportId>("leads-generated");
+  const [preset, setPreset] = useState<ReportPreset>("day");
+  const [date, setDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [month, setMonth] = useState(() => format(new Date(), "yyyy-MM"));
+  const [from, setFrom] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [to, setTo] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<ReportResponse | null>(null);
 
-  // Mock data for property reports
-  const propertyData = [
-    {
-      name: "Postcard Goa",
-      totalRevenue: "₹18,50,000",
-      occupancy: "92%",
-      avgRoomRate: "₹12,500",
-      guestSatisfaction: 4.8,
-      totalBookings: 148,
-      cancellationRate: "8%",
-      repeatGuests: "34%"
-    },
-    {
-      name: "Postcard Udaipur",
-      totalRevenue: "₹22,30,000",
-      occupancy: "88%",
-      avgRoomRate: "₹15,200",
-      guestSatisfaction: 4.9,
-      totalBookings: 127,
-      cancellationRate: "5%",
-      repeatGuests: "42%"
-    },
-    {
-      name: "Postcard Munnar",
-      totalRevenue: "₹16,80,000",
-      occupancy: "85%",
-      avgRoomRate: "₹11,800",
-      guestSatisfaction: 4.7,
-      totalBookings: 132,
-      cancellationRate: "12%",
-      repeatGuests: "28%"
-    },
-    {
-      name: "Postcard Kerala",
-      totalRevenue: "₹19,90,000",
-      occupancy: "90%",
-      avgRoomRate: "₹13,800",
-      guestSatisfaction: 4.6,
-      totalBookings: 141,
-      cancellationRate: "7%",
-      repeatGuests: "31%"
+  const active = REPORT_CATALOG.find((r) => r.id === activeId)!;
+
+  const query: ReportQuery = useMemo(() => {
+    const q: ReportQuery = { preset };
+    if (preset === "day") q.date = date;
+    if (preset === "month") q.month = month;
+    if (preset === "custom") {
+      q.from = from;
+      q.to = to;
     }
-  ];
+    return q;
+  }, [preset, date, month, from, to]);
 
-  // Mock data for sales performance
-  const salesData = [
-    {
-      agent: "Priya Sharma",
-      totalLeads: 87,
-      conversions: 24,
-      conversionRate: "27.6%",
-      revenue: "₹8,45,000",
-      avgDealSize: "₹35,208",
-      callsMade: 312,
-      emailsSent: 156
-    },
-    {
-      agent: "Rajesh Kumar",
-      totalLeads: 92,
-      conversions: 28,
-      conversionRate: "30.4%",
-      revenue: "₹9,80,000",
-      avgDealSize: "₹35,000",
-      callsMade: 298,
-      emailsSent: 142
-    },
-    {
-      agent: "Anita Patel",
-      totalLeads: 78,
-      conversions: 19,
-      conversionRate: "24.4%",
-      revenue: "₹6,95,000",
-      avgDealSize: "₹36,579",
-      callsMade: 267,
-      emailsSent: 134
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await fetchEnterpriseReport(
+        activeId,
+        active.usesPeriodFilter ? query : {}
+      );
+      setData(result);
+    } catch (err) {
+      setData(null);
+      setError(err instanceof Error ? err.message : "Failed to load report");
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  // Mock data for call center performance
-  const callCenterData = [
-    {
-      agent: "Harleen Mehta",
-      totalCalls: 245,
-      avgCallDuration: "4:32",
-      resolutionRate: "94%",
-      customerSat: 4.7,
-      ticketsCreated: 18,
-      ticketsResolved: 23,
-      responseTime: "1.2 min"
-    },
-    {
-      agent: "Suresh Gupta",
-      totalCalls: 198,
-      avgCallDuration: "5:15",
-      resolutionRate: "91%",
-      customerSat: 4.5,
-      ticketsCreated: 22,
-      ticketsResolved: 19,
-      responseTime: "1.8 min"
-    },
-    {
-      agent: "Kavita Singh",
-      totalCalls: 267,
-      avgCallDuration: "3:58",
-      resolutionRate: "96%",
-      customerSat: 4.8,
-      ticketsCreated: 15,
-      ticketsResolved: 28,
-      responseTime: "1.0 min"
-    }
-  ];
-
-  // Mock projected revenue data
-  const projectedData = [
-    { month: "Jan 2024", actual: "₹67,50,000", projected: "₹70,00,000", variance: "-3.6%" },
-    { month: "Feb 2024", actual: "₹72,30,000", projected: "₹68,50,000", variance: "+5.5%" },
-    { month: "Mar 2024", actual: "₹78,90,000", projected: "₹75,00,000", variance: "+5.2%" },
-    { month: "Apr 2024", projected: "₹82,50,000", forecast: "₹85,20,000" },
-    { month: "May 2024", projected: "₹88,00,000", forecast: "₹91,50,000" },
-    { month: "Jun 2024", projected: "₹92,30,000", forecast: "₹96,80,000" }
-  ];
-
-  // Excel download functions
-  const downloadPropertyReport = (property: any) => {
-    const workbook = XLSX.utils.book_new();
-
-    const propertyDetails = [
-      ['Property Name', property.name],
-      ['Report Period', `${format(startDate, "PPP")} to ${format(endDate, "PPP")}`],
-      [''],
-      ['Performance Metrics', ''],
-      ['Total Revenue', property.totalRevenue],
-      ['Occupancy Rate', property.occupancy],
-      ['Average Room Rate', property.avgRoomRate],
-      ['Guest Satisfaction Rating', property.guestSatisfaction],
-      ['Total Bookings', property.totalBookings],
-      ['Cancellation Rate', property.cancellationRate],
-      ['Repeat Guests Percentage', property.repeatGuests],
-      [''],
-      ['Additional Details', ''],
-      ['Location Type', 'Premium Resort Property'],
-      ['Room Categories', 'Deluxe, Premium, Suite'],
-      ['Amenities', 'Pool, Spa, Restaurant, Conference Hall'],
-      ['Staff Count', '45-60 employees'],
-      ['Peak Season', 'October to March'],
-      ['Off Season', 'April to September']
-    ];
-
-    const worksheet = XLSX.utils.aoa_to_sheet(propertyDetails);
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Property Report');
-
-    XLSX.writeFile(workbook, `${property.name}_Detailed_Report_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
   };
 
-  const downloadSalesReport = (agent: any) => {
-    const workbook = XLSX.utils.book_new();
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, query.preset, query.date, query.month, query.from, query.to]);
 
-    const salesDetails = [
-      ['Sales Executive', agent.agent],
-      ['Report Period', `${format(startDate, "PPP")} to ${format(endDate, "PPP")}`],
-      [''],
-      ['Performance Metrics', ''],
-      ['Total Leads', agent.totalLeads],
-      ['Conversions', agent.conversions],
-      ['Conversion Rate', agent.conversionRate],
-      ['Total Revenue', agent.revenue],
-      ['Average Deal Size', agent.avgDealSize],
-      ['Calls Made', agent.callsMade],
-      ['Emails Sent', agent.emailsSent],
-      [''],
-      ['Lead Sources', ''],
-      ['Website Inquiries', '35%'],
-      ['Referrals', '25%'],
-      ['Social Media', '20%'],
-      ['Direct Walk-ins', '15%'],
-      ['Partner Channels', '5%'],
-      [''],
-      ['Performance Trends', ''],
-      ['Best Performing Month', 'March 2024'],
-      ['Target Achievement', '108%'],
-      ['Customer Satisfaction', '4.6/5']
+  const rows = (data?.rows ?? []) as Record<string, unknown>[];
+  const columns = useMemo(() => inferColumns(rows), [rows]);
+
+  const metaLines = useMemo(() => {
+    if (!data?.meta) return [] as string[];
+    const lines = [
+      `Period: ${data.meta.label}`,
+      `From: ${new Date(data.meta.from).toLocaleString()}`,
+      `To: ${new Date(data.meta.to).toLocaleString()}`,
+      `Data quality: ${data.meta.dataQuality}`,
+      `Generated for: ${userName}`,
     ];
+    if (data.meta.notes) lines.push(`Notes: ${data.meta.notes}`);
+    return lines;
+  }, [data, userName]);
 
-    const worksheet = XLSX.utils.aoa_to_sheet(salesDetails);
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sales Report');
+  const exportDisabled = loading || !data || rows.length === 0;
 
-    XLSX.writeFile(workbook, `${agent.agent}_Sales_Report_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  const runExport = (kind: "csv" | "xlsx" | "pdf") => {
+    if (!data || columns.length === 0) {
+      toast({
+        title: "Nothing to export",
+        description: "Load a report with rows first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      if (kind === "csv") exportReportCsv(active.title, columns, rows, metaLines);
+      else if (kind === "xlsx") exportReportExcel(active.title, columns, rows, metaLines);
+      else exportReportPdf(active.title, columns, rows, metaLines);
+      toast({ title: "Export ready", description: `${active.title} downloaded.` });
+    } catch (err) {
+      toast({
+        title: "Export failed",
+        description: err instanceof Error ? err.message : "Could not export",
+        variant: "destructive",
+      });
+    }
   };
 
-  const downloadCallCenterReport = (agent: any) => {
-    const workbook = XLSX.utils.book_new();
-
-    const callCenterDetails = [
-      ['Call Center Agent', agent.agent],
-      ['Report Period', `${format(startDate, "PPP")} to ${format(endDate, "PPP")}`],
-      [''],
-      ['Performance Metrics', ''],
-      ['Total Calls Handled', agent.totalCalls],
-      ['Average Call Duration', agent.avgCallDuration],
-      ['Resolution Rate', agent.resolutionRate],
-      ['Customer Satisfaction', agent.customerSat],
-      ['Tickets Created', agent.ticketsCreated],
-      ['Tickets Resolved', agent.ticketsResolved],
-      ['Average Response Time', agent.responseTime],
-      [''],
-      ['Call Categories', ''],
-      ['Booking Inquiries', '40%'],
-      ['Complaint Resolution', '25%'],
-      ['Cancellation Requests', '15%'],
-      ['General Information', '12%'],
-      ['Technical Support', '8%'],
-      [''],
-      ['Quality Metrics', ''],
-      ['First Call Resolution', '89%'],
-      ['Escalation Rate', '6%'],
-      ['Call Back Rate', '12%'],
-      ['Training Hours Completed', '8 hours/month']
-    ];
-
-    const worksheet = XLSX.utils.aoa_to_sheet(callCenterDetails);
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Call Center Report');
-
-    XLSX.writeFile(workbook, `${agent.agent}_CallCenter_Report_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
-  };
+  const summaryEntries = Object.entries(data?.summary ?? {}).filter(
+    ([, v]) => v != null && typeof v !== "object"
+  );
 
   return (
-    <div className="space-y-6 animate-panel-enter">
+    <div className="space-y-5">
       <PageHeader
         title="Reports"
-        subtitle="Property, sales, and call center analytics"
+        subtitle="Enterprise analytics with on-screen results and CSV, Excel, and PDF export."
         actions={
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
+              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               Refresh
             </Button>
-            <Button size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={exportDisabled}
+              onClick={() => runExport("csv")}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={exportDisabled}
+              onClick={() => runExport("xlsx")}
+            >
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Excel
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={exportDisabled}
+              onClick={() => runExport("pdf")}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              PDF
             </Button>
           </div>
         }
       />
-      <div className="rounded-md border border-border bg-primary-light/30 px-4 py-3 text-sm text-text-muted">
-        Sample report data shown below. Live reporting API integration can replace these figures when connected.
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <Card className="h-fit">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="h-4 w-4" />
+              Report catalog
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 p-3 pt-0">
+            {REPORT_CATALOG.map((report) => {
+              const selected = report.id === activeId;
+              return (
+                <button
+                  key={report.id}
+                  type="button"
+                  onClick={() => setActiveId(report.id)}
+                  className={`w-full rounded-md px-3 py-2.5 text-left transition-colors ${
+                    selected
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted text-text"
+                  }`}
+                >
+                  <div className="text-sm font-medium leading-snug">{report.title}</div>
+                  <div
+                    className={`mt-0.5 text-[11px] leading-snug ${
+                      selected ? "text-primary-foreground/80" : "text-muted-foreground"
+                    }`}
+                  >
+                    {report.description}
+                  </div>
+                </button>
+              );
+            })}
+          </CardContent>
+        </Card>
+
+        <div className="min-w-0 space-y-4">
+          <Card>
+            <CardContent className="space-y-4 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-text">{active.title}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{active.description}</p>
+                </div>
+                {data?.meta && qualityBadge(data.meta.dataQuality)}
+              </div>
+
+              {active.usesPeriodFilter && (
+                <div className="space-y-3 border-t border-border pt-3">
+                  <div className="flex flex-wrap gap-2">
+                    {PRESETS.map((p) => (
+                      <Button
+                        key={p.id}
+                        size="sm"
+                        variant={preset === p.id ? "default" : "outline"}
+                        onClick={() => setPreset(p.id)}
+                      >
+                        {p.label}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    {preset === "day" && (
+                      <div>
+                        <Label htmlFor="report-date">Date</Label>
+                        <Input
+                          id="report-date"
+                          type="date"
+                          value={date}
+                          onChange={(e) => setDate(e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                    )}
+                    {preset === "month" && (
+                      <div>
+                        <Label htmlFor="report-month">Month</Label>
+                        <Input
+                          id="report-month"
+                          type="month"
+                          value={month}
+                          onChange={(e) => setMonth(e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                    )}
+                    {preset === "custom" && (
+                      <>
+                        <div>
+                          <Label htmlFor="report-from">From</Label>
+                          <Input
+                            id="report-from"
+                            type="date"
+                            value={from}
+                            onChange={(e) => setFrom(e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="report-to">To</Label>
+                          <Input
+                            id="report-to"
+                            type="date"
+                            value={to}
+                            onChange={(e) => setTo(e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {!active.usesPeriodFilter && (
+                <p className="text-sm text-muted-foreground border-t border-border pt-3">
+                  This report always shows Daily, MTD, and YTD (financial year) buckets.
+                </p>
+              )}
+
+              {data?.meta?.notes && (
+                <p className="rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+                  {data.meta.notes}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {summaryEntries.length > 0 && (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {summaryEntries.map(([key, value]) => (
+                <Card key={key}>
+                  <CardContent className="p-4">
+                    <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      {key.replace(/([A-Z])/g, " $1")}
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-text">
+                      {formatCell(value)}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          <Card>
+            <CardContent className="p-0">
+              {loading ? (
+                <div className="flex min-h-48 items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : error ? (
+                <div className="px-6 py-12 text-center">
+                  <p className="font-medium text-text">Unable to load report</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+                  <Button className="mt-4" variant="outline" onClick={() => void load()}>
+                    Try again
+                  </Button>
+                </div>
+              ) : data?.meta.dataQuality === "unavailable" ? (
+                <div className="px-6 py-12 text-center">
+                  <p className="font-medium text-text">Data not available yet</p>
+                  <p className="mt-2 text-sm text-muted-foreground max-w-lg mx-auto">
+                    {data.reason ||
+                      data.meta.notes ||
+                      "This report requires additional telephony data capture."}
+                  </p>
+                </div>
+              ) : rows.length === 0 ? (
+                <div className="px-6 py-12 text-center">
+                  <p className="font-medium text-text">No rows for this period</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Try another date range or confirm activity exists in CRM.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[640px] text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/40 text-left">
+                        {columns.map((col) => (
+                          <th
+                            key={col.key}
+                            className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                          >
+                            {col.label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((row, idx) => (
+                        <tr
+                          key={idx}
+                          className="border-b border-border last:border-0 hover:bg-muted/30"
+                        >
+                          {columns.map((col) => (
+                            <td key={col.key} className="px-4 py-2.5 text-text">
+                              {formatCell(row[col.key])}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      {/* Date Range Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Report Period</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-4">
-            <div className="flex flex-col space-y-2">
-              <label className="text-sm font-medium">Start Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[200px] justify-start text-left font-normal",
-                      !startDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="flex flex-col space-y-2">
-              <label className="text-sm font-medium">End Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[200px] justify-start text-left font-normal",
-                      !endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Reports Tabs */}
-      <Tabs defaultValue="property" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3">
-          <TabsTrigger value="property">Property Reports</TabsTrigger>
-          <TabsTrigger value="sales">Sales Performance</TabsTrigger>
-          <TabsTrigger value="callcenter">Call Center Performance</TabsTrigger>
-        </TabsList>
-
-        {/* Property Reports */}
-        <TabsContent value="property" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Building2 className="h-5 w-5" />
-                <span>Property Performance Overview</span>
-              </CardTitle>
-              <CardDescription>
-                Performance metrics across all properties for the selected period
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {propertyData.map((property) => (
-                  <Card key={property.name} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-xl font-semibold">{property.name}</h3>
-                          <Badge variant="outline" className="mt-2">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            Property
-                          </Badge>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-green-600">{property.totalRevenue}</p>
-                          <p className="text-sm text-muted-foreground">Total Revenue</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-3 bg-blue-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Occupancy Rate</p>
-                          <p className="text-lg font-semibold text-blue-600">{property.occupancy}</p>
-                        </div>
-                        <div className="text-center p-3 bg-purple-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Avg Room Rate</p>
-                          <p className="text-lg font-semibold text-purple-600">{property.avgRoomRate}</p>
-                        </div>
-                        <div className="text-center p-3 bg-orange-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Guest Rating</p>
-                          <div className="flex items-center justify-center">
-                            <Star className="h-4 w-4 text-orange-500 mr-1" />
-                            <p className="text-lg font-semibold text-orange-600">{property.guestSatisfaction}</p>
-                          </div>
-                        </div>
-                        <div className="text-center p-3 bg-green-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Total Bookings</p>
-                          <p className="text-lg font-semibold text-green-600">{property.totalBookings}</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                        <div className="text-center">
-                          <p className="text-sm text-muted-foreground">Cancellation Rate</p>
-                          <p className="font-semibold">{property.cancellationRate}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-muted-foreground">Repeat Guests</p>
-                          <p className="font-semibold">{property.repeatGuests}</p>
-                        </div>
-                        <div className="text-center">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => downloadPropertyReport(property)}
-                          >
-                            <BarChart3 className="h-4 w-4 mr-2" />
-                            Detailed Report
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Sales Performance */}
-        <TabsContent value="sales" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="h-5 w-5" />
-                <span>Sales Team Performance</span>
-              </CardTitle>
-              <CardDescription>
-                Individual and team sales metrics for the selected period
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {salesData.map((agent) => (
-                  <Card key={agent.agent} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-xl font-semibold">{agent.agent}</h3>
-                          <Badge variant="secondary" className="mt-2">
-                            <Users className="h-3 w-3 mr-1" />
-                            Sales Executive
-                          </Badge>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-green-600">{agent.revenue}</p>
-                          <p className="text-sm text-muted-foreground">Total Revenue</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-3 bg-blue-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Total Leads</p>
-                          <p className="text-lg font-semibold text-blue-600">{agent.totalLeads}</p>
-                        </div>
-                        <div className="text-center p-3 bg-green-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Conversions</p>
-                          <p className="text-lg font-semibold text-green-600">{agent.conversions}</p>
-                        </div>
-                        <div className="text-center p-3 bg-purple-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Conversion Rate</p>
-                          <p className="text-lg font-semibold text-purple-600">{agent.conversionRate}</p>
-                        </div>
-                        <div className="text-center p-3 bg-orange-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Avg Deal Size</p>
-                          <p className="text-lg font-semibold text-orange-600">{agent.avgDealSize}</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                        <div className="text-center">
-                          <p className="text-sm text-muted-foreground">Calls Made</p>
-                          <p className="font-semibold">{agent.callsMade}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-muted-foreground">Emails Sent</p>
-                          <p className="font-semibold">{agent.emailsSent}</p>
-                        </div>
-                        <div className="text-center">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => downloadSalesReport(agent)}
-                          >
-                            <LineChart className="h-4 w-4 mr-2" />
-                            View Details
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Call Center Performance */}
-        <TabsContent value="callcenter" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Phone className="h-5 w-5" />
-                <span>Call Center Performance</span>
-              </CardTitle>
-              <CardDescription>
-                Call center agents' performance metrics for the selected period
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {callCenterData.map((agent) => (
-                  <Card key={agent.agent} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-xl font-semibold">{agent.agent}</h3>
-                          <Badge variant="secondary" className="mt-2">
-                            <Phone className="h-3 w-3 mr-1" />
-                            Call Center Agent
-                          </Badge>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-blue-600">{agent.totalCalls}</p>
-                          <p className="text-sm text-muted-foreground">Total Calls</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-3 bg-green-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Resolution Rate</p>
-                          <p className="text-lg font-semibold text-green-600">{agent.resolutionRate}</p>
-                        </div>
-                        <div className="text-center p-3 bg-orange-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Customer Satisfaction</p>
-                          <div className="flex items-center justify-center">
-                            <Star className="h-4 w-4 text-orange-500 mr-1" />
-                            <p className="text-lg font-semibold text-orange-600">{agent.customerSat}</p>
-                          </div>
-                        </div>
-                        <div className="text-center p-3 bg-blue-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Avg Call Duration</p>
-                          <p className="text-lg font-semibold text-blue-600">{agent.avgCallDuration}</p>
-                        </div>
-                        <div className="text-center p-3 bg-purple-50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Response Time</p>
-                          <p className="text-lg font-semibold text-purple-600">{agent.responseTime}</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                        <div className="text-center">
-                          <p className="text-sm text-muted-foreground">Tickets Created</p>
-                          <p className="font-semibold">{agent.ticketsCreated}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-muted-foreground">Tickets Resolved</p>
-                          <p className="font-semibold">{agent.ticketsResolved}</p>
-                        </div>
-                        <div className="text-center">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => downloadCallCenterReport(agent)}
-                          >
-                            <PieChart className="h-4 w-4 mr-2" />
-                            Performance Chart
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };

@@ -10,10 +10,13 @@ import { CommunicationChannel, CommunicationDirection } from "../models/common";
 import { buildLeadQueryForUser } from "../services/dashboardDataScope";
 import { badRequest } from "../utils/httpError";
 import { PERMISSIONS } from "../constants/permissions";
+import { registerEnterpriseReports } from "./enterpriseReports";
 
 export const reportsRouter = Router();
 
 reportsRouter.use(requireAuth, requirePermissions(["reports.view"]));
+
+registerEnterpriseReports(reportsRouter);
 
 // GET /reports/daily-activity?date=YYYY-MM-DD
 reportsRouter.get("/daily-activity", async (req, res, next) => {
