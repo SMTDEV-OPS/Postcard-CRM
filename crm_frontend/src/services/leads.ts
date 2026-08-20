@@ -33,19 +33,22 @@ export type LeadSource =
   | "CSV_UPLOAD";
 
 export type ClosedReason =
+  | "BUDGET"
   | "DESTINATION_CHANGED"
+  | "TRAVEL_CANCELLED"
+  | "NO_REVERT_FROM_CLIENT"
+  | "SOLD_OUT_ALTERNATE_DATE"
+  | "OTHER"
+  // Legacy values retained for historical records
   | "EXPERIENCES_NOT_AVAILABLE"
   | "CONFIRMED_ANOTHER_TA"
   | "CONFIRMED_ANOTHER_SALESPERSON"
   | "CONFIRMED_RESERVATIONS"
   | "LOST_TO_ALTERNATE_HOTEL"
-  // Legacy values retained for historical records
   | "PRICE"
   | "NO_AVAILABILITY"
   | "GUEST_NOT_RESPONDING"
-  | "OTHER"
   | "SOLD_OUT"
-  | "BUDGET"
   | "BOOKED_OTA"
   | "BOOKED_WEBSITE"
   | "BOOKED_OTHER_PROPERTY"
@@ -59,22 +62,25 @@ export type ClosedReason =
 
 /** Reasons shown when marking a lead Lost. */
 export const SELECTABLE_CLOSED_REASONS: { value: ClosedReason; label: string }[] = [
-  { value: "DESTINATION_CHANGED", label: "Destination changed" },
-  { value: "EXPERIENCES_NOT_AVAILABLE", label: "Experiences not available" },
-  { value: "CONFIRMED_ANOTHER_TA", label: "Confirmed through another source – Another TA" },
-  { value: "CONFIRMED_ANOTHER_SALESPERSON", label: "Confirmed through another source – Another Sales person" },
-  { value: "CONFIRMED_RESERVATIONS", label: "Confirmed through another source – Reservations" },
-  { value: "LOST_TO_ALTERNATE_HOTEL", label: "Lost to alternate hotel" },
+  { value: "BUDGET", label: "Budget" },
+  { value: "DESTINATION_CHANGED", label: "Destination Changed" },
+  { value: "TRAVEL_CANCELLED", label: "Travel Cancelled" },
+  { value: "NO_REVERT_FROM_CLIENT", label: "No Revert from Clients End" },
+  { value: "SOLD_OUT_ALTERNATE_DATE", label: "Sold Out -alternate date offered." },
+  { value: "OTHER", label: "Others." },
 ];
 
 const CLOSED_REASON_LABELS: Record<string, string> = Object.fromEntries([
   ...SELECTABLE_CLOSED_REASONS.map((r) => [r.value, r.label] as const),
+  ["EXPERIENCES_NOT_AVAILABLE", "Experiences not available"],
+  ["CONFIRMED_ANOTHER_TA", "Confirmed through another source – Another TA"],
+  ["CONFIRMED_ANOTHER_SALESPERSON", "Confirmed through another source – Another Sales person"],
+  ["CONFIRMED_RESERVATIONS", "Confirmed through another source – Reservations"],
+  ["LOST_TO_ALTERNATE_HOTEL", "Lost to alternate hotel"],
   ["PRICE", "Price"],
   ["NO_AVAILABILITY", "No availability"],
   ["GUEST_NOT_RESPONDING", "Guest not responding"],
-  ["OTHER", "Other"],
   ["SOLD_OUT", "Sold out"],
-  ["BUDGET", "Budget"],
   ["BOOKED_OTA", "Booked elsewhere – OTA"],
   ["BOOKED_WEBSITE", "Booked elsewhere – Website"],
   ["BOOKED_OTHER_PROPERTY", "Booked elsewhere – Other property"],

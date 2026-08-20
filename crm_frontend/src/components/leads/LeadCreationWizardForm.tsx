@@ -7,6 +7,8 @@ import {
   BedDouble,
   Trash2,
   User as UserIcon,
+  Check,
+  ChevronsUpDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +29,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Property } from "@/services/properties";
 import { AddLeadStepIndicator, ADD_LEAD_STEP_SUBTITLES } from "./AddLeadStepIndicator";
@@ -258,6 +273,7 @@ export function LeadCreationWizardForm({
   title,
 }: LeadCreationWizardFormProps) {
   const [step, setStep] = useState(1);
+  const [channelOpen, setChannelOpen] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -712,23 +728,53 @@ export function LeadCreationWizardForm({
                   </div>
                   <div className="space-y-2">
                     <FormLabelHelp helpId="leads.add.source">Channel</FormLabelHelp>
-                    <Select
-                      value={(customData.lead_channel as string) || ""}
-                      onValueChange={(value) =>
-                        setCustomData((prev) => ({ ...prev, lead_channel: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select channel" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {LEAD_CHANNEL_OPTIONS.map((opt) => (
-                          <SelectItem key={opt} value={opt}>
-                            {opt}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={channelOpen} onOpenChange={setChannelOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={channelOpen}
+                          className="w-full justify-between font-normal"
+                        >
+                          <span className="truncate">
+                            {(customData.lead_channel as string) || "Type to search channel…"}
+                          </span>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search channel…" />
+                          <CommandList>
+                            <CommandEmpty>No channel found.</CommandEmpty>
+                            <CommandGroup>
+                              {LEAD_CHANNEL_OPTIONS.map((opt) => {
+                                const selected = (customData.lead_channel as string) === opt;
+                                return (
+                                  <CommandItem
+                                    key={opt}
+                                    value={opt}
+                                    onSelect={() => {
+                                      setCustomData((prev) => ({ ...prev, lead_channel: opt }));
+                                      setChannelOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        selected ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    {opt}
+                                  </CommandItem>
+                                );
+                              })}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
                 <FormField

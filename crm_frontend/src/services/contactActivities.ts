@@ -10,6 +10,7 @@ export const CONTACT_ACTIVITY_TYPE_OPTIONS = [
   { value: "SITE_INSPECTION", label: "Site inspection" },
   { value: "OFF_BASE_TRAVEL", label: "Off base travel" },
   { value: "VIRTUAL_MEETING", label: "Virtual meeting" },
+  { value: "TRADE_FAIR", label: "Trade Fair" },
 ] as const;
 
 export type SelectableContactActivityType =

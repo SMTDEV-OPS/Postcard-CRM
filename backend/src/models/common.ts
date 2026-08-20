@@ -82,20 +82,23 @@ export enum HeatLevel {
 }
 
 export enum ClosedReason {
-  // Current selectable reasons (Lost UI)
+  // Selectable reasons (Lost UI)
+  BUDGET = "BUDGET",
   DESTINATION_CHANGED = "DESTINATION_CHANGED",
+  TRAVEL_CANCELLED = "TRAVEL_CANCELLED",
+  NO_REVERT_FROM_CLIENT = "NO_REVERT_FROM_CLIENT",
+  SOLD_OUT_ALTERNATE_DATE = "SOLD_OUT_ALTERNATE_DATE",
+  OTHER = "OTHER",
+  // Legacy values retained for historical records and auto-close jobs
   EXPERIENCES_NOT_AVAILABLE = "EXPERIENCES_NOT_AVAILABLE",
   CONFIRMED_ANOTHER_TA = "CONFIRMED_ANOTHER_TA",
   CONFIRMED_ANOTHER_SALESPERSON = "CONFIRMED_ANOTHER_SALESPERSON",
   CONFIRMED_RESERVATIONS = "CONFIRMED_RESERVATIONS",
   LOST_TO_ALTERNATE_HOTEL = "LOST_TO_ALTERNATE_HOTEL",
-  // Legacy values retained for historical records and auto-close jobs
   PRICE = "PRICE",
   NO_AVAILABILITY = "NO_AVAILABILITY",
   GUEST_NOT_RESPONDING = "GUEST_NOT_RESPONDING",
-  OTHER = "OTHER",
   SOLD_OUT = "SOLD_OUT",
-  BUDGET = "BUDGET",
   BOOKED_OTA = "BOOKED_OTA",
   BOOKED_WEBSITE = "BOOKED_WEBSITE",
   BOOKED_OTHER_PROPERTY = "BOOKED_OTHER_PROPERTY",
@@ -110,16 +113,21 @@ export enum ClosedReason {
 
 /** Reasons shown when marking a lead Lost (excludes legacy auto-close codes). */
 export const SELECTABLE_CLOSED_REASONS: ClosedReason[] = [
+  ClosedReason.BUDGET,
   ClosedReason.DESTINATION_CHANGED,
-  ClosedReason.EXPERIENCES_NOT_AVAILABLE,
-  ClosedReason.CONFIRMED_ANOTHER_TA,
-  ClosedReason.CONFIRMED_ANOTHER_SALESPERSON,
-  ClosedReason.CONFIRMED_RESERVATIONS,
-  ClosedReason.LOST_TO_ALTERNATE_HOTEL,
+  ClosedReason.TRAVEL_CANCELLED,
+  ClosedReason.NO_REVERT_FROM_CLIENT,
+  ClosedReason.SOLD_OUT_ALTERNATE_DATE,
+  ClosedReason.OTHER,
 ];
 
 export const CLOSED_REASON_LABELS: Record<string, string> = {
-  DESTINATION_CHANGED: "Destination changed",
+  BUDGET: "Budget",
+  DESTINATION_CHANGED: "Destination Changed",
+  TRAVEL_CANCELLED: "Travel Cancelled",
+  NO_REVERT_FROM_CLIENT: "No Revert from Clients End",
+  SOLD_OUT_ALTERNATE_DATE: "Sold Out -alternate date offered.",
+  OTHER: "Others.",
   EXPERIENCES_NOT_AVAILABLE: "Experiences not available",
   CONFIRMED_ANOTHER_TA: "Confirmed through another source – Another TA",
   CONFIRMED_ANOTHER_SALESPERSON: "Confirmed through another source – Another Sales person",
@@ -128,9 +136,7 @@ export const CLOSED_REASON_LABELS: Record<string, string> = {
   PRICE: "Price",
   NO_AVAILABILITY: "No availability",
   GUEST_NOT_RESPONDING: "Guest not responding",
-  OTHER: "Other",
   SOLD_OUT: "Sold out",
-  BUDGET: "Budget",
   BOOKED_OTA: "Booked elsewhere – OTA",
   BOOKED_WEBSITE: "Booked elsewhere – Website",
   BOOKED_OTHER_PROPERTY: "Booked elsewhere – Other property",

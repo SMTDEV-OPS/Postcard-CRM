@@ -202,12 +202,12 @@ async function seedEverything() {
       is_active: true,
       module: "leads" as const,
       options: [
-        "Destination changed",
-        "Experiences not available",
-        "Confirmed through another source – Another TA",
-        "Confirmed through another source – Another Sales person",
-        "Confirmed through another source – Reservations",
-        "Lost to alternate hotel",
+        "Budget",
+        "Destination Changed",
+        "Travel Cancelled",
+        "No Revert from Clients End",
+        "Sold Out -alternate date offered.",
+        "Others.",
       ].map((v) => ({ label: v, value: v })),
     },
   ];

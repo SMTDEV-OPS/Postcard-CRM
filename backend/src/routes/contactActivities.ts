@@ -19,6 +19,7 @@ const activityTypeEnum = z.enum([
   "SITE_INSPECTION",
   "OFF_BASE_TRAVEL",
   "VIRTUAL_MEETING",
+  "TRADE_FAIR",
 ]);
 const activityStatusEnum = z.enum(["ACTIVE", "CANCELLED"]);
 const responseStatusEnum = z.enum(["NEEDS_ACTION", "ACCEPTED", "DECLINED", "TENTATIVE"]);

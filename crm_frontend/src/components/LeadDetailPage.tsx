@@ -271,6 +271,7 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
   const [lostReasonDialogOpen, setLostReasonDialogOpen] = useState(false);
   const [pendingLostStageId, setPendingLostStageId] = useState<string | null>(null);
   const [pendingClosedReason, setPendingClosedReason] = useState<string>("");
+  const [pendingClosedReasonNote, setPendingClosedReasonNote] = useState("");
   const [isMovingToLost, setIsMovingToLost] = useState(false);
   const [followUps, setFollowUps] = useState<Task[]>([]);
   const [workflowLogs, setWorkflowLogs] = useState<WorkflowExecutionLog[]>([]);
@@ -828,6 +829,14 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
       });
       return;
     }
+    if (pendingClosedReason === "OTHER" && !pendingClosedReasonNote.trim()) {
+      toast({
+        title: "Details required",
+        description: "Please describe the closure reason when selecting Others.",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       setIsMovingToLost(true);
       const res = await fetch(`${API_BASE_URL}/leads/${leadId}`, {
@@ -837,6 +846,9 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
           stageId: pendingLostStageId,
           status: "LOST",
           closedReason: pendingClosedReason,
+          ...(pendingClosedReasonNote.trim()
+            ? { closedReasonNote: pendingClosedReasonNote.trim() }
+            : {}),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -853,6 +865,7 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
       setLocalClosedReason(pendingClosedReason);
       setLostReasonDialogOpen(false);
       setPendingLostStageId(null);
+      setPendingClosedReasonNote("");
       await loadLeadDetail();
       toast({ title: "Lead marked Lost", description: formatClosedReasonLabel(pendingClosedReason) });
     } catch (err) {
@@ -1488,6 +1501,7 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
           if (!open) {
             setPendingLostStageId(null);
             setPendingClosedReason("");
+            setPendingClosedReasonNote("");
           }
         }}
       >
@@ -1495,20 +1509,34 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
           <DialogHeader>
             <DialogTitle>Closure reason</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2 py-2">
-            <Label htmlFor="closed-reason">Why is this lead Lost?</Label>
-            <Select value={pendingClosedReason || undefined} onValueChange={setPendingClosedReason}>
-              <SelectTrigger id="closed-reason">
-                <SelectValue placeholder="Select closure reason" />
-              </SelectTrigger>
-              <SelectContent>
-                {SELECTABLE_CLOSED_REASONS.map((reason) => (
-                  <SelectItem key={reason.value} value={reason.value}>
-                    {reason.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-3 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="closed-reason">Why is this lead Lost?</Label>
+              <Select value={pendingClosedReason || undefined} onValueChange={setPendingClosedReason}>
+                <SelectTrigger id="closed-reason">
+                  <SelectValue placeholder="Select closure reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SELECTABLE_CLOSED_REASONS.map((reason) => (
+                    <SelectItem key={reason.value} value={reason.value}>
+                      {reason.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {pendingClosedReason === "OTHER" && (
+              <div className="space-y-2">
+                <Label htmlFor="closed-reason-note">Please specify *</Label>
+                <Textarea
+                  id="closed-reason-note"
+                  value={pendingClosedReasonNote}
+                  onChange={(e) => setPendingClosedReasonNote(e.target.value)}
+                  placeholder="Describe the closure reason"
+                  rows={3}
+                />
+              </div>
+            )}
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
@@ -1521,7 +1549,14 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
             >
               Cancel
             </Button>
-            <Button onClick={() => void handleConfirmLostStage()} disabled={isMovingToLost || !pendingClosedReason}>
+            <Button
+              onClick={() => void handleConfirmLostStage()}
+              disabled={
+                isMovingToLost ||
+                !pendingClosedReason ||
+                (pendingClosedReason === "OTHER" && !pendingClosedReasonNote.trim())
+              }
+            >
               {isMovingToLost ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Mark as Lost
             </Button>

@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Filter, Plus, Mail, Calendar as CalendarIcon, Clock, User as UserIcon, TrendingUp, Eye, Users, AlertTriangle, FileText, Edit, X } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, endOfMonth, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import { calculateStayNights, formatInr, parseDealAmount } from "@/lib/leadDates";
 import { EmailDialog } from "@/components/communication/EmailDialog";
@@ -25,6 +25,7 @@ import {
   updateLead,
   type LeadDetail,
   type HeatLevel,
+  type LeadListQuery,
 } from "@/services/leads";
 import { LeadDetailPage } from "@/components/LeadDetailPage";
 import { EditLeadDetailsDialog, type LeadTripDetails } from "@/components/EditLeadDetailsDialog";
@@ -74,6 +75,9 @@ const ProfessionalLeadManagement = ({
     bookingType: "all",
     assignedTo: userRole === 'callcenter' ? userName : "all"
   });
+  const [createdDateMode, setCreatedDateMode] = useState<"none" | "date" | "month">("none");
+  const [createdDate, setCreatedDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [createdMonth, setCreatedMonth] = useState(() => format(new Date(), "yyyy-MM"));
 
   const [scope, setScope] = useState<"own" | "team">("own");
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -109,6 +113,29 @@ const ProfessionalLeadManagement = ({
 
   const agentName = userRole === 'callcenter' ? userName : '';
 
+  const createdDateRange = useMemo((): Pick<LeadListQuery, "fromDate" | "toDate"> => {
+    if (createdDateMode === "date" && createdDate) {
+      return { fromDate: createdDate, toDate: createdDate };
+    }
+    if (createdDateMode === "month" && createdMonth) {
+      try {
+        const start = parse(`${createdMonth}-01`, "yyyy-MM-dd", new Date());
+        return {
+          fromDate: format(start, "yyyy-MM-dd"),
+          toDate: format(endOfMonth(start), "yyyy-MM-dd"),
+        };
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  }, [createdDateMode, createdDate, createdMonth]);
+
+  const listLeadsQuery = useMemo(
+    (): LeadListQuery => ({ scope, ...createdDateRange }),
+    [scope, createdDateRange]
+  );
+
   const sortedPipelineStages = useMemo(
     () => [...pipelineStages].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [pipelineStages]
@@ -125,7 +152,7 @@ const ProfessionalLeadManagement = ({
         setIsLoadingLeads(true);
         setLoadError(null);
         const [leadData, usersData] = await Promise.all([
-          listLeads({ scope }),
+          listLeads(listLeadsQuery),
           listUsers(),
         ]);
         setLeads(leadData);
@@ -162,7 +189,7 @@ const ProfessionalLeadManagement = ({
     };
     void fetchStages();
     void refreshCustomFields();
-  }, [backendUserId, scope]);
+  }, [backendUserId, listLeadsQuery]);
 
   useEffect(() => {
     if (isAddLeadOpen) void refreshCustomFields();
@@ -210,7 +237,7 @@ const ProfessionalLeadManagement = ({
   const refreshLeads = async () => {
     if (!backendUserId) return;
     try {
-      const leadData = await listLeads({ scope });
+      const leadData = await listLeads(listLeadsQuery);
       setLeads(leadData);
     } catch (err) {
       console.error("Failed to refresh leads", err);
@@ -468,6 +495,9 @@ const ProfessionalLeadManagement = ({
       assignedTo: userRole === 'callcenter' ? agentName : "all"
     });
     setSearchQuery("");
+    setCreatedDateMode("none");
+    setCreatedDate(format(new Date(), "yyyy-MM-dd"));
+    setCreatedMonth(format(new Date(), "yyyy-MM"));
   };
 
   const handleAssignLead = (leadId: string, assignTo: string) => {
@@ -669,6 +699,40 @@ const ProfessionalLeadManagement = ({
   const leadFilterControls = (
     <>
       <Select
+        value={createdDateMode}
+        onValueChange={(value: "none" | "date" | "month") => setCreatedDateMode(value)}
+      >
+        <SelectTrigger className="w-full md:w-40">
+          <SelectValue placeholder="Created date" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">Any created date</SelectItem>
+          <SelectItem value="date">Created on date</SelectItem>
+          <SelectItem value="month">Created in month</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {createdDateMode === "date" && (
+        <Input
+          type="date"
+          value={createdDate}
+          onChange={(e) => setCreatedDate(e.target.value)}
+          className="w-full md:w-40"
+          aria-label="Created on date"
+        />
+      )}
+
+      {createdDateMode === "month" && (
+        <Input
+          type="month"
+          value={createdMonth}
+          onChange={(e) => setCreatedMonth(e.target.value)}
+          className="w-full md:w-40"
+          aria-label="Created in month"
+        />
+      )}
+
+      <Select
         value={selectedFilters.status}
         onValueChange={(value) => setSelectedFilters((prev) => ({ ...prev, status: value }))}
       >
@@ -869,7 +933,7 @@ const ProfessionalLeadManagement = ({
           setIsLoadingLeads(true);
           setLoadError(null);
           const [leadData, usersData] = await Promise.all([
-            listLeads({ scope }),
+            listLeads(listLeadsQuery),
             listUsers(),
           ]);
           setLeads(leadData);

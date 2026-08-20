@@ -11,6 +11,7 @@ export type ContactActivityType =
   | "SITE_INSPECTION"
   | "OFF_BASE_TRAVEL"
   | "VIRTUAL_MEETING"
+  | "TRADE_FAIR"
   // Legacy values remain valid so historical records can still be read/updated.
   | "EMAIL"
   | "CLIENT_SITE_INSPECTION";
@@ -122,6 +123,7 @@ const contactActivitySchema = new Schema<IContactActivity>(
         "SITE_INSPECTION",
         "OFF_BASE_TRAVEL",
         "VIRTUAL_MEETING",
+        "TRADE_FAIR",
         "EMAIL",
         "CLIENT_SITE_INSPECTION",
       ],
