@@ -28,6 +28,8 @@ const KnowledgeBaseMain = lazy(() =>
 const Dashboard = lazy(() => import("@/components/Dashboard"));
 const SalesExecutiveDashboard = lazy(() => import("@/components/SalesExecutiveDashboard"));
 const Reports = lazy(() => import("@/components/Reports"));
+const HandoverPage = lazy(() => import("@/components/HandoverPage"));
+const BudgetPage = lazy(() => import("@/components/BudgetPage"));
 const UserRoleManagement = lazy(() =>
   import("@/pages/admin/UserManagement").then((m) => ({ default: m.UserManagement }))
 );
@@ -392,6 +394,36 @@ export const ProfessionalCRM = ({
         return (
           <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
             You do not have permission to view reports.
+          </div>
+        );
+      case 'handover':
+        if (
+          isAdmin ||
+          permissions?.includes("leads.manage") ||
+          permissions?.includes("accounts.assign_managers") ||
+          permissions?.includes("accounts.manage") ||
+          permissions?.includes("users.manage")
+        ) {
+          return <HandoverPage />;
+        }
+        return (
+          <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+            You do not have permission to manage handover.
+          </div>
+        );
+      case 'budget':
+        if (
+          canViewReports ||
+          userRole === "management" ||
+          userRole === "admin" ||
+          userRole === "saleshead" ||
+          permissions?.includes("leads.manage")
+        ) {
+          return <BudgetPage isAdmin={!!isAdmin} />;
+        }
+        return (
+          <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+            You do not have permission to view budget.
           </div>
         );
       case 'knowledge':

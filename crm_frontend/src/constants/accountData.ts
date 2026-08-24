@@ -251,6 +251,65 @@ export function getStatesForCity(city: string): string[] {
     return [...INDIAN_STATES];
 }
 
+/** Zone → states for Account Location cascade (standard India regions). */
+export const STATES_BY_ZONE: Record<string, string[]> = {
+    NORTH: [
+        "Delhi",
+        "Haryana",
+        "Punjab",
+        "Uttar Pradesh",
+        "Uttarakhand",
+        "Himachal Pradesh",
+        "Jammu and Kashmir",
+        "Ladakh",
+        "Chandigarh",
+        "Rajasthan",
+    ],
+    SOUTH: [
+        "Karnataka",
+        "Tamil Nadu",
+        "Kerala",
+        "Andhra Pradesh",
+        "Telangana",
+        "Puducherry",
+        "Goa",
+        "Andaman and Nicobar Islands",
+        "Lakshadweep",
+    ],
+    EAST: [
+        "West Bengal",
+        "Bihar",
+        "Jharkhand",
+        "Odisha",
+        "Assam",
+        "Arunachal Pradesh",
+        "Manipur",
+        "Meghalaya",
+        "Mizoram",
+        "Nagaland",
+        "Sikkim",
+        "Tripura",
+    ],
+    WEST: [
+        "Maharashtra",
+        "Gujarat",
+        "Madhya Pradesh",
+        "Chhattisgarh",
+        "Goa",
+        "Dadra and Nagar Haveli and Daman and Diu",
+    ],
+};
+
+export function getStatesForZone(zone: string): string[] {
+    if (!zone) return Object.keys(CITIES_BY_STATE).sort();
+    return STATES_BY_ZONE[zone] || Object.keys(CITIES_BY_STATE).sort();
+}
+
+export function getCitiesForState(state: string): string[] {
+    if (!state) return [];
+    return CITIES_BY_STATE[state] || [];
+}
+
 export const POTENTIAL_LOCATIONS = [
     { value: "CBD", label: "Commercial Business District" },
     { value: "MICRO_MARKET", label: "Micro Market" },

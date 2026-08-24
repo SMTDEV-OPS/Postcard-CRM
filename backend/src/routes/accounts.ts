@@ -106,7 +106,7 @@ const accountSchema = z.object({
   state: z.string().optional(),
   country: z.string().optional(),
   locality: z.string().optional(),
-  zone: z.enum(["NORTH", "SOUTH", "EAST", "WEST", "CENTRAL"]).optional().or(z.string().optional()),
+  zone: z.enum(["NORTH", "SOUTH", "EAST", "WEST"]).optional().or(z.string().optional()),
   gstin: z.string().regex(/^[0-9A-Z]{15}$|^[0-9]{13}$/).optional().or(z.literal("")), // Validates 13 digit or standard GSTIN
   panNumber: z.string().optional(),
   pmsProfileId: z.string().optional(),

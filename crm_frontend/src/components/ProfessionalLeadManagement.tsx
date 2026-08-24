@@ -262,6 +262,11 @@ const ProfessionalLeadManagement = ({
   const handleSaveEditLead = async (details: LeadTripDetails) => {
     if (!editLeadDetail?.lead) return;
     const payload = {
+      contactDetails: {
+        name: details.contactName,
+        phone: details.contactPhone,
+        email: details.contactEmail,
+      },
       hotels: [
         {
           checkInDate: details.checkInDate,
@@ -278,6 +283,7 @@ const ProfessionalLeadManagement = ({
       notes: details.notes || undefined,
       source: details.source || undefined,
       heatLevel: (details.heatLevel as HeatLevel) || undefined,
+      roomsRequested: details.roomsRequested,
       customData: {
         ...(details.customData || {}),
         ...(details.budget != null && details.budget !== "" && { budget: String(details.budget) }),
@@ -1254,6 +1260,9 @@ const ProfessionalLeadManagement = ({
           }}
           customFields={customFields as any[]}
           currentDetails={{
+            contactName: editLeadDetail.lead.contactDetails?.name,
+            contactPhone: editLeadDetail.lead.contactDetails?.phone,
+            contactEmail: editLeadDetail.lead.contactDetails?.email,
             checkInDate: editLeadDetail.lead.itineraries?.[0]?.checkInDate,
             checkOutDate: editLeadDetail.lead.itineraries?.[0]?.checkOutDate,
             roomsRequested: (editLeadDetail.lead as { roomsRequested?: number }).roomsRequested,

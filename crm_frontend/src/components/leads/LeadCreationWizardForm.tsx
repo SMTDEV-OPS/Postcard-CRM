@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { UseFormReturn, FieldArrayWithId } from "react-hook-form";
 import { format } from "date-fns";
 import {
@@ -55,6 +55,24 @@ import { FormFieldLabelHelp, FormLabelHelp } from "@/components/help/FormLabelHe
 import type { LeadFormData } from "./useLeadForm";
 import { cn } from "@/lib/utils";
 import { formGrid2 } from "@/lib/responsive";
+import { calculateStayNights } from "@/lib/leadDates";
+
+function computeCallCenterEstimatedValue(hotels: LeadFormData["hotels"] | undefined): number {
+  if (!hotels?.length) return 0;
+  let total = 0;
+  for (const hotel of hotels) {
+    const checkIn = hotel.checkInDate
+      ? format(hotel.checkInDate, "yyyy-MM-dd")
+      : "";
+    const checkOut = hotel.checkOutDate
+      ? format(hotel.checkOutDate, "yyyy-MM-dd")
+      : "";
+    const nights = calculateStayNights(checkIn, checkOut);
+    const rooms = Math.max(1, hotel.rooms?.length || 0);
+    if (nights > 0) total += rooms * nights;
+  }
+  return total;
+}
 
 export const LEAD_WIZARD_STEP_FIELDS: Record<number, string[]> = {
   1: ["firstName", "lastName", "guestContactNumber"],
@@ -198,8 +216,9 @@ function CustomFieldsSection({
 
 function ReviewSummary({ form }: { form: UseFormReturn<LeadFormData> }) {
   const data = form.watch();
-  const guestName = [data.firstName, data.middleName, data.lastName].filter(Boolean).join(" ");
+  const guestName = [data.firstName, data.lastName].filter(Boolean).join(" ");
   const primaryHotel = data.hotels?.[0];
+  const autoEv = computeCallCenterEstimatedValue(data.hotels);
 
   return (
     <div className="rounded-lg border border-border bg-hover/50 p-4 space-y-3 text-sm">
@@ -276,6 +295,19 @@ export function LeadCreationWizardForm({
   const [channelOpen, setChannelOpen] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
 
+  const watchedHotels = form.watch("hotels");
+  const autoEstimatedValue = useMemo(
+    () => computeCallCenterEstimatedValue(watchedHotels),
+    [watchedHotels]
+  );
+
+  useEffect(() => {
+    const next = autoEstimatedValue > 0 ? String(autoEstimatedValue) : "";
+    if (form.getValues("value") !== next) {
+      form.setValue("value", next, { shouldDirty: true });
+    }
+  }, [autoEstimatedValue, form]);
+
   useEffect(() => {
     setStep(1);
   }, [resetKey]);
@@ -331,7 +363,7 @@ export function LeadCreationWizardForm({
                   <UserIcon className="h-4 w-4" />
                   Guest details
                 </h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="firstName"
@@ -340,19 +372,6 @@ export function LeadCreationWizardForm({
                         <FormFieldLabelHelp helpId="leads.add.firstName" required>First name</FormFieldLabelHelp>
                         <FormControl>
                           <Input placeholder="First name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="middleName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormFieldLabelHelp helpId="leads.add.middleName">Middle name</FormFieldLabelHelp>
-                        <FormControl>
-                          <Input placeholder="Middle name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -863,10 +882,25 @@ export function LeadCreationWizardForm({
                     name="value"
                     render={({ field }) => (
                       <FormItem>
-                        <FormFieldLabelHelp helpId="leads.add.value">Estimated Booking Value</FormFieldLabelHelp>
+                        <FormFieldLabelHelp helpId="leads.add.value">
+                          Estimated value (rooms × nights)
+                        </FormFieldLabelHelp>
                         <FormControl>
-                          <Input placeholder="e.g. ₹25,000" {...field} />
+                          <Input
+                            {...field}
+                            readOnly
+                            value={
+                              autoEstimatedValue > 0
+                                ? String(autoEstimatedValue)
+                                : ""
+                            }
+                            placeholder="Auto from stay"
+                            className="bg-muted"
+                          />
                         </FormControl>
+                        <p className="text-xs text-muted-foreground">
+                          Auto-calculated from room count × nights. Add rates at quotation for revenue.
+                        </p>
                         <FormMessage />
                       </FormItem>
                     )}

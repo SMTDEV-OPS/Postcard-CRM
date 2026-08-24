@@ -745,6 +745,11 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
       setIsSavingStatus(true);
 
       const payload: any = {
+        contactDetails: {
+          name: details.contactName,
+          phone: details.contactPhone,
+          email: details.contactEmail,
+        },
         hotels: [{
           checkInDate: details.checkInDate,
           checkOutDate: details.checkOutDate,
@@ -759,6 +764,7 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
         notes: details.notes || undefined,
         source: details.source || undefined,
         heatLevel: details.heatLevel || undefined,
+        roomsRequested: details.roomsRequested,
         customData: {
           ...(details.customData || {}),
           ...(details.budget != null && details.budget !== "" && { budget: String(details.budget) }),
@@ -1646,6 +1652,9 @@ export const LeadDetailPage = ({ leadId, onBack, permissions, isAdmin, embedded 
         onOpenChange={setIsEditLeadDetailsDialogOpen}
         customFields={customFields}
         currentDetails={{
+          contactName: lead.contactDetails?.name,
+          contactPhone: lead.contactDetails?.phone,
+          contactEmail: lead.contactDetails?.email,
           checkInDate: primaryCheckIn,
           checkOutDate: primaryCheckOut,
           roomsRequested: (lead as any).roomsRequested,

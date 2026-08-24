@@ -136,8 +136,7 @@ export function FieldSalesLeadWizard({
       : a.name?.toLowerCase().includes(accountSearch.toLowerCase())
   );
 
-  const showAccountPicker =
-    SOURCES_REQUIRING_ACCOUNT.has(form.source) && !defaultAccountId;
+  const accountRequired = SOURCES_REQUIRING_ACCOUNT.has(form.source);
 
   return (
     <>
@@ -159,8 +158,20 @@ export function FieldSalesLeadWizard({
           ) : (
             <div className="space-y-6 py-2">
               <section className="space-y-3 rounded-lg border border-border p-4">
+                <h4 className="text-sm font-semibold">Booker's Name</h4>
+                <div>
+                  <FormLabelHelp helpId="leads.field-sales.bookerName">Booker's name</FormLabelHelp>
+                  <Input
+                    value={form.bookerName}
+                    onChange={(e) => patch({ bookerName: e.target.value })}
+                    placeholder="Optional — who is booking on behalf of the guest"
+                  />
+                </div>
+              </section>
+
+              <section className="space-y-3 rounded-lg border border-border p-4">
                 <div className="flex items-center gap-2">
-                  <FormLabelHelp helpId="leads.field-sales.contact">Contact</FormLabelHelp>
+                  <FormLabelHelp helpId="leads.field-sales.contact">Guest details</FormLabelHelp>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="sm:col-span-2">
@@ -227,16 +238,23 @@ export function FieldSalesLeadWizard({
                       </SelectContent>
                     </Select>
                   </div>
-                  {showAccountPicker && (
-                    <div className="sm:col-span-2 space-y-2">
-                      <FormLabelHelp helpId="leads.field-sales.accountId" required>Account (TA / Corporate)</FormLabelHelp>
+                  <div className="sm:col-span-2 space-y-2">
+                      <FormLabelHelp
+                        helpId="leads.field-sales.accountId"
+                        required={accountRequired}
+                      >
+                        Account (TA / Corporate)
+                      </FormLabelHelp>
                       <Input
                         placeholder="Search accounts..."
                         value={accountSearch}
                         onChange={(e) => setAccountSearch(e.target.value)}
                         className="mb-1"
                       />
-                      <Select value={form.accountId} onValueChange={(v) => patch({ accountId: v })}>
+                      <Select
+                        value={form.accountId || undefined}
+                        onValueChange={(v) => patch({ accountId: v })}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select account" />
                         </SelectTrigger>
@@ -249,7 +267,6 @@ export function FieldSalesLeadWizard({
                         </SelectContent>
                       </Select>
                     </div>
-                  )}
                   <div className="sm:col-span-2">
                     <FormLabelHelp helpId="leads.field-sales.companyName">Company name (snapshot)</FormLabelHelp>
                     <Input

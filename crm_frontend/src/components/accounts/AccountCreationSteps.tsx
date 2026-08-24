@@ -5,13 +5,16 @@ import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { listUsers, type User } from "@/services/users";
 import {
   ORGANIZATION_TYPES,
   ACCOUNT_LEVELS,
-  MAJOR_INDIAN_CITIES,
   MONTHS,
   getIndustryCategoriesForOrganizationType,
   formatOrganizationTypeLabel,
+  getStatesForZone,
+  getCitiesForState,
 } from "@/constants/accountData";
 import { Account } from "@/services/accounts";
 import { Conglomerate } from "@/services/conglomerates";
@@ -331,6 +334,19 @@ export function AccountStepHierarchy({ formData, set, conglomerates, availableAc
 }
 
 export function AccountStepLocation({ formData, set }: StepContext) {
+  const states = getStatesForZone(formData.zone || "");
+  const cities = getCitiesForState(formData.state || "");
+
+  const handleZoneChange = (v: string) => {
+    const zone = v === "none" ? "" : v;
+    set({ zone, state: "", city: "", locality: "", zip: "" });
+  };
+
+  const handleStateChange = (v: string) => {
+    const state = v === "none" ? "" : v;
+    set({ state, city: "" });
+  };
+
   const handleCityChange = (v: string) => {
     const city = v === "none" ? "" : v;
     set({ city });
@@ -340,20 +356,71 @@ export function AccountStepLocation({ formData, set }: StepContext) {
     <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
       <div className={formGrid2}>
         <div className="space-y-1.5">
-          <FormLabelHelp helpId="accounts.wizard.location.city">City</FormLabelHelp>
-          <Select value={formData.city || "none"} onValueChange={handleCityChange}>
+          <FormLabelHelp helpId="accounts.wizard.location.zone">Zone</FormLabelHelp>
+          <Select value={formData.zone || "none"} onValueChange={handleZoneChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Select city" />
+              <SelectValue placeholder="Select zone" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">— Select —</SelectItem>
-              {MAJOR_INDIAN_CITIES.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
+              {["NORTH", "SOUTH", "EAST", "WEST"].map((z) => (
+                <SelectItem key={z} value={z}>
+                  {z.charAt(0) + z.slice(1).toLowerCase()}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-1.5">
+          <FormLabelHelp helpId="accounts.wizard.location.state">State</FormLabelHelp>
+          <Select
+            value={formData.state || "none"}
+            onValueChange={handleStateChange}
+            disabled={!formData.zone}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={formData.zone ? "Select state" : "Select zone first"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— Select —</SelectItem>
+              {states.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className={formGrid2}>
+        <div className="space-y-1.5">
+          <FormLabelHelp helpId="accounts.wizard.location.city">City</FormLabelHelp>
+          {cities.length > 0 ? (
+            <Select
+              value={formData.city || "none"}
+              onValueChange={handleCityChange}
+              disabled={!formData.state}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={formData.state ? "Select city" : "Select state first"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Select —</SelectItem>
+                {cities.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              value={formData.city}
+              onChange={(e) => set({ city: e.target.value })}
+              placeholder={formData.state ? "Enter city" : "Select state first"}
+              disabled={!formData.state}
+            />
+          )}
         </div>
         <div className="space-y-1.5">
           <FormLabelHelp helpId="accounts.wizard.location.country">Country</FormLabelHelp>
@@ -368,31 +435,13 @@ export function AccountStepLocation({ formData, set }: StepContext) {
           </Select>
         </div>
       </div>
-      <div className={formGrid2}>
-        <div className="space-y-1.5">
-          <FormLabelHelp helpId="accounts.wizard.location.zone">Zone</FormLabelHelp>
-          <Select value={formData.zone || "none"} onValueChange={(v) => set({ zone: v === "none" ? "" : v })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Zone" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
-              {["NORTH", "SOUTH", "EAST", "WEST"].map((z) => (
-                <SelectItem key={z} value={z}>
-                  {z.charAt(0) + z.slice(1).toLowerCase()}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <FormLabelHelp helpId="accounts.wizard.location.addressLine1">Address</FormLabelHelp>
-          <Input
-            value={formData.addressLine1}
-            onChange={(e) => set({ addressLine1: e.target.value })}
-            placeholder="Street / building"
-          />
-        </div>
+      <div className="space-y-1.5">
+        <FormLabelHelp helpId="accounts.wizard.location.addressLine1">Address</FormLabelHelp>
+        <Input
+          value={formData.addressLine1}
+          onChange={(e) => set({ addressLine1: e.target.value })}
+          placeholder="Street / building"
+        />
       </div>
     </div>
   );
@@ -401,6 +450,15 @@ export function AccountStepLocation({ formData, set }: StepContext) {
 export function AccountStepCompliance({ ctx }: { ctx: StepContext }) {
   const { formData, set, addSam, removeSam, updateSam, toggleContractingType, updateContractingType } = ctx;
   const contractingOptions = getContractingTypeOptions(formData.organizationType);
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    listUsers()
+      .then(setUsers)
+      .catch(() => setUsers([]));
+  }, []);
+
+  const pickUser = (userId: string) => users.find((u) => u.id === userId);
 
   return (
     <div className="space-y-4">
@@ -428,36 +486,99 @@ export function AccountStepCompliance({ ctx }: { ctx: StepContext }) {
 
       <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
         <h4 className="text-sm font-medium text-text">Sales team</h4>
+        <p className="text-xs text-muted-foreground">
+          Assign PAM/SAM to transfer ownership. Contacts and activity history stay with the company.
+        </p>
         <div className="space-y-2">
-          <FormLabelHelp helpId="accounts.wizard.compliance.primaryAccountManager" className="text-sm">Primary account manager (PAM)</FormLabelHelp>
+          <FormLabelHelp helpId="accounts.wizard.compliance.primaryAccountManager" className="text-sm">
+            Primary account manager (PAM)
+          </FormLabelHelp>
           <div className={formGrid2}>
+            <Select
+              value={formData.primaryAccountManager?.userId || "none"}
+              onValueChange={(v) => {
+                if (v === "none") {
+                  set({ primaryAccountManager: { userId: "", name: "", city: formData.primaryAccountManager?.city || "" } });
+                  return;
+                }
+                const u = pickUser(v);
+                set({
+                  primaryAccountManager: {
+                    userId: v,
+                    name: u?.name || "",
+                    city: formData.primaryAccountManager?.city || "",
+                  },
+                });
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select user" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Unassigned —</SelectItem>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.name} ({u.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Input
-              placeholder="Manager name"
-              value={formData.primaryAccountManager?.name || ""}
-              onChange={(e) =>
-                set({ primaryAccountManager: { ...formData.primaryAccountManager, name: e.target.value } })
-              }
-            />
-            <Input
-              placeholder="City"
+              placeholder="City (optional)"
               value={formData.primaryAccountManager?.city || ""}
               onChange={(e) =>
-                set({ primaryAccountManager: { ...formData.primaryAccountManager, city: e.target.value } })
+                set({
+                  primaryAccountManager: {
+                    ...formData.primaryAccountManager,
+                    city: e.target.value,
+                  },
+                })
               }
             />
           </div>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <FormLabelHelp helpId="accounts.wizard.compliance.secondaryAccountManagers" className="text-sm">Secondary managers (SAM)</FormLabelHelp>
+            <FormLabelHelp helpId="accounts.wizard.compliance.secondaryAccountManagers" className="text-sm">
+              Secondary account managers (SAM)
+            </FormLabelHelp>
             <Button type="button" variant="outline" size="sm" onClick={addSam}>
               Add SAM
             </Button>
           </div>
           {formData.secondaryAccountManagers.map((sam, i) => (
-            <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
-              <Input placeholder="Name" value={sam.name} onChange={(e) => updateSam(i, { name: e.target.value })} />
-              <Input placeholder="City" value={sam.city} onChange={(e) => updateSam(i, { city: e.target.value })} />
+            <div key={i} className="flex flex-wrap items-end gap-2">
+              <div className="min-w-[200px] flex-1">
+                <Select
+                  value={sam.userId || "none"}
+                  onValueChange={(v) => {
+                    if (v === "none") {
+                      updateSam(i, { userId: "", name: "" });
+                      return;
+                    }
+                    const u = pickUser(v);
+                    updateSam(i, { userId: v, name: u?.name || "" });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select user" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Unassigned —</SelectItem>
+                    {users.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name} ({u.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input
+                className="w-36"
+                placeholder="City"
+                value={sam.city}
+                onChange={(e) => updateSam(i, { city: e.target.value })}
+              />
               <Button type="button" variant="ghost" size="icon" onClick={() => removeSam(i)}>
                 <X className="h-4 w-4" />
               </Button>

@@ -50,9 +50,9 @@ export function formatAccountTypeLabel(value: string | undefined): string {
 
 /** Stored values stay uppercase; labels are proper case for UI */
 export const TRAVEL_TRADE_CONTRACTING_OPTIONS = [
-  { value: "INBOUND_PREFERRED", label: "Preferred (Inbound)" },
-  { value: "INBOUND_SPECIAL", label: "Special (Inbound)" },
-  { value: "INBOUND_PARTNER", label: "Partner (Inbound)" },
+  { value: "INBOUND_PREFERRED", label: "Preferred" },
+  { value: "INBOUND_SPECIAL", label: "Special" },
+  { value: "INBOUND_PARTNER", label: "Partner" },
   { value: "GLOBAL_RFP", label: "Global RFP" },
 ] as const;
 

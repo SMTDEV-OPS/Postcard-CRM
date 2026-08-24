@@ -13,6 +13,8 @@ export const CRM_PATHS = {
   accountsDashboard: "/accounts/dashboard",
   tickets: "/tickets",
   reports: "/reports",
+  handover: "/handover",
+  budget: "/budget",
   buddy: "/buddy",
   knowledge: "/knowledge",
   email: "/email",
@@ -59,6 +61,8 @@ export function pathnameToView(pathname: string): { view: string; leadId?: strin
   if (p === "/accounts") return { view: "account-management" };
   if (p === "/tickets") return { view: "ticket-management" };
   if (p === "/reports") return { view: "reports" };
+  if (p === "/handover") return { view: "handover" };
+  if (p === "/budget") return { view: "budget" };
   if (p === "/buddy") return { view: "buddy-management" };
   if (p.startsWith("/knowledge")) return { view: "knowledge-properties" };
   if (p === "/email") return { view: "email-client" };
@@ -107,6 +111,10 @@ export function viewToPath(view: string, leadId?: string): string {
       return CRM_PATHS.tickets;
     case "reports":
       return CRM_PATHS.reports;
+    case "handover":
+      return CRM_PATHS.handover;
+    case "budget":
+      return CRM_PATHS.budget;
     case "buddy-management":
       return CRM_PATHS.buddy;
     case "knowledge-properties":

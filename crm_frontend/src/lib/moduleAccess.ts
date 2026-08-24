@@ -115,6 +115,26 @@ export function canAccessPath(
         canAccessModule("reports", perms, false) ||
         hasAnyPermission(perms, false, ["reports.view", "reports.manage"])
       );
+    case CRM_PATHS.handover:
+      return (
+        isAdmin === true ||
+        hasAnyPermission(perms, false, [
+          "leads.manage",
+          "accounts.assign_managers",
+          "accounts.manage",
+          "users.manage",
+        ])
+      );
+    case CRM_PATHS.budget:
+      return (
+        canAccessModule("reports", perms, false) ||
+        hasAnyPermission(perms, false, [
+          "reports.view",
+          "reports.read",
+          "reports.manage",
+          "leads.manage",
+        ])
+      );
     case CRM_PATHS.buddy:
       return (
         canAccessModule("buddies", perms, false) ||

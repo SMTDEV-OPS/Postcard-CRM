@@ -35,6 +35,7 @@ export type ReportId =
   | "field-sales-calls"
   | "leads-period-summary"
   | "conversion-performance"
+  | "sales-executive-bookings"
   | "agent-call-volume"
   | "missed-calls"
   | "call-response-time"
@@ -64,17 +65,25 @@ export const REPORT_CATALOG: {
   {
     id: "leads-period-summary",
     title: "Leads Generated — Daily, MTD, YTD",
-    description: "Lead counts for today, month-to-date, and financial year-to-date.",
+    description: "Lead counts for selected period plus today, month-to-date, and financial year-to-date.",
     endpoint: "/reports/leads-period-summary",
-    usesPeriodFilter: false,
+    usesPeriodFilter: true,
   },
   {
     id: "conversion-performance",
     title: "Conversion % — Daily, MTD, YTD",
     description:
-      "Conversion rate with confirmed booking count, revenue, and room nights from reservations.",
+      "Conversion rate with confirmed booking count, revenue, and room nights for selected period plus MTD/YTD.",
     endpoint: "/reports/conversion-performance",
-    usesPeriodFilter: false,
+    usesPeriodFilter: true,
+  },
+  {
+    id: "sales-executive-bookings",
+    title: "Sales Executive Bookings",
+    description:
+      "Executive-wise bookings: hotel, check-in/out, booker, company, room nights, ADR, revenue, status.",
+    endpoint: "/reports/sales-executive-bookings",
+    usesPeriodFilter: true,
   },
   {
     id: "agent-call-volume",

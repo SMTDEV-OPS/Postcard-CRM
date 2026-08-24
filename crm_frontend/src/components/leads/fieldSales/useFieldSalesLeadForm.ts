@@ -11,6 +11,7 @@ import type { ItineraryPricingLine } from "@/constants/fieldSalesLeadOptions";
 import { SOURCES_REQUIRING_ACCOUNT } from "@/constants/fieldSalesLeadOptions";
 
 export interface FieldSalesLeadFormState {
+  bookerName: string;
   pocName: string;
   phone: string;
   email: string;
@@ -34,6 +35,7 @@ export interface FieldSalesLeadFormState {
 }
 
 export const emptyFieldSalesForm = (accountId = ""): FieldSalesLeadFormState => ({
+  bookerName: "",
   pocName: "",
   phone: "",
   email: "",
@@ -138,6 +140,7 @@ export function buildFieldSalesPayload(
     assignmentMode: "auto",
     customData: {
       field_sales_form: true,
+      booker_name: data.bookerName.trim() || undefined,
       itinerary_pricing: data.pricingLines,
       rooms_requested: data.roomsRequested,
     },
@@ -167,6 +170,7 @@ export function fieldSalesFormFromLeadDetail(
       : (lead.accountId as { id?: string })?.id || defaultAccountId || "";
 
   return {
+    bookerName: String(custom.booker_name || ""),
     pocName: contact.name || "",
     phone: contact.phone || "",
     email: contact.email || "",

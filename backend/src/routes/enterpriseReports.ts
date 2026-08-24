@@ -21,6 +21,7 @@ import {
   getFinancialYearRange,
   getOrgSalesSettings,
 } from "../services/accountsDashboardService";
+import { buildExecutiveBookingRows } from "../services/executiveBookingService";
 
 async function userNameMap(ids: (Types.ObjectId | string | null | undefined)[]) {
   const unique = [
@@ -213,20 +214,21 @@ export function registerEnterpriseReports(router: Router) {
     }
   });
 
-  // 3. Leads Generated Daily / MTD / YTD
+  // 3. Leads Generated Daily / MTD / YTD (+ selected period when filters set)
   router.get("/leads-period-summary", async (req, res, next) => {
     try {
       const orgId = defaultOrgId(req);
       const propertyId = optionalObjectId(req.query.propertyId, "propertyId");
-      const now = new Date();
+      const selected = await resolveReportPeriod(req, orgId);
+      const ref = selected.to;
       const settings = await getOrgSalesSettings(orgId);
-      const fy = getFinancialYearRange(settings, now);
+      const fy = getFinancialYearRange(settings, ref);
 
-      const dayFrom = startOfUtcDay(now);
-      const dayTo = endOfUtcDay(now);
-      const mtdFrom = startOfUtcMonth(now);
+      const dayFrom = startOfUtcDay(ref);
+      const dayTo = endOfUtcDay(ref);
+      const mtdFrom = startOfUtcMonth(ref);
       const ytdFrom = fy.start;
-      const to = endOfUtcDay(now);
+      const to = endOfUtcDay(ref);
 
       const base: Record<string, unknown> = {};
       if (propertyId) base.propertyId = propertyId;
@@ -237,7 +239,8 @@ export function registerEnterpriseReports(router: Router) {
           createdAt: { $gte: from, $lte: until },
         });
 
-      const [daily, mtd, ytd] = await Promise.all([
+      const [selectedCount, daily, mtd, ytd] = await Promise.all([
+        countIn(selected.from, selected.to),
         countIn(dayFrom, dayTo),
         countIn(mtdFrom, to),
         countIn(ytdFrom, to),
@@ -262,23 +265,22 @@ export function registerEnterpriseReports(router: Router) {
         { $sort: { _id: 1 } },
       ]);
 
-      const period = {
-        from: ytdFrom,
-        to,
-        preset: "ytd" as const,
-        label: "Daily / MTD / YTD (Financial Year)",
-      };
-
       res.json({
-        meta: buildReportMeta(period, "live", "YTD uses organization financial year."),
+        meta: buildReportMeta(
+          selected,
+          "live",
+          "Selected period plus Daily / MTD / YTD relative to filter end date. YTD uses organization financial year."
+        ),
         summary: {
+          selected: selectedCount,
           daily,
           mtd,
           ytd,
           financialYearStart: fy.start.toISOString(),
         },
         rows: [
-          { period: "Daily (Today)", leadsGenerated: daily },
+          { period: `Selected (${selected.label})`, leadsGenerated: selectedCount },
+          { period: "Daily (as of filter end)", leadsGenerated: daily },
           { period: "MTD", leadsGenerated: mtd },
           { period: "YTD (FY)", leadsGenerated: ytd },
           ...monthRows.map((r) => ({
@@ -297,28 +299,35 @@ export function registerEnterpriseReports(router: Router) {
     try {
       const orgId = defaultOrgId(req);
       const propertyId = optionalObjectId(req.query.propertyId, "propertyId");
-      const now = new Date();
+      const selected = await resolveReportPeriod(req, orgId);
+      const ref = selected.to;
       const settings = await getOrgSalesSettings(orgId);
-      const fy = getFinancialYearRange(settings, now);
+      const fy = getFinancialYearRange(settings, ref);
 
       const buckets: { key: string; label: string; from: Date; to: Date }[] = [
         {
+          key: "selected",
+          label: `Selected (${selected.label})`,
+          from: selected.from,
+          to: selected.to,
+        },
+        {
           key: "daily",
-          label: "Daily (Today)",
-          from: startOfUtcDay(now),
-          to: endOfUtcDay(now),
+          label: "Daily (as of filter end)",
+          from: startOfUtcDay(ref),
+          to: endOfUtcDay(ref),
         },
         {
           key: "mtd",
           label: "MTD",
-          from: startOfUtcMonth(now),
-          to: endOfUtcDay(now),
+          from: startOfUtcMonth(ref),
+          to: endOfUtcDay(ref),
         },
         {
           key: "ytd",
           label: "YTD (FY)",
           from: fy.start,
-          to: endOfUtcDay(now),
+          to: endOfUtcDay(ref),
         },
       ];
 
@@ -381,23 +390,62 @@ export function registerEnterpriseReports(router: Router) {
         });
       }
 
-      const period = {
-        from: fy.start,
-        to: endOfUtcDay(now),
-        preset: "ytd" as const,
-        label: "Conversion Daily / MTD / YTD (FY)",
-      };
+      res.json({
+        meta: buildReportMeta(
+          selected,
+          "live",
+          "Selected period plus Daily / MTD / YTD relative to filter end. Revenue and room nights from confirmed reservations. Room nights = nights × roomsBooked."
+        ),
+        summary: {
+          selected: rows.find((r) => r.periodKey === "selected"),
+          daily: rows.find((r) => r.periodKey === "daily"),
+          mtd: rows.find((r) => r.periodKey === "mtd"),
+          ytd: rows.find((r) => r.periodKey === "ytd"),
+        },
+        rows,
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // 4b. Sales Executive–wise bookings
+  router.get("/sales-executive-bookings", async (req, res, next) => {
+    try {
+      const orgId = defaultOrgId(req);
+      const period = await resolveReportPeriod(req, orgId);
+      const executiveUserId = optionalObjectId(
+        req.query.executiveUserId || req.query.agentUserId,
+        "executiveUserId"
+      );
+      const propertyId = optionalObjectId(req.query.propertyId, "propertyId");
+      const status =
+        typeof req.query.status === "string" && req.query.status.trim()
+          ? req.query.status.trim()
+          : undefined;
+
+      const rows = await buildExecutiveBookingRows({
+        from: period.from,
+        to: period.to,
+        executiveUserId,
+        propertyId,
+        status,
+      });
+
+      const totalRevenue = rows.reduce((s, r) => s + (r.revenue || 0), 0);
+      const totalRn = rows.reduce((s, r) => s + (r.roomNights || 0), 0);
 
       res.json({
         meta: buildReportMeta(
           period,
           "live",
-          "Revenue and room nights from confirmed reservations (CONFIRMED/CHECKED_IN/CHECKED_OUT). Room nights = nights × roomsBooked."
+          "Executive bookings from leads in period. Revenue prefers linked reservation totalAmount; else estimatedValue/budget. Room nights from reservation or itinerary."
         ),
         summary: {
-          daily: rows.find((r) => r.periodKey === "daily"),
-          mtd: rows.find((r) => r.periodKey === "mtd"),
-          ytd: rows.find((r) => r.periodKey === "ytd"),
+          rowCount: rows.length,
+          totalRevenue,
+          totalRoomNights: totalRn,
+          adr: totalRn > 0 ? Math.round((totalRevenue / totalRn) * 100) / 100 : 0,
         },
         rows,
       });

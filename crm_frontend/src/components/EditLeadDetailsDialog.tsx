@@ -13,11 +13,14 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { LeadGuests } from "@/services/leads";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CustomFieldDefinition } from "@/services/customFields";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { OCCASION_OPTIONS } from "@/constants/fieldSalesLeadOptions";
 
 export interface LeadTripDetails {
+    contactName?: string;
+    contactPhone?: string;
+    contactEmail?: string;
     checkInDate?: string;
     checkOutDate?: string;
     roomsRequested?: number;
@@ -61,6 +64,9 @@ export function EditLeadDetailsDialog({
     const [notes, setNotes] = useState("");
     const [source, setSource] = useState("");
     const [heatLevel, setHeatLevel] = useState("");
+    const [contactName, setContactName] = useState("");
+    const [contactPhone, setContactPhone] = useState("");
+    const [contactEmail, setContactEmail] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [errors, setErrors] = useState<{ dates?: string, custom?: string }>({});
 
@@ -90,6 +96,9 @@ export function EditLeadDetailsDialog({
             setNotes(currentDetails.notes || "");
             setSource(currentDetails.source || "");
             setHeatLevel(currentDetails.heatLevel || "");
+            setContactName(currentDetails.contactName || "");
+            setContactPhone(currentDetails.contactPhone || "");
+            setContactEmail(currentDetails.contactEmail || "");
             setErrors({});
         }
     }, [open, currentDetails]);
@@ -121,6 +130,9 @@ export function EditLeadDetailsDialog({
         try {
             setIsSaving(true);
             await onSave({
+                contactName: contactName.trim() || undefined,
+                contactPhone: contactPhone.trim() || undefined,
+                contactEmail: contactEmail.trim() || undefined,
                 checkInDate: checkInDate ? new Date(checkInDate).toISOString() : undefined,
                 checkOutDate: checkOutDate ? new Date(checkOutDate).toISOString() : undefined,
                 roomsRequested: parseInt(rooms) || 1,
@@ -149,12 +161,41 @@ export function EditLeadDetailsDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Edit Trip Details</DialogTitle>
+                    <DialogTitle>Edit lead details</DialogTitle>
                     <DialogDescription>
-                        Update travel dates, occupancy, and other trip information.
+                        Update contact, stay, and other lead information.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="contactName">Contact name</Label>
+                        <Input
+                            id="contactName"
+                            value={contactName}
+                            onChange={(e) => setContactName(e.target.value)}
+                            placeholder="Guest / POC name"
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="contactPhone">Phone</Label>
+                            <Input
+                                id="contactPhone"
+                                value={contactPhone}
+                                onChange={(e) => setContactPhone(e.target.value)}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="contactEmail">Email</Label>
+                            <Input
+                                id="contactEmail"
+                                type="email"
+                                value={contactEmail}
+                                onChange={(e) => setContactEmail(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="checkIn">Check-in Date</Label>
@@ -302,12 +343,11 @@ export function EditLeadDetailsDialog({
                                 <SelectValue placeholder="Select occasion (optional)" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="leisure">Leisure</SelectItem>
-                                <SelectItem value="business">Business</SelectItem>
-                                <SelectItem value="honeymoon">Honeymoon</SelectItem>
-                                <SelectItem value="anniversary">Anniversary</SelectItem>
-                                <SelectItem value="birthday">Birthday</SelectItem>
-                                <SelectItem value="wedding">Wedding</SelectItem>
+                                {OCCASION_OPTIONS.map((o) => (
+                                    <SelectItem key={o} value={o}>
+                                        {o}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>

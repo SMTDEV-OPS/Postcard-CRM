@@ -146,7 +146,7 @@ export function buildLeadPayload(
   customData: Record<string, unknown>,
   options?: { accountId?: string; assignToUserId?: string }
 ): CreateLeadPayload {
-  const guestFullName = [data.firstName, data.middleName, data.lastName].filter(Boolean).join(" ").trim();
+  const guestFullName = [data.firstName, data.lastName].filter(Boolean).join(" ").trim();
 
   const hotels = (data.hotels || [])
     .filter((hotel) => hotel.hotelName?.trim())

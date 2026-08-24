@@ -15,6 +15,8 @@ import {
   UserCheck,
   Activity,
   BarChart2,
+  PieChart,
+  ArrowRightLeft,
   Clock,
   ChevronDown,
   LogOut,
@@ -32,7 +34,7 @@ import { HelpInfoButton } from "@/components/help/HelpInfoButton";
 import { NAV_PATH_TO_HELP_ID } from "@/help/helpContent";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useMobileNav } from "./MobileNavContext";
-import { canAccessPath, canAccessSetup } from "@/lib/moduleAccess";
+import { canAccessPath, canAccessSetup, hasAnyPermission } from "@/lib/moduleAccess";
 
 interface NavItem {
   title: string;
@@ -105,6 +107,7 @@ export function Sidebar({
     { title: "Activities", path: CRM_PATHS.activities, icon: Activity, roles: [] },
     { title: "Calendar", path: CRM_PATHS.calendar, icon: Calendar, roles: ["callcenter", "salesexecutive", "saleshead", "ccmanager", "management", "admin"] },
     { title: "Reports", path: CRM_PATHS.reports, icon: BarChart2, roles: ["management", "admin"] },
+    { title: "Budget", path: CRM_PATHS.budget, icon: PieChart, roles: ["management", "admin", "saleshead"] },
     { title: "Buddy", path: CRM_PATHS.buddy, icon: UserCheck, roles: [] },
     { title: "Tickets", path: CRM_PATHS.tickets, icon: Ticket, roles: [] },
   ].filter(filterItem);
@@ -123,6 +126,14 @@ export function Sidebar({
     : [];
 
   const showSetup = isAdminLike || canAccessSetup(permissions, !!isAdmin);
+  const showHandover =
+    isAdminLike ||
+    hasAnyPermission(permissions, !!isAdmin, [
+      "leads.manage",
+      "accounts.assign_managers",
+      "accounts.manage",
+      "users.manage",
+    ]);
 
   useEffect(() => {
     if (mobileOpen) setCollapsed(false);
@@ -247,9 +258,25 @@ export function Sidebar({
           <NavItemLink key={item.path} item={item} />
         ))}
 
-        {(showSetup) && (
+        {(showSetup || showHandover) && (
           <>
             <SectionLabel>Admin</SectionLabel>
+            {showHandover && (
+              <div className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
+                <NavLink
+                  to={CRM_PATHS.handover}
+                  onClick={() => closeMobileNav()}
+                  className={({ isActive }) =>
+                    cn("nav-item flex-1", isActive && "nav-item-active", collapsed && "justify-center px-3")
+                  }
+                  title={collapsed ? "Handover" : undefined}
+                >
+                  <ArrowRightLeft className="nav-icon h-4 w-4 shrink-0" strokeWidth={1.5} />
+                  {!collapsed && <span>Handover</span>}
+                </NavLink>
+              </div>
+            )}
+            {showSetup && (
             <div className={cn("group/nav relative flex items-center", collapsed && "justify-center")}>
               <NavLink
                 to={CRM_PATHS.settings}
@@ -269,6 +296,7 @@ export function Sidebar({
                 />
               )}
             </div>
+            )}
           </>
         )}
 
