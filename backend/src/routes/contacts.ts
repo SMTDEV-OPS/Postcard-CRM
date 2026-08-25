@@ -15,7 +15,7 @@ const contactSchema = z.object({
     name: z.string().min(1),
     designation: z.string().optional(),
     isKeyPersonnel: z.boolean().default(false),
-    keyPersonnelRole: z.enum(["ADMIN_HEAD", "FINANCE_HEAD", "SALES_HEAD", "MARKETING_HEAD", "COUNTRY_CITY_HEAD", "ASSISTANT", "HR_HEAD", "TRAINING_HEAD"]).optional(),
+    keyPersonnelRole: z.string().trim().min(1).max(120).optional(),
     officeAddress: z.object({
         addressLine1: z.string().optional(),
         city: z.string().optional(),

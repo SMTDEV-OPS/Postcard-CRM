@@ -4,7 +4,7 @@ import { FormLabelHelp } from "@/components/help/FormLabelHelp";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Contact } from "@/services/contacts";
-import { CLIENT_STATUS_OPTIONS, CONTACT_ROLES } from "./contactFormTypes";
+import { CLIENT_STATUS_OPTIONS } from "./contactFormTypes";
 import { cn } from "@/lib/utils";
 import { formGrid2 } from "@/lib/responsive";
 
@@ -130,25 +130,18 @@ export function ContactStepRole({ formData, set, errors, clearError }: ContactSt
         </div>
       {formData.isKeyPersonnel && (
         <div className="space-y-1.5 pl-6 border-l-2 border-primary/20">
-          <FormLabelHelp helpId="contacts.wizard.keyPersonnelRole" required>Organization role</FormLabelHelp>
-          <Select
-            value={formData.keyPersonnelRole}
-            onValueChange={(v) => {
-              set({ keyPersonnelRole: v as Contact["keyPersonnelRole"] });
+          <FormLabelHelp helpId="contacts.wizard.keyPersonnelRole" required>
+            Role in organization
+          </FormLabelHelp>
+          <Input
+            value={formData.keyPersonnelRole || ""}
+            onChange={(e) => {
+              set({ keyPersonnelRole: e.target.value });
               clearError("keyPersonnelRole");
             }}
-          >
-            <SelectTrigger className={errors.keyPersonnelRole ? "border-destructive" : ""}>
-              <SelectValue placeholder="Select role" />
-            </SelectTrigger>
-            <SelectContent>
-              {CONTACT_ROLES.map((r) => (
-                <SelectItem key={r.value} value={r.value}>
-                  {r.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="e.g. Head of Contracting, City Head"
+            className={errors.keyPersonnelRole ? "border-destructive" : ""}
+          />
           {errors.keyPersonnelRole && (
             <p className="text-xs text-destructive">{errors.keyPersonnelRole}</p>
           )}
@@ -245,7 +238,7 @@ export function ContactStepLoyalty({ formData, set, errors, clearError }: Contac
 }
 
 export function ContactReviewSummary({ formData }: { formData: Partial<Contact> }) {
-  const roleLabel = CONTACT_ROLES.find((r) => r.value === formData.keyPersonnelRole)?.label;
+  const roleLabel = formData.keyPersonnelRole?.trim() || undefined;
   const statusLabel = CLIENT_STATUS_OPTIONS.find((s) => s.value === formData.clientStatus)?.label;
 
   return (
@@ -271,7 +264,7 @@ export function ContactReviewSummary({ formData }: { formData: Partial<Contact> 
         </div>
         {formData.isKeyPersonnel && (
           <div>
-            <span className="text-text-muted">Role</span>
+            <span className="text-text-muted">Role in organization</span>
             <p className="font-medium text-text">{roleLabel || "—"}</p>
           </div>
         )}

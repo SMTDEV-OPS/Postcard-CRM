@@ -10,7 +10,7 @@ export interface IContact extends Document {
 
     // Key Personnel Flag
     isKeyPersonnel: boolean;
-    keyPersonnelRole?: "ADMIN_HEAD" | "FINANCE_HEAD" | "SALES_HEAD" | "MARKETING_HEAD" | "COUNTRY_CITY_HEAD" | "ASSISTANT" | "HR_HEAD" | "TRAINING_HEAD" | "CITY_HEAD" | "CITY_HEAD_ASSISTANT";
+    keyPersonnelRole?: string;
 
     // Addresses
     officeAddress?: {
@@ -96,7 +96,7 @@ const contactSchema = new Schema<IContact>(
         },
         keyPersonnelRole: {
             type: String,
-            enum: ["ADMIN_HEAD", "FINANCE_HEAD", "SALES_HEAD", "MARKETING_HEAD", "COUNTRY_CITY_HEAD", "ASSISTANT", "HR_HEAD", "TRAINING_HEAD", "CITY_HEAD", "CITY_HEAD_ASSISTANT"],
+            trim: true,
         },
 
         // Addresses

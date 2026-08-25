@@ -54,21 +54,27 @@ export function HelpInfoButton({
         <h4 className="mb-2 text-sm font-semibold">{title}</h4>
         {field ? (
           <div className="space-y-2 text-muted-foreground leading-relaxed">
-            <div>
-              <p className="text-xs font-medium uppercase text-foreground/70">What is this?</p>
-              <p>{field.what}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase text-foreground/70">How to use</p>
-              <p>{field.how}</p>
-            </div>
-            {field.example && (
+            {typeof field.what === "string" && field.what && (
+              <div>
+                <p className="text-xs font-medium uppercase text-foreground/70">What is this?</p>
+                <p>{field.what}</p>
+              </div>
+            )}
+            {typeof field.how === "string" && field.how && (
+              <div>
+                <p className="text-xs font-medium uppercase text-foreground/70">How to use</p>
+                <p>{field.how}</p>
+              </div>
+            )}
+            {typeof field.example === "string" && field.example && (
               <p className="text-xs">
                 <span className="font-medium text-foreground/70">Example: </span>
                 {field.example}
               </p>
             )}
-            {field.tips && <p className="text-xs italic">{field.tips}</p>}
+            {typeof field.tips === "string" && field.tips && (
+              <p className="text-xs italic">{field.tips}</p>
+            )}
           </div>
         ) : (
           <>

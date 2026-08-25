@@ -186,7 +186,9 @@ export const ContactManagement = ({
                             <div className="flex flex-wrap gap-1.5">
                                 {contact.isKeyPersonnel && (
                                     <Badge variant="outline" className="text-[10px] font-medium text-primary border-primary">
-                                        {contact.keyPersonnelRole?.replace(/_/g, " ")}
+                                        {contact.keyPersonnelRole
+                                          ? contact.keyPersonnelRole.replace(/_/g, " ")
+                                          : null}
                                     </Badge>
                                 )}
                                 {contact.isLoyaltyMember && (

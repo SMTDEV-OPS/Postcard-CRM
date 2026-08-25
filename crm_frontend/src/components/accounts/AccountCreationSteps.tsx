@@ -185,7 +185,9 @@ export function AccountStepClassification({ formData, set }: StepContext) {
       </div>
       <div className={cn(formGrid2, "pt-2 border-t border-border")}>
         <div className="space-y-1.5">
-          <FormLabelHelp helpId="accounts.wizard.classification.industryCategory">Industry category</FormLabelHelp>
+          <FormLabelHelp helpId="accounts.wizard.classification.industryCategory">
+            Account classification
+          </FormLabelHelp>
           <Select
             value={industryValue}
             onValueChange={(v) => set({ industryCategory: v === "none" ? "" : v, industrySubCategory: "" })}

@@ -15,7 +15,7 @@ export const ACCOUNTS_WIZARD_CLASSIFICATION_FIELDS = [
   field(`${W}.classification.accountLevel`, "Account level", "Hierarchy tier: Master, Parent, Branch, Subsidiary.", "Defines reporting roll-up.", { required: true }),
   field(`${W}.classification.accountType`, "Account type", "Acquisition, Development, or Retention.", "Sales strategy classification.", { required: true }),
   field(`${W}.classification.isHeadquarter`, "Headquarter account", "Marks this entity as HQ for a group.", "HQ accounts appear prominently in hierarchy views."),
-  field(`${W}.classification.industryCategory`, "Industry category", "Industry vertical for the selected organization type.", "Options depend on organization type chosen in Step 1."),
+  field(`${W}.classification.industryCategory`, "Account classification", "Industry / segment for the selected organization type (Government, Travel Trade, Lifestyle, Other, etc.).", "Options depend on organization type chosen in Step 1."),
   field(`${W}.classification.industrySize`, "Industry size", "Small, Medium, or Large band.", "Optional firmographic data."),
 ];
 
@@ -81,7 +81,7 @@ export const CONTACTS_WIZARD_FIELDS = [
   field("contacts.wizard.contactType", "Contact type", "Role category (Decision maker, Finance, etc.).", "Helps route communications."),
   field("contacts.wizard.isPrimary", "Primary contact", "Main POC for this account.", "Only one primary recommended per account."),
   field("contacts.wizard.isKeyPersonnel", "Key personnel", "Marks this contact as a decision maker.", "Enables organization role selection."),
-  field("contacts.wizard.keyPersonnelRole", "Organization role", "Decision-maker role at the account.", "Required when key personnel is checked.", { required: true }),
+  field("contacts.wizard.keyPersonnelRole", "Role in organization", "Free-text decision-maker role at the account.", "Required when key personnel is checked. Type any role title.", { required: true, example: "Head of Contracting" }),
   field("contacts.wizard.clientStatus", "Client status", "Relationship status with this contact.", "Active, inactive, or prospect."),
   field("contacts.wizard.loyaltyNumber", "Loyalty membership number", "Guest loyalty program ID.", "Required when loyalty member is checked."),
   field("contacts.wizard.loyaltyProgramName", "Program name", "Name of loyalty program.", { example: "Postcard Privilege" }),

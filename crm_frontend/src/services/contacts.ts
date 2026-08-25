@@ -1,6 +1,5 @@
 import { API_BASE_URL, withAuthHeaders } from "./api";
 
-export type KeyPersonnelRole = "ADMIN_HEAD" | "FINANCE_HEAD" | "SALES_HEAD" | "MARKETING_HEAD" | "COUNTRY_CITY_HEAD" | "ASSISTANT" | "HR_HEAD" | "TRAINING_HEAD";
 export type ClientStatus = "PROMOTER" | "NEUTRAL" | "DETRACTOR";
 
 export interface Contact {
@@ -10,7 +9,8 @@ export interface Contact {
     name: string;
     designation?: string;
     isKeyPersonnel: boolean;
-    keyPersonnelRole?: KeyPersonnelRole;
+    /** Free-text role in organization (formerly enum). */
+    keyPersonnelRole?: string;
     officeAddress?: {
         addressLine1?: string;
         city?: string;

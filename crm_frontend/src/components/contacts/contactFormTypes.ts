@@ -1,4 +1,4 @@
-import type { ClientStatus, Contact, KeyPersonnelRole } from "@/services/contacts";
+import type { ClientStatus, Contact } from "@/services/contacts";
 
 export const emptyContactForm: Partial<Contact> = {
   name: "",
@@ -19,17 +19,6 @@ export const emptyContactForm: Partial<Contact> = {
   weddingAnniversary: "",
 };
 
-export const CONTACT_ROLES: { value: KeyPersonnelRole; label: string }[] = [
-  { value: "ADMIN_HEAD", label: "Admin Head" },
-  { value: "FINANCE_HEAD", label: "Finance Head" },
-  { value: "SALES_HEAD", label: "Sales Head" },
-  { value: "MARKETING_HEAD", label: "Marketing Head" },
-  { value: "COUNTRY_CITY_HEAD", label: "Country/City Head" },
-  { value: "ASSISTANT", label: "Assistant" },
-  { value: "HR_HEAD", label: "HR Head" },
-  { value: "TRAINING_HEAD", label: "Training Head" },
-];
-
 export const CLIENT_STATUS_OPTIONS: { value: ClientStatus; label: string }[] = [
   { value: "PROMOTER", label: "Promoter (High Support)" },
   { value: "NEUTRAL", label: "Neutral" },
@@ -49,5 +38,9 @@ export function cleanContactPayload(data: Partial<Contact>): Partial<Contact> {
   if (!cleaned.loyaltyNumber) delete cleaned.loyaltyNumber;
   if (!cleaned.designation) delete cleaned.designation;
   if (!cleaned.isKeyPersonnel) delete cleaned.keyPersonnelRole;
+  if (cleaned.keyPersonnelRole) {
+    cleaned.keyPersonnelRole = String(cleaned.keyPersonnelRole).trim();
+    if (!cleaned.keyPersonnelRole) delete cleaned.keyPersonnelRole;
+  }
   return cleaned;
 }

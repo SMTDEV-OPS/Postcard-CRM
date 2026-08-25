@@ -109,10 +109,16 @@ function FieldTable({ topic }: { topic: HelpTopic }) {
                     {screen.fields.map((f) => (
                       <TableRow key={f.id}>
                         <TableCell className="font-medium text-sm align-top">{f.label}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground align-top">{f.what}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground align-top">{f.how}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground align-top">
+                          {typeof f.what === "string" ? f.what : "—"}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground align-top">
+                          {typeof f.how === "string" && f.how ? f.how : "—"}
+                        </TableCell>
                         <TableCell className="text-xs align-top">{f.required ? "Yes" : "—"}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground align-top">{f.example ?? "—"}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground align-top">
+                          {typeof f.example === "string" ? f.example : "—"}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

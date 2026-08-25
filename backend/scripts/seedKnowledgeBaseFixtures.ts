@@ -35,10 +35,11 @@ const DUMMY_PROPERTIES: SeedProperty[] = [
     timeZone: "Asia/Kolkata",
   },
   {
-    name: "Postcard Goa Riverside",
-    code: "POSTCARD_GOA_RIVERSIDE",
-    legacyCode: "MOUSTACHE_GOA_RIVERSIDE",
-    city: "Goa",
+    name: "The Postcard Saligao",
+    code: "POSTCARD_SALIGAO",
+    /** Prior incorrect/duplicate codes so re-seed renames existing rows instead of creating another hotel. */
+    legacyCode: "POSTCARD_GOA_RIVERSIDE",
+    city: "Saligao",
     state: "Goa",
     country: "India",
     timeZone: "Asia/Kolkata",
@@ -114,14 +115,30 @@ export async function seedKnowledgeBaseFixtures() {
   }
 
   for (const property of DUMMY_PROPERTIES) {
+    const codeAliases = [
+      property.code,
+      property.legacyCode,
+      // Historical incorrect Goa name/code
+      ...(property.code === "POSTCARD_SALIGAO"
+        ? ["POSTCARD_GOA_RIVERSIDE", "MOUSTACHE_GOA_RIVERSIDE"]
+        : []),
+    ];
+
     const existingProperty = await PropertyModel.findOne({
-      code: { $in: [property.code, property.legacyCode] },
+      $or: [
+        { code: { $in: codeAliases } },
+        ...(property.code === "POSTCARD_SALIGAO"
+          ? [{ name: "Postcard Goa Riverside" }]
+          : []),
+      ],
     })
       .select("_id")
       .lean();
 
     const savedProperty = await PropertyModel.findOneAndUpdate(
-      { code: { $in: [property.code, property.legacyCode] } },
+      existingProperty?._id
+        ? { _id: existingProperty._id }
+        : { code: { $in: codeAliases } },
       {
         $set: {
           name: property.name,

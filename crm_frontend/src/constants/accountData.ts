@@ -133,6 +133,7 @@ export const INDUSTRY_CATEGORIES_BY_ORGANIZATION_TYPE: Record<CanonicalOrganizat
         "Sports Organisation",
     ],
     OTHER: [
+        "Conglomerate",
         "Individual / HNI",
         "Startup",
         "Co-working Space",

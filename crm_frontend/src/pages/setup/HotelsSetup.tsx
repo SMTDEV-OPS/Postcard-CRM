@@ -64,6 +64,19 @@ export function HotelsSetup() {
 
   const codePreview = useMemo(() => (form.name.trim() ? makePropertyCode(form.name) : ""), [form.name]);
 
+  const normalizeHotelName = (name: string) =>
+    name.trim().toLowerCase().replace(/\s+/g, " ");
+
+  const findDuplicateName = (name: string, excludeId?: string | null) => {
+    const key = normalizeHotelName(name);
+    if (!key) return undefined;
+    return items.find(
+      (p) =>
+        p._id !== excludeId &&
+        normalizeHotelName(p.name) === key
+    );
+  };
+
   const load = useCallback(async () => {
     try {
       setLoading(true);
@@ -85,6 +98,15 @@ export function HotelsSetup() {
   const handleCreate = async () => {
     if (!form.name.trim()) {
       toast({ title: "Name required", variant: "destructive" });
+      return;
+    }
+    const dup = findDuplicateName(form.name);
+    if (dup) {
+      toast({
+        title: "Duplicate hotel name",
+        description: `“${dup.name}” already exists (${dup.status}). Use a unique name or edit the existing hotel.`,
+        variant: "destructive",
+      });
       return;
     }
     try {
@@ -126,6 +148,15 @@ export function HotelsSetup() {
   const handleUpdate = async () => {
     if (!editingId || !form.name.trim()) {
       toast({ title: "Name required", variant: "destructive" });
+      return;
+    }
+    const dup = findDuplicateName(form.name, editingId);
+    if (dup) {
+      toast({
+        title: "Duplicate hotel name",
+        description: `“${dup.name}” already exists (${dup.status}). Choose a different name.`,
+        variant: "destructive",
+      });
       return;
     }
     try {
