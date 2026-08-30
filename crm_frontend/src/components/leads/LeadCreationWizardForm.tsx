@@ -56,6 +56,7 @@ import type { LeadFormData } from "./useLeadForm";
 import { cn } from "@/lib/utils";
 import { formGrid2 } from "@/lib/responsive";
 import { calculateStayNights } from "@/lib/leadDates";
+import { getRoomTypesForProperty } from "@/lib/propertyRoomTypes";
 
 function computeCallCenterEstimatedValue(hotels: LeadFormData["hotels"] | undefined): number {
   if (!hotels?.length) return 0;
@@ -513,7 +514,20 @@ export function LeadCreationWizardForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormFieldLabelHelp helpId="leads.add.hotelName">Hotel name</FormFieldLabelHelp>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={(v) => {
+                              field.onChange(v);
+                              const rooms = form.getValues(`hotels.${index}.rooms`) || [];
+                              rooms.forEach((_, roomIdx) => {
+                                form.setValue(
+                                  `hotels.${index}.rooms.${roomIdx}.roomCategory`,
+                                  "",
+                                  { shouldDirty: true, shouldValidate: false }
+                                );
+                              });
+                            }}
+                            value={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select hotel (optional)" />
@@ -528,7 +542,7 @@ export function LeadCreationWizardForm({
                                 ))
                               ) : (
                                 <SelectItem value="no-hotels-available" disabled>
-                                  No PMS hotels available
+                                  No hotels available
                                 </SelectItem>
                               )}
                             </SelectContent>
@@ -577,25 +591,45 @@ export function LeadCreationWizardForm({
                             <FormField
                               control={form.control}
                               name={`hotels.${index}.rooms.${roomIdx}.roomCategory`}
-                              render={({ field }) => (
+                              render={({ field }) => {
+                                const hotelName = form.watch(`hotels.${index}.hotelName`);
+                                const roomOptions = getRoomTypesForProperty(
+                                  hotelOptions,
+                                  hotelName
+                                );
+                                return (
                                 <FormItem>
                                   <FormFieldLabelHelp helpId="leads.add.roomCategory" required className="text-xs">Category</FormFieldLabelHelp>
-                                  <Select onValueChange={field.onChange} value={field.value}>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    value={field.value || undefined}
+                                    disabled={!hotelName}
+                                  >
                                     <FormControl>
                                       <SelectTrigger className="h-9">
-                                        <SelectValue placeholder="Select" />
+                                        <SelectValue
+                                          placeholder={
+                                            !hotelName
+                                              ? "Select hotel first"
+                                              : roomOptions.length
+                                                ? "Select room type"
+                                                : "No room types configured"
+                                          }
+                                        />
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      <SelectItem value="standard">Standard</SelectItem>
-                                      <SelectItem value="deluxe">Deluxe</SelectItem>
-                                      <SelectItem value="suite">Suite</SelectItem>
-                                      <SelectItem value="villa">Villa</SelectItem>
+                                      {roomOptions.map((rt) => (
+                                        <SelectItem key={rt} value={rt}>
+                                          {rt}
+                                        </SelectItem>
+                                      ))}
                                     </SelectContent>
                                   </Select>
                                   <FormMessage />
                                 </FormItem>
-                              )}
+                                );
+                              }}
                             />
                             <FormField
                               control={form.control}

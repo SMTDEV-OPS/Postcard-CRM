@@ -1,5 +1,10 @@
 import { API_BASE_URL, withAuthHeaders } from "./api";
 
+export interface PropertyRoomType {
+  name: string;
+  inventoryCount?: number;
+}
+
 export interface Property {
   _id: string;
   name: string;
@@ -11,6 +16,7 @@ export interface Property {
   };
   timeZone?: string;
   status: "ACTIVE" | "INACTIVE";
+  roomTypes?: PropertyRoomType[];
   pmsProvider?: "NONE" | "EZEE";
   pmsConfig?: {
     hotelCode?: string;
@@ -31,6 +37,7 @@ export interface CreatePropertyInput {
   };
   timeZone?: string;
   status?: "ACTIVE" | "INACTIVE";
+  roomTypes?: PropertyRoomType[];
   pmsProvider?: "NONE" | "EZEE";
   pmsConfig?: {
     hotelCode?: string;
@@ -48,6 +55,7 @@ export interface UpdatePropertyInput {
   };
   timeZone?: string;
   status?: "ACTIVE" | "INACTIVE";
+  roomTypes?: PropertyRoomType[];
   pmsProvider?: "NONE" | "EZEE";
   pmsConfig?: {
     hotelCode?: string;

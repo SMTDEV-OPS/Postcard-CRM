@@ -38,10 +38,13 @@ From `backend/` with `MONGO_URI` pointing at Atlas:
 export MONGO_URI='mongodb+srv://USER:PASSWORD@cluster.mongodb.net/postcard_crm?retryWrites=true&w=majority'
 export TS_NODE_TRANSPILE_ONLY=true
 npm run seed:admin
+npm run seed:postcard-hotels
 npm run seed:everything
 npm run seed:kb:fixtures
 # Then run dashboard widgets, system filters, workflows (see seedComplete.ts)
 ```
+
+`seed:postcard-hotels` upserts the canonical **12 Postcard hotels + room types** and sets any other properties to `INACTIVE` so lead/quotation dropdowns only show the final list.
 
 Or: `npm run seed:complete` (with `TS_NODE_TRANSPILE_ONLY=true` if ts-node type errors occur).
 

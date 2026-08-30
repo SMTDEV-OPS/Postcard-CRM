@@ -10,6 +10,11 @@ export const propertiesRouter = Router();
 
 propertiesRouter.use(requireAuth);
 
+const roomTypeSchema = z.object({
+  name: z.string().min(1),
+  inventoryCount: z.number().int().min(0).optional().default(0),
+});
+
 const propertySchema = z.object({
   name: z.string().min(1),
   code: z.string().min(1),
@@ -23,6 +28,7 @@ const propertySchema = z.object({
   title: z.string().optional(), // Allow title if it exists on frontend form (sometimes it does)
   timeZone: z.string().optional(),
   status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  roomTypes: z.array(roomTypeSchema).optional(),
   pmsProvider: z.enum(["NONE", "EZEE"]).optional(),
   pmsConfig: z
     .object({

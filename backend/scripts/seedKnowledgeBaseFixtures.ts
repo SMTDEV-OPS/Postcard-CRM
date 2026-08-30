@@ -4,47 +4,7 @@ import { config } from "../src/config/env";
 import { PropertyModel } from "../src/models/property";
 import { UserModel } from "../src/models/user";
 import { KnowledgeBaseModel, KnowledgeBaseType } from "../src/models/knowledgeBase";
-
-type SeedProperty = {
-  name: string;
-  code: string;
-  legacyCode: string;
-  city: string;
-  state: string;
-  country: string;
-  timeZone: string;
-};
-
-const DUMMY_PROPERTIES: SeedProperty[] = [
-  {
-    name: "Postcard Jaipur Heritage",
-    code: "POSTCARD_JAIPUR_HERITAGE",
-    legacyCode: "MOUSTACHE_JAIPUR_HERITAGE",
-    city: "Jaipur",
-    state: "Rajasthan",
-    country: "India",
-    timeZone: "Asia/Kolkata",
-  },
-  {
-    name: "Postcard Udaipur Lakeview",
-    code: "POSTCARD_UDAIPUR_LAKEVIEW",
-    legacyCode: "MOUSTACHE_UDAIPUR_LAKEVIEW",
-    city: "Udaipur",
-    state: "Rajasthan",
-    country: "India",
-    timeZone: "Asia/Kolkata",
-  },
-  {
-    name: "The Postcard Saligao",
-    code: "POSTCARD_SALIGAO",
-    /** Prior incorrect/duplicate codes so re-seed renames existing rows instead of creating another hotel. */
-    legacyCode: "POSTCARD_GOA_RIVERSIDE",
-    city: "Saligao",
-    state: "Goa",
-    country: "India",
-    timeZone: "Asia/Kolkata",
-  },
-];
+import { POSTCARD_HOTELS, makePropertyCode } from "../src/constants/postcardHotels";
 
 function createFixtureItems(propertyName: string) {
   return [
@@ -114,41 +74,24 @@ export async function seedKnowledgeBaseFixtures() {
     throw new Error("No active user found. Run seed:admin before seeding knowledge base fixtures.");
   }
 
-  for (const property of DUMMY_PROPERTIES) {
-    const codeAliases = [
-      property.code,
-      property.legacyCode,
-      // Historical incorrect Goa name/code
-      ...(property.code === "POSTCARD_SALIGAO"
-        ? ["POSTCARD_GOA_RIVERSIDE", "MOUSTACHE_GOA_RIVERSIDE"]
-        : []),
-    ];
-
+  // Use canonical Postcard hotels only (same master as seed:postcard-hotels)
+  for (const hotel of POSTCARD_HOTELS) {
+    const code = makePropertyCode(hotel.name);
     const existingProperty = await PropertyModel.findOne({
-      $or: [
-        { code: { $in: codeAliases } },
-        ...(property.code === "POSTCARD_SALIGAO"
-          ? [{ name: "Postcard Goa Riverside" }]
-          : []),
-      ],
+      $or: [{ code }, { name: hotel.name }],
     })
       .select("_id")
       .lean();
 
     const savedProperty = await PropertyModel.findOneAndUpdate(
-      existingProperty?._id
-        ? { _id: existingProperty._id }
-        : { code: { $in: codeAliases } },
+      existingProperty?._id ? { _id: existingProperty._id } : { code },
       {
         $set: {
-          name: property.name,
-          code: property.code,
-          location: {
-            city: property.city,
-            state: property.state,
-            country: property.country,
-          },
-          timeZone: property.timeZone,
+          name: hotel.name,
+          code,
+          location: hotel.location,
+          roomTypes: hotel.roomTypes,
+          timeZone: "Asia/Kolkata",
           status: "ACTIVE",
           pmsProvider: "NONE",
         },
@@ -157,13 +100,13 @@ export async function seedKnowledgeBaseFixtures() {
     ).lean();
 
     if (!savedProperty?._id) {
-      throw new Error(`Failed to upsert property ${property.code}`);
+      throw new Error(`Failed to upsert property ${code}`);
     }
 
     if (existingProperty) propertiesUpdated++;
     else propertiesCreated++;
 
-    const fixtures = createFixtureItems(property.name);
+    const fixtures = createFixtureItems(hotel.name);
     for (const item of fixtures) {
       const legacyTitle = item.title.replace("Postcard", "Moustache");
       const existingKb = await KnowledgeBaseModel.findOne({

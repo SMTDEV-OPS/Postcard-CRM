@@ -19,6 +19,7 @@ import { createLead, getLeadDetail, Lead, LeadDetail, listLeads, updateLead, get
 import { listFilters, applyFilter, type SavedFilter } from "@/services/filters";
 import { listProperties } from "@/services/properties";
 import { useActiveProperties } from "@/hooks/useActiveProperties";
+import { getRoomTypesForProperty } from "@/lib/propertyRoomTypes";
 import { listUsers, User } from "@/services/users";
 import { listAccounts, Account, AccountType } from "@/services/accounts";
 import { CustomFieldsService, CustomFieldDefinition } from "@/services/customFields";
@@ -437,7 +438,15 @@ export const AdminLeads = ({ canManageUsers, permissions, isAdmin, onViewLead }:
 
   const updateHotel = (index: number, field: keyof HotelEntry, value: string | RoomEntry[]) => {
     const updated = [...hotels];
-    updated[index] = { ...updated[index], [field]: value };
+    if (field === "hotelName" && typeof value === "string") {
+      updated[index] = {
+        ...updated[index],
+        hotelName: value,
+        rooms: updated[index].rooms.map((r) => ({ ...r, roomCategory: "" })),
+      };
+    } else {
+      updated[index] = { ...updated[index], [field]: value };
+    }
     setHotels(updated);
   };
 
@@ -2197,18 +2206,27 @@ export const AdminLeads = ({ canManageUsers, permissions, isAdmin, onViewLead }:
                           <div className="space-y-1">
                             <label className="text-xs font-medium">Room Category *</label>
                             <Select
-                              value={room.roomCategory}
+                              value={room.roomCategory || undefined}
                               onValueChange={(v) => updateRoom(index, roomIdx, "roomCategory", v)}
+                              disabled={!hotel.hotelName}
                             >
                               <SelectTrigger className="h-8">
-                                <SelectValue placeholder="Select" />
+                                <SelectValue
+                                  placeholder={
+                                    !hotel.hotelName
+                                      ? "Select hotel first"
+                                      : getRoomTypesForProperty(hotelOptions, hotel.hotelName).length
+                                        ? "Select"
+                                        : "No room types"
+                                  }
+                                />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="Standard Room">Standard Room</SelectItem>
-                                <SelectItem value="Deluxe Room">Deluxe Room</SelectItem>
-                                <SelectItem value="Suite">Suite</SelectItem>
-                                <SelectItem value="Villa">Villa</SelectItem>
-                                <SelectItem value="Pool Villa">Pool Villa</SelectItem>
+                                {getRoomTypesForProperty(hotelOptions, hotel.hotelName).map((rt) => (
+                                  <SelectItem key={rt} value={rt}>
+                                    {rt}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </div>

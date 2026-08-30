@@ -1,5 +1,10 @@
 import { Schema, model, Document } from "mongoose";
 
+export interface IPropertyRoomType {
+  name: string;
+  inventoryCount: number;
+}
+
 export interface IProperty extends Document {
   name: string;
   code: string;
@@ -10,6 +15,7 @@ export interface IProperty extends Document {
   };
   timeZone?: string;
   status: "ACTIVE" | "INACTIVE";
+  roomTypes?: IPropertyRoomType[];
   pmsProvider?: "NONE" | "EZEE";
   pmsConfig?: {
     hotelCode?: string;
@@ -18,6 +24,14 @@ export interface IProperty extends Document {
   };
   lastSyncedAt?: Date;
 }
+
+const roomTypeSchema = new Schema<IPropertyRoomType>(
+  {
+    name: { type: String, required: true, trim: true },
+    inventoryCount: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false }
+);
 
 const propertySchema = new Schema<IProperty>(
   {
@@ -30,6 +44,7 @@ const propertySchema = new Schema<IProperty>(
     },
     timeZone: String,
     status: { type: String, enum: ["ACTIVE", "INACTIVE"], default: "ACTIVE" },
+    roomTypes: { type: [roomTypeSchema], default: [] },
     pmsProvider: {
       type: String,
       enum: ["NONE", "EZEE"],
@@ -46,6 +61,3 @@ const propertySchema = new Schema<IProperty>(
 );
 
 export const PropertyModel = model<IProperty>("Property", propertySchema);
-
-
-

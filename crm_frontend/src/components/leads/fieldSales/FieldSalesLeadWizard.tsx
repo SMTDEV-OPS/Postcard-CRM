@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2, Loader2, AlertTriangle } from "lucide-react";
 import { listProperties, type Property } from "@/services/properties";
+import { getRoomTypesForProperty } from "@/lib/propertyRoomTypes";
 import { listAccounts, type Account } from "@/services/accounts";
 import {
   FIELD_SALES_SOURCES,
@@ -289,7 +290,14 @@ export function FieldSalesLeadWizard({
                       value={form.hotelName}
                       onValueChange={(name) => {
                         const p = hotels.find((h) => h.name === name);
-                        patch({ hotelName: name, propertyId: p?._id || "" });
+                        patch({
+                          hotelName: name,
+                          propertyId: p?._id || "",
+                          pricingLines: form.pricingLines.map((line) => ({
+                            ...line,
+                            roomCategory: "",
+                          })),
+                        });
                       }}
                     >
                       <SelectTrigger>
@@ -381,10 +389,30 @@ export function FieldSalesLeadWizard({
                   <div key={idx} className="grid gap-2 rounded-md border border-dashed p-3 sm:grid-cols-2">
                     <div>
                       <FormLabelHelp helpId="leads.field-sales.roomCategory" className="text-xs">Room category</FormLabelHelp>
-                      <Input
-                        value={line.roomCategory}
-                        onChange={(e) => updatePricingLine(idx, "roomCategory", e.target.value)}
-                      />
+                      <Select
+                        value={line.roomCategory || undefined}
+                        onValueChange={(v) => updatePricingLine(idx, "roomCategory", v)}
+                        disabled={!form.hotelName}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              !form.hotelName
+                                ? "Select hotel first"
+                                : getRoomTypesForProperty(hotels, form.hotelName).length
+                                  ? "Select room type"
+                                  : "No room types configured"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getRoomTypesForProperty(hotels, form.hotelName).map((rt) => (
+                            <SelectItem key={rt} value={rt}>
+                              {rt}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <FormLabelHelp helpId="leads.field-sales.mealPlan" className="text-xs">Meal plan</FormLabelHelp>

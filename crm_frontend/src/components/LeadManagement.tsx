@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { disableCheckInDate, disableCheckoutDate, startOfDay } from "@/lib/leadDates";
 import type { UseFormReturn } from "react-hook-form";
 import { useActiveProperties } from "@/hooks/useActiveProperties";
+import { getRoomTypesForProperty } from "@/lib/propertyRoomTypes";
 import { formGrid2, formGrid3 } from "@/lib/responsive";
 import { displayLabel } from "@/lib/displayIds";
 
@@ -143,13 +144,6 @@ const LeadManagement = () => {
     { name: "Kavita Reddy", department: "Sales Team" },
     { name: "Arjun Malhotra", department: "Sales Team" }
   ];
-
-  const propertyRoomCategories = {
-    "Postcard Goa": ["Deluxe Ocean View", "Premium Sea Facing", "Luxury Villa", "Standard Room"],
-    "Postcard Kerala": ["Backwater Suite", "Garden View", "Pool Villa", "Heritage Room"],
-    "Postcard Rajasthan": ["Royal Suite", "Palace View", "Courtyard Room", "Desert Villa"],
-    "Postcard Mumbai": ["City View", "Executive Suite", "Business Room", "Premium Floor"]
-  };
 
   const [leads, setLeads] = useState<any[]>([
     {
@@ -941,11 +935,14 @@ const LeadManagement = () => {
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {form.watch(`hotels.${index}.hotelName`) &&
-                                      propertyRoomCategories[form.watch(`hotels.${index}.hotelName`) as keyof typeof propertyRoomCategories]?.map((category) => (
-                                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                                      ))
-                                    }
+                                    {getRoomTypesForProperty(
+                                      activeProperties,
+                                      form.watch(`hotels.${index}.hotelName`)
+                                    ).map((category) => (
+                                      <SelectItem key={category} value={category}>
+                                        {category}
+                                      </SelectItem>
+                                    ))}
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />

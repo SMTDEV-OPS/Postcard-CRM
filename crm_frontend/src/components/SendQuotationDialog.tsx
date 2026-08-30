@@ -21,6 +21,13 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   createQuotation,
   listQuotations,
   Quotation,
@@ -30,6 +37,8 @@ import {
 } from "@/services/quotations";
 import { Lead, LeadDetail, getLeadContactInfo } from "@/services/leads";
 import { listEmailAccounts, EmailAccount } from "@/services/email";
+import { useActiveProperties } from "@/hooks/useActiveProperties";
+import { getRoomTypesForProperty } from "@/lib/propertyRoomTypes";
 import { useToast } from "@/hooks/use-toast";
 import {
   Mail,
@@ -86,6 +95,7 @@ export const SendQuotationDialog = ({
   propertyName,
   onQuotationSent,
 }: SendQuotationDialogProps) => {
+  const { properties: hotelOptions } = useActiveProperties();
   const primaryItinerary = lead?.itineraries?.[0];
   const checkInDate = primaryItinerary?.checkInDate;
   const checkOutDate = primaryItinerary?.checkOutDate;
@@ -628,16 +638,36 @@ export const SendQuotationDialog = ({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="space-y-2">
                       <Label>Hotel Name *</Label>
-                      <Input
-                        value={hotel.hotelName}
-                        onChange={(e) =>
+                      <Select
+                        value={hotel.hotelName || undefined}
+                        onValueChange={(name) =>
                           setBookingHotels((prev) =>
                             prev.map((h, i) =>
-                              i === hotelIdx ? { ...h, hotelName: e.target.value } : h
+                              i === hotelIdx
+                                ? {
+                                    ...h,
+                                    hotelName: name,
+                                    rooms: h.rooms.map((r) => ({
+                                      ...r,
+                                      roomCategory: "",
+                                    })),
+                                  }
+                                : h
                             )
                           )
                         }
-                      />
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select hotel" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {hotelOptions.map((p) => (
+                            <SelectItem key={p._id} value={p.name}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label>Check-in *</Label>
@@ -710,23 +740,51 @@ export const SendQuotationDialog = ({
                       <div key={roomIdx} className="grid grid-cols-1 md:grid-cols-3 gap-3 border rounded p-2">
                         <div className="space-y-1">
                           <Label>Room Category</Label>
-                          <Input
-                            value={room.roomCategory}
-                            onChange={(e) =>
+                          <Select
+                            value={room.roomCategory || undefined}
+                            onValueChange={(v) =>
                               setBookingHotels((prev) =>
                                 prev.map((h, i) =>
                                   i === hotelIdx
                                     ? {
                                         ...h,
                                         rooms: h.rooms.map((r, ri) =>
-                                          ri === roomIdx ? { ...r, roomCategory: e.target.value } : r
+                                          ri === roomIdx
+                                            ? { ...r, roomCategory: v }
+                                            : r
                                         ),
                                       }
                                     : h
                                 )
                               )
                             }
-                          />
+                            disabled={!hotel.hotelName}
+                          >
+                            <SelectTrigger>
+                              <SelectValue
+                                placeholder={
+                                  !hotel.hotelName
+                                    ? "Select hotel first"
+                                    : getRoomTypesForProperty(
+                                        hotelOptions,
+                                        hotel.hotelName
+                                      ).length
+                                      ? "Select room type"
+                                      : "No room types"
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getRoomTypesForProperty(
+                                hotelOptions,
+                                hotel.hotelName
+                              ).map((rt) => (
+                                <SelectItem key={rt} value={rt}>
+                                  {rt}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="space-y-1">
                           <Label>Room Preference</Label>
